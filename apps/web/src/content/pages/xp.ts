@@ -29,7 +29,9 @@ const kindFields = [
   txt("terms", 160, "Cancellation", "الإلغاء", "As the Terms say it for this kind.", "كما تذكرها الشروط لهذا النوع."),
 ] as const;
 
-/** The kinds staff can describe, in the order the editor lists them (lib/rides.ts RideKind, and test rides). */
+/** The kinds staff can describe, in the order the editor lists them (lib/rides.ts RideKind, and test rides). Not the
+ *  Blood Donation event nor the Farm House Night: their words are the server's alone and never the public schema's
+ *  (content/blood-words.ts, content/farm-words.ts); their facts are what the session itself says. */
 export const XP_KINDS = [
   ["saturday", "Saturday Social Ride", "جولة السبت الاجتماعية"],
   ["jcc", "Circuit nights", "ليالي الحلبة"],
@@ -42,9 +44,7 @@ export const XP_KINDS = [
   ["defe5k", "DEFE 5KM Run", "سباق دفء 5 كم"],
   ["vlap", "Victory Lap", "Victory Lap"],
   ["arena", "Arena Heros", "Arena Heros"],
-  ["blood", "Blood Donation", "التبرع بالدم"],
   ["yoga", "Yoga", "اليوغا"],
-  ["farm", "Farm House Night", "ليلة المزرعة"],
   ["testride", "Test rides", "تجربة الدراجات"],
 ] as const;
 export type XpKind = (typeof XP_KINDS)[number][0];

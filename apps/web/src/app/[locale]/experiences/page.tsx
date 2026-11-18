@@ -34,7 +34,6 @@ import { BLOOD_NAME, bloodName } from "@/content/blood-words";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { mfAt } from "@/lib/members-first";
 import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
-import { headers } from "next/headers";
 import XpList from "@/components/experiences/XpList";
 import { sized, srcSet } from "@/lib/img";
 import { filterFromQuery, waNumber } from "@/lib/sx-B5";
@@ -249,10 +248,9 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   const xs = xpSettings(content, L);
   const listIds = new Set(events.flatMap((x) => x.sessions.map((s) => s.id)));
   const listSrc = [...all.filter((s) => listIds.has(s.id)), ...(xs.general.testRides ? ahead.filter((s) => s.testRide) : [])];
-  const host = flow ? "" : (await headers()).get("host") ?? "";
   const xpCtx = { locale, content, now, nowMs: drawn, member: !!acct?.member, satLink, prices, window, appBase, bookBase: localHref("/experiences", locale), facts: xs.facts };
   const [xpRows, ratings] = flow ? [[], new Map()] : await Promise.all([withWeather(xpItems(listSrc, xpCtx), xs.general.weatherDays, drawn), xpRatings(xs.general.ratingMin)]);
-  const xpX = xpExtras(xpRows, { content, locale, host, calendars: xs.general.calendars, ratings, wa: xs.general.privateOn ? waNumber(S(site.social.whatsapp)) : null, gatherWord: S(d.gather), startWord: S(d.start) });
+  const xpX = xpExtras(xpRows, { content, locale, calendars: xs.general.calendars, ratings, wa: xs.general.privateOn ? waNumber(S(site.social.whatsapp)) : null, gatherWord: S(d.gather), startWord: S(d.start) });
   const heroImg = S(c.hero.image);
   const flowBox = (
     <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} seatMax={biz.eventSeatMax} acct={acct} items={items}

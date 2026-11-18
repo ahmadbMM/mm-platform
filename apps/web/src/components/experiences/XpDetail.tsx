@@ -27,6 +27,9 @@ export type XpExtras = {
   cal: Record<string, string>;
   rating: Record<string, { avg: number; n: number }>;
   wa: string | null;
+  /** The List / Calendar switch's words and the month's arrows (the booking app's shGrpView, calViewList, calViewCal,
+   *  calPrev, calNext; KindTheme.words.ts). */
+  calWords: { view: string; list: string; cal: string; prev: string; next: string };
 };
 
 export function XpAmt({ n, word }: { n: number; word: string }) {
@@ -154,7 +157,12 @@ export default function XpDetail({ s, x, locale, mode, pageHref }: { s: XpItem; 
         {(wa || x.cal[s.kind]) && (
           <div className="xq-more">
             {wa && <a className="xq-btn2" href={wa} target="_blank" rel="noopener"><XIc name="chat" size={17} />{t.privateGroup}</a>}
-            {x.cal[s.kind] && <a className="xq-btn2" href={x.cal[s.kind]}><XIc name="calPlus" size={17} />{t.calendar}</a>}
+            {x.cal[s.kind] && (
+              // a webcal:// address on this site's host, which a phone's calendar subscribes to; the plain address without it
+              <a className="xq-btn2" href={x.cal[s.kind]} onClick={(e) => { e.preventDefault(); window.location.href = `webcal://${window.location.host}${x.cal[s.kind]}`; }}>
+                <XIc name="calPlus" size={17} />{t.calendar}
+              </a>
+            )}
           </div>
         )}
       </div>

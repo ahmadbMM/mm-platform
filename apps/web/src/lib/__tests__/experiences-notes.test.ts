@@ -42,7 +42,7 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); jar.account = ""; }
 describe("the Experiences booking flow's event cards", () => {
   for (const locale of ["en", "ar", "de"]) {
     it(`say the caps, never the placeholders (${locale})`, async () => {
-      const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({}) });
+      const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ ev: "community" }) });
       const flow = findAll(page, BookingFlow)[0] as ReactElement<Parameters<typeof BookingFlow>[0]>;
       const events = flow.props.events;
       expect(events.map((e) => e.key)).toEqual(expect.arrayContaining(["jcc", "event"]));
@@ -78,7 +78,7 @@ describe("the Experiences booking flow after main's yoga and Arabic names", () =
       if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/0" } });
       return json([]);
     }));
-    const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({}) });
+    const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ ev: "community" }) });
     return (findAll(page, BookingFlow)[0] as ReactElement<Parameters<typeof BookingFlow>[0]>).props;
   };
 

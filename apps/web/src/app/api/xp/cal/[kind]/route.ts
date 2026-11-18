@@ -26,12 +26,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
   const rides = await loadRides();
   const now = riyadhClock(new Date());
   const sessions = upcoming(rides?.sessions ?? [], now).filter((s) => (s.testRide ? "testride" : s.kind) === kind);
-  const host = u.host;
+  const host = u.hostname;
   const items = xpItems(sessions, {
     locale, content, now, nowMs: Date.now(), member: false, satLink: false, prices: priceMap(rides?.prices ?? []), window: siteBookingWindow(content),
     appBase: "", bookBase: localHref("/experiences", locale), facts: xs.facts,
   });
-  const name = xpExtras(items, { content, locale, host: "", calendars: false, ratings: new Map(), wa: null, gatherWord: "", startWord: "" }).x.kindName[kind] ?? kind;
+  const name = xpExtras(items, { content, locale, calendars: false, ratings: new Map(), wa: null, gatherWord: "", startWord: "" }).x.kindName[kind] ?? kind;
   const ics = icsFeed({
     name: `${name} · MicroMobility`, host,
     items: sessions.map((s, i) => {
@@ -39,7 +39,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
       return {
         id: s.id, date: s.date, name: items[i].name, gather: tm.gather, start: tm.start, end: tm.end,
         place: items[i].place && !items[i].place?.held ? items[i].place!.name : null,
-        url: `${u.protocol}//${host}${localHref("/experiences", locale)}/s/${encodeURIComponent(s.id)}${locale === "en" ? "" : `?lang=${locale}`}`,
+        url: `${u.protocol}//${u.host}${localHref("/experiences", locale)}/s/${encodeURIComponent(s.id)}${locale === "en" ? "" : `?lang=${locale}`}`,
       };
     }),
   });

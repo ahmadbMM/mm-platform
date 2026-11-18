@@ -560,7 +560,7 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
 .sc-card[aria-checked="true"] .sc-dot { background: #1a1919; border-color: #1a1919; }
 /* A card that goes elsewhere (the booking app, the Saturday ride's code page) wears an arrow at its end, never a radio dot
    (E05, 2026-11-18). */
-.sc-card.sc-out { padding-inline-end: 40px; }
+a.sc-card { padding-inline-end: 40px; }
 .sc-card .sc-go { position: absolute; inset-inline-end: 14px; top: 50%; margin-top: -8px; color: #6e6b63; }
 /* A date not open yet: a clock beside when it opens, never the grey alone (WCAG 1.4.1). */
 .sc-spots.closed::before { content: none; }

@@ -568,7 +568,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     // a Saturday ride while staff take its bookings at micromobility.sa/saturday with a ride code (2026-11-08): its card
     // goes there, for anyone with a code, member or not, as main's Experiences sends it
     // and a kind this booking has no steps for goes to the booking app on its card and this date (BookSession.handoff)
-    if (out) return <a key={s.id} href={out} className={`sc-card ev-${s.kind} sc-out${rej ? " rej" : ""}`}>{body}<Ic name="go" size={16} flip className="sc-go" /></a>;
+    if (out) return <a key={s.id} href={out} className={`sc-card ev-${s.kind}${rej ? " rej" : ""}`}>{body}<Ic name="go" size={16} flip className="sc-go" /></a>;
     return (
       <button key={s.id} type="button" className={`sc-card ev-${s.kind}${on ? " sel" : ""}${rej ? " rej" : ""}`} role="radio" aria-checked={on} tabIndex={stop ? 0 : -1} data-id={s.id} onClick={() => pick(s)}>
         {body}

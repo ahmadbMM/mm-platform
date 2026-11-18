@@ -52,6 +52,14 @@ html:is([lang="ar"], [lang="ur"]) .xq-top h1 { letter-spacing: 0; line-height: 1
 .xq-chip:focus-visible { outline: 3px solid rgba(7, 122, 75, .4); outline-offset: 2px; }
 @media (hover: hover) { .xq-chip:not(.on):hover { background: #f4f1ea; } }
 
+/* List or Calendar (EF07), the month drawn with experiences.css's .xs-cal. */
+.xq-view { display: inline-flex; gap: 4px; padding: 3px; margin: 4px 0 2px; border-radius: 999px; background: #efede6; }
+.xq-vbtn { min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: none; font: inherit; font-size: 14px; font-weight: 600; color: #4a4843; cursor: pointer; }
+.xq-vbtn.on { background: #fff; color: #1a1919; box-shadow: 0 1px 2px rgba(26, 25, 25, .12); }
+.xq-vbtn:focus-visible { outline: 3px solid rgba(7, 122, 75, .4); outline-offset: 2px; }
+.xq-list .xs-cal { margin: 10px 0 12px; }
+.xq-list .xs-cal-mk { background: var(--xq-k, #077a4b); }
+
 /* The list (EM01-B, EM03-B): days, their series blocks and rows. */
 .xq-day { margin-top: 14px; }
 .xq-dayh { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: #4a4843; letter-spacing: 0; }
@@ -66,6 +74,7 @@ html:is([lang="ar"], [lang="ur"]) .xq-top h1 { letter-spacing: 0; line-height: 1
 .xq-row-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .xq-row-start { font-size: 18px; font-weight: 700; letter-spacing: -.3px; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .xq-row-g { font-size: 12px; color: #6e6b63; line-height: 1.25; }
+.xq-nw { white-space: nowrap; }
 .xq-row-m { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .xq-row-n { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; font-size: 15px; font-weight: 700; line-height: 1.3; min-width: 0; }
 .xq-row-n .k-ic { display: inline-block; vertical-align: -2px; margin-inline-end: 6px; color: var(--xq-k, #4a4843); }

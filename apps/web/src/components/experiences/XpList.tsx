@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { fill } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
@@ -10,6 +10,7 @@ import { KindIcon } from "./KindArt";
 import { XIc } from "./sx-B5-icons";
 import XpDetail, { PriceText, statusText, statusTone, type XpExtras } from "./XpDetail";
 import "./sx-B5.css";
+import { calDayLabel, calKey, calMonth, calMonths, calMove, calOffered, calPlan, calTitle, calWeekdays } from "@/lib/reserve-calendar";
 import { NO_FILTER, chipHas, dayGroups, filterOn, filterQuery, kindsOf, lenText, seriesPlan, xpFilter, type XpFilter, type XpItem, type XpSeries, type XpWhen } from "@/lib/sx-B5";
 
 // Every session ahead in one list (EM01-B, EM03-B): chips for each kind and for Today, This week, This weekend, Women
@@ -43,6 +44,10 @@ export default function XpList({ locale, items, order, x, today, start, pageBase
   const rtl = isRtl(locale);
   const [f, setF] = useState<XpFilter>(start);
   const [selId, setSelId] = useState<string | null>(null);
+  // List, or a month with the day's sessions under it (EF07: the calendar optional, List first; lib/reserve-calendar.ts)
+  const [view, setView] = useState<"list" | "cal">("list");
+  const [calDay, setCalDay] = useState<string | null>(null);
+  const calBox = useRef<HTMLElement>(null);
   const kinds = useMemo(() => kindsOf(items, order), [items, order]);
   const shown = useMemo(() => xpFilter(items, f, today), [items, f, today]);
   // folded into series only while nothing narrows the list
@@ -88,7 +93,7 @@ export default function XpList({ locale, items, order, x, today, start, pageBase
           onClick={(e) => open(e, s.id)} aria-current={on ? "true" : undefined}>
           <span className="xq-row-t">
             <bdi className="xq-row-start">{s.start ?? ""}</bdi>
-            {s.gather && <bdi className="xq-row-g">{x.gatherWord} {s.gather}</bdi>}
+            {s.gather && <bdi className="xq-row-g">{x.gatherWord} <span className="xq-nw">{s.gather}</span></bdi>}
           </span>
           <span className="xq-row-m">
             <span className="xq-row-n"><KindIcon kind={s.kind} size={15} /><span>{s.name}</span>{s.featured && <span className="xq-feat">{t.featured}</span>}</span>
@@ -127,6 +132,66 @@ export default function XpList({ locale, items, order, x, today, start, pageBase
     </section>
   );
 
+  const calOn = calOffered(shown);
+  const plan2 = calOn && view === "cal" ? calPlan(shown, calDay, null) : null;
+  const moveMonth = (f: number, fromKey: boolean) => {
+    const to = plan2 ? calMove(plan2.days, plan2.day, f) : null;
+    if (!to) return;
+    setCalDay(to);
+    requestAnimationFrame(() => {
+      const box = calBox.current;
+      const btn = box?.querySelector<HTMLButtonElement>(f < 0 ? ".xs-cal-prev" : ".xs-cal-next");
+      if (fromKey || !btn || btn.disabled) box?.querySelector<HTMLElement>(".xs-cal-day.on")?.focus();
+    });
+  };
+  const calKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const d = (e.target as HTMLElement).closest<HTMLButtonElement>(".xs-cal-day.has");
+    if (!d) return;
+    if (e.key === "PageUp" || e.key === "PageDown") { e.preventDefault(); moveMonth(e.key === "PageUp" ? -1 : 1, true); return; }
+    const all = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>(".xs-cal-day.has"));
+    const to = calKey(all.map((x) => x.dataset.day ?? ""), d.dataset.day ?? "", e.key, rtl);
+    if (to === undefined) return;
+    e.preventDefault();
+    const n = to ? all.find((x) => x.dataset.day === to) : undefined;
+    if (!n) return;
+    d.tabIndex = -1;
+    n.tabIndex = 0;
+    n.focus();
+  };
+  // the month, weeks from Sunday (Friday and Saturday the weekend), a dot per kind on a day with sessions, today ringed
+  const month = (p: NonNullable<typeof plan2>) => {
+    const ym = p.day.slice(0, 7), months = calMonths(p.days), mi = months.indexOf(ym), m = calMonth(ym);
+    return (
+      <div className="xs">
+        <section className="xs-cal" ref={calBox} aria-labelledby="xq-cal-t">
+          <div className="xs-cal-head">
+            <button type="button" className="xs-cal-nav xs-cal-prev" aria-label={x.calWords.prev} disabled={mi <= 0} onClick={() => moveMonth(-1, false)}><XIc name={rtl ? "go" : "back"} size={18} /></button>
+            <h3 id="xq-cal-t" className="xs-cal-t" aria-live="polite">{calTitle(ym, locale)}</h3>
+            <button type="button" className="xs-cal-nav xs-cal-next" aria-label={x.calWords.next} disabled={mi >= months.length - 1} onClick={() => moveMonth(1, false)}><XIc name={rtl ? "back" : "go"} size={18} /></button>
+          </div>
+          <div className="xs-cal-grid" onKeyDown={calKeyDown}>
+            <div className="xs-cal-dows" aria-hidden="true">{calWeekdays(locale).map((w, i) => <span key={i} className="xs-cal-dow">{w}</span>)}</div>
+            {Array.from({ length: m.lead }, (_, i) => <span key={`p${i}`} className="xs-cal-pad" />)}
+            {m.days.map((iso) => {
+              const l = p.by.get(iso), n = Number(iso.slice(8));
+              const cl = `${iso === today ? " today" : ""}${iso < today ? " past" : ""}`;
+              if (!l) return <span key={iso} className={`xs-cal-day${cl}`}>{n}</span>;
+              const on = iso === p.day, fb = l.every((s) => s.status?.k === "fbk");
+              return (
+                <button key={iso} type="button" className={`xs-cal-day has${cl}${on ? " on" : ""}${fb ? " fb" : ""}`} data-day={iso} aria-pressed={on}
+                  aria-label={calDayLabel(iso, locale, l.map((s) => ({ name: s.name, fbk: s.status?.k === "fbk" ? b.fbk : undefined })), { held: { ok: "", wl: "", rsv: "" }, fbk: b.fbk })}
+                  tabIndex={on ? 0 : -1} onClick={() => setCalDay(iso)}>
+                  {n}
+                  <span className="xs-cal-marks" aria-hidden="true">{[...new Set(l.map((s) => s.kind))].slice(0, 3).map((k) => <i key={k} className={`xs-cal-mk ev-${k}`} />)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+    );
+  };
+
   if (!items.length) return <p className="xq-empty">{empty}</p>;
   return (
     <div className="xq-split">
@@ -146,7 +211,17 @@ export default function XpList({ locale, items, order, x, today, start, pageBase
             {(chipHas(items, { ...f, kids: true }, today) || f.kids) && chip(f.kids, t.kids, () => setF({ ...f, kids: !f.kids }), "kids")}
           </div>
         </div>
-        {!shown.length ? (
+        {calOn && (
+          <div className="xq-view" role="group" aria-label={x.calWords.view}>
+            {(["list", "cal"] as const).map((v) => <button key={v} type="button" className={`xq-vbtn${view === v ? " on" : ""}`} aria-pressed={view === v} onClick={() => setView(v)}>{v === "list" ? x.calWords.list : x.calWords.cal}</button>)}
+          </div>
+        )}
+        {plan2 ? (
+          <>
+            {month(plan2)}
+            <ul className="xq-rows" role="list">{plan2.list.map(row)}</ul>
+          </>
+        ) : !shown.length ? (
           <div className="xq-empty"><p>{t.noMatch}</p><button type="button" className="xq-btn2" onClick={() => setF(NO_FILTER)}>{t.showAll}</button></div>
         ) : days.map((d) => {
           const first = d.rows[0] ?? d.series[0]?.next[0];

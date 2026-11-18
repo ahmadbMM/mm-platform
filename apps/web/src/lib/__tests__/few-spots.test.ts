@@ -58,7 +58,7 @@ type Props = Parameters<typeof ExperienceSteps>[0];
 const experiences = async (sessions: unknown[], locale = "en") => {
   resetRides();
   vi.stubGlobal("fetch", db(sessions));
-  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({}) });
+  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ ev: "community" }) });
   const props = (findAll(page, ExperienceSteps)[0] as ReactElement<Props>).props;
   return { props, dates: props.events.flatMap((e) => e.sessions) };
 };
@@ -185,7 +185,7 @@ describe("automatic (bike_slots._fewAt)", () => {
     rows = list; resetRides();
     const f = taken(by);
     vi.stubGlobal("fetch", f);
-    const p = await ExperiencesPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) });
+    const p = await ExperiencesPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({ ev: "community" }) });
     const props = (findAll(p, ExperienceSteps)[0] as ReactElement<Props>).props;
     const heads = f.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === "HEAD").map((c) => String(c[0]));
     return { by: Object.fromEntries(props.events.flatMap((e) => e.sessions).map((s) => [s.id, s])), heads };
@@ -261,7 +261,7 @@ describe("staging's booking flow (BookingFlow)", () => {
       if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": `0-0/${taken[/session_id=eq\.([^&]+)/.exec(url)?.[1] ?? ""] ?? 0}` } });
       return json([]);
     }));
-    const page = await ExperiencesPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) });
+    const page = await ExperiencesPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({ ev: "community" }) });
     const props = (findAll(page, BookingFlow)[0] as ReactElement<FlowProps>).props;
     return { props, by: Object.fromEntries(props.events.flatMap((e) => e.sessions).map((s) => [s.id, s])) };
   };

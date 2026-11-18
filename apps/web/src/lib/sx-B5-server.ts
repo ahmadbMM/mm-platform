@@ -28,7 +28,6 @@ import { sunriseHhmm } from "@/lib/kind-theme";
 import { memo } from "@/lib/memo";
 import { communityMember, getAccount, rpcServer } from "@/lib/account";
 import { cache } from "react";
-import { headers } from "next/headers";
 import { pageState } from "@/lib/page-state";
 import { loadRides, upcoming } from "@/lib/rides";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -254,7 +253,7 @@ export const feedKind = (k: string): boolean => /^[a-z0-9]{2,20}$/.test(k) && !N
 /** Each kind's name on its chip (short where the booking app has a short one), the words for the gathering and the
  *  start, each kind's calendar address (webcal, on this site's host), its average rating, and the WhatsApp number. */
 export function xpExtras(items: readonly XpItem[], o: {
-  content: SiteContent | null; locale: string; host: string; calendars: boolean; ratings: Map<string, { avg: number; n: number }>;
+  content: SiteContent | null; locale: string; calendars: boolean; ratings: Map<string, { avg: number; n: number }>;
   wa: string | null; gatherWord: string; startWord: string;
 }): { order: string[]; x: import("@/components/experiences/XpDetail").XpExtras } {
   const L = asLocale(o.locale);
@@ -262,20 +261,24 @@ export function xpExtras(items: readonly XpItem[], o: {
   const page = resolvePage(experiencesSchema, o.content, L);
   const kw = kindThemeWords(o.locale);
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  const names: Record<string, string> = {
-    ...kindNames(page.dates as Record<string, unknown>), saturday: kw.kinds.saturday, swim: kw.kinds.swim, petromin: kw.kinds.petromin,
-    jcc: S((page.events as Record<string, unknown>).jccTitle) || kindNames(page.dates as Record<string, unknown>).jcc,
-    blood: bloodName(tx), farm: farmWords(tx).name, testride: tx("Test rides", "تجربة الدراجات"),
-  };
   const kinds = [...new Set(items.map((s) => s.kind))];
+  // only the kinds on the list are named: the Blood Donation event and the Farm House Night by the server's own words,
+  // and neither names itself to a page without one of its dates (content/blood-words.ts, lib/farm.ts)
+  const all: Record<string, () => string> = {
+    saturday: () => kw.kinds.saturday, swim: () => kw.kinds.swim, petromin: () => kw.kinds.petromin,
+    jcc: () => S((page.events as Record<string, unknown>).jccTitle) || kindNames(page.dates as Record<string, unknown>).jcc,
+    blood: () => bloodName(tx), farm: () => farmWords(tx).name, testride: () => tx("Test rides", "تجربة الدراجات"),
+  };
+  const dn = kindNames(page.dates as Record<string, unknown>) as Record<string, string>;
   // a kind without a name of its own is named by its first date
-  for (const k of kinds) if (!names[k]) names[k] = items.find((s) => s.kind === k)?.name ?? k;
+  const names: Record<string, string> = Object.fromEntries(kinds.map((k) => [k, all[k]?.() || dn[k] || items.find((s) => s.kind === k)?.name || k]));
   const lang = o.locale;
   return {
     order: XP_ORDER,
     x: {
-      kindName: names, gatherWord: o.gatherWord, startWord: o.startWord, wa: o.wa,
-      cal: o.calendars && o.host ? Object.fromEntries(kinds.filter(feedKind).map((k) => [k, `webcal://${o.host}/api/xp/cal/${k}?lang=${encodeURIComponent(lang)}`])) : {},
+      kindName: names, gatherWord: o.gatherWord, startWord: o.startWord, wa: o.wa, calWords: kw.cal,
+      // the feed's path on this site: the page makes it a webcal:// address on its own host when tapped
+      cal: o.calendars ? Object.fromEntries(kinds.filter(feedKind).map((k) => [k, `/api/xp/cal/${k}?lang=${encodeURIComponent(lang)}`])) : {},
       rating: Object.fromEntries([...o.ratings].filter(([k]) => kinds.includes(k))),
     },
   };
@@ -308,15 +311,17 @@ export const xpSession = cache(async (locale: string, id: string) => {
     bookBase: localHref("/experiences", locale), facts: xs.facts,
   };
   const [item] = await withWeather(xpItems([s], ctx), xs.general.weatherDays, nowMs);
-  const [ratings, host] = await Promise.all([xpRatings(xs.general.ratingMin), headers().then((h) => h.get("host") ?? "")]);
+  const ratings = await xpRatings(xs.general.ratingMin);
   const d = resolvePage(experiencesSchema, content, L).dates as Record<string, unknown>;
   const S = (v: unknown) => (typeof v === "string" ? v : "");
   const social = (site as unknown as { social?: Record<string, unknown> }).social ?? {};
-  const ex = xpExtras([item], { content, locale, host, calendars: xs.general.calendars, ratings, wa: xs.general.privateOn ? waNumber(S(social.whatsapp)) : null, gatherWord: S(d.gather), startWord: S(d.start) });
+  const ex = xpExtras([item], { content, locale, calendars: xs.general.calendars, ratings, wa: xs.general.privateOn ? waNumber(S(social.whatsapp)) : null, gatherWord: S(d.gather), startWord: S(d.start) });
   return { ...base, item, x: ex.x };
 });
 
-/** The share picture of a kind's sessions (EF33): its drawing, its mark and its name, made once (scripts kept in the
- *  build's notes); the site's own for a kind without one. */
+/** The share picture of a kind's sessions (EF33): its drawing or tint, its drawn mark and the logo, no words (the link's
+ *  title carries the session's name and date in the reader's language); 1200 by 630 JPEGs in public/site/experiences/og,
+ *  drawn once from experiences.css's art and KindArt.tsx's marks. The site's own picture for a kind without one (a
+ *  Petromin night and the Farm House Night, whose pages only some visitors see). */
 const OG_KINDS: ReadonlySet<string> = new Set(["saturday", "jcc", "swim", "workshop", "event", "snd96", "runher", "defe5k", "vlap", "arena", "blood", "yoga", "testride"]);
-export const ogImageOf = (kind: string): string | undefined => (OG_KINDS.has(kind) ? `/site/experiences/og/${kind}.png` : undefined);
+export const ogImageOf = (kind: string): string | undefined => (OG_KINDS.has(kind) ? `/site/experiences/og/${kind}.jpg` : undefined);
