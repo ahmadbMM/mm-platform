@@ -32,6 +32,7 @@ export const T = {
     forRide: "For this ride",
     manage: "Manage booking",
     seeTicket: "See my ticket",
+    xpKind: "Experiences",
     // the official Wallet buttons' names (the artwork says them; these are for a screen reader and the plain buttons)
     appleAdd: "Add to Apple Wallet",
     googleAdd: "Save to Google Wallet",
@@ -101,6 +102,7 @@ export const T = {
     forRide: "لهذه الرحلة",
     manage: "إدارة الحجز",
     seeTicket: "عرض تذكرتي",
+    xpKind: "التجارب",
     appleAdd: "إضافة إلى Apple Wallet",
     googleAdd: "الحفظ في Google Wallet",
     passBusy: "جارٍ إعداد البطاقة…",

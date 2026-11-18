@@ -28,6 +28,8 @@ import { T, type BookingText } from "./Booking.text";
 import { T as SX } from "./sx-B6.text";
 import PartyStepper from "./PartyStepper";
 import BookedExtras from "./BookedExtras";
+import XpPacks, { PackUse } from "./XpPacks";
+import GiftNote from "./GiftNote";
 import { useKeyboardUp } from "./useKeyboardUp";
 import { datesLive, earlyPct, lessPct, partyOf, refundLine, riderDone, setParty, type PartyRider, type SxFlow } from "@/lib/sx-b6";
 
@@ -774,6 +776,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           </div>
         )}
         {sel?.community && isFull(sel) && <p className="bk-note bk-full"><span className="bk-full-dot" aria-hidden="true" />{t.fullNote}</p>}
+        {/* EF21: packs of sessions staff sell for this event's kinds of ride (none: nothing drawn) */}
+        {sx && sx.packs.length > 0 && <XpPacks packs={sx.packs.filter((p) => ev.sessions.some((x) => x.kind === p.kind))} signedIn={!!acctNow} onSignIn={() => setModal({ kind: "signin" })} locale={locale} />}
         {ev.sessions.some((s) => s.members) && text.membersNote && <p className="xs-note">{text.membersNote}{links.club && <> <a href={links.club}>{text.clubLink}</a></>}</p>}
         {bar(1, (
           <>
@@ -1024,6 +1028,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
             </>
           )}
           {promoBox("review")}
+          {/* EF21: a session from the rider's own pack, put in as the code */}
+          {acctNow && !free && !promo && <PackUse kind={sel.kind} busy={promoBusy} onUse={(c) => { setPromoOpen(true); void applyPromo(c); }} />}
         </div>
         <div className="bk-card">
           {addonTotal > 0 && (
@@ -1100,6 +1106,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const wide = !done && !!ev && !!sel && step !== 1;
   return (
     <div className={`xs bk${rtl ? " rtl" : ""}`} ref={top}>
+      {!done && <GiftNote typeName={pillName} />}
       {wide ? <div className="bk-layout"><div className="bk-main">{body}</div>{side()}</div> : body}
       {modal && <Pop modal={modal} close={() => setModal(null)} t={t} links={links} locale={locale} sel={sel} acct={acctNow} pay={pay}
         onGone={(wl) => {

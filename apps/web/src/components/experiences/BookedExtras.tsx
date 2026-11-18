@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
+import { Link } from "@/i18n/navigation";
 import { kitFor, type KitItem, type SxFlow } from "@/lib/sx-b6";
 import { Ic } from "./BookIcons";
 import GiftRide from "./GiftRide";
@@ -38,11 +39,11 @@ export default function BookedExtras({ locale, kind, start, sx, manage, until, p
           <ul>
             {kit.map((p) => (
               <li key={p.slug}>
-                <a href={`/store/${p.slug}`}>
+                <Link href={`/store/${p.slug}`}>
                   {p.photo ? <img src={p.photo} alt="" width={56} height={56} loading="lazy" decoding="async" /> : <span className="sx6-kit-ph" aria-hidden="true"><Ic name="bike" size={22} /></span>}
                   <span>{p.name}</span>
                   <Ic name="go" size={16} flip />
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

@@ -3,7 +3,8 @@
 import type { SiteContent } from "./site";
 import { discountLicence, loadStore, storeOpen } from "./store";
 import { SITE_URL } from "./seo";
-import { KIT_NAMES, kitPick, xpSettings, type SxFlow } from "./sx-b6";
+import { KIT_NAMES, kitPick, packsOf, xpSettings, type SxFlow } from "./sx-b6";
+import { rpcServer } from "./account";
 import { payReady } from "./pay/config";
 import { paySettings } from "./pay/settings";
 
@@ -31,5 +32,9 @@ export async function sxFlow(content: SiteContent | null | undefined, locale: st
       kit = { night: byEn(settings.kit.night, KIT_NAMES.night), saturday: byEn(settings.kit.saturday, KIT_NAMES.saturday) };
     } catch { /* no kit */ }
   }
-  return { settings, kit, origin: SITE_URL };
+  // EF21: the packs staff sell, only where payments are on; none while the database has no packs (or no function)
+  const packs = paySettings(content).enabled && payReady()
+    ? await rpcServer<unknown[]>("xp_packs_list", {}).then((r) => (r.status === 200 ? packsOf(r.data, locale) : []), () => [])
+    : [];
+  return { settings, kit, origin: SITE_URL, packs };
 }

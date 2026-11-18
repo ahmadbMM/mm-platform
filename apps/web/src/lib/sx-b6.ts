@@ -139,7 +139,7 @@ export function xpSettings(content: Record<string, unknown> | null | undefined, 
 }
 /** What the Experiences page hands the booking flow (app/[locale]/experiences/page.tsx, lib/sx-b6-server.ts): the
  *  settings, the kit each kind of ride links on its confirmation, and this site's address for links shared out. */
-export type SxFlow = { settings: XpSettings; kit: { night: KitItem[]; saturday: KitItem[] }; origin: string };
+export type SxFlow = { settings: XpSettings; kit: { night: KitItem[]; saturday: KitItem[] }; origin: string; packs: Pack[] };
 /** EF29: the early-bird share off a date, or 0: the kind is one staff named and the date is far enough ahead. */
 export function earlyPct(e: EarlyBird | null, kind: string, date: string, today: string): number {
   if (!e || !e.kinds.includes(kind)) return 0;
