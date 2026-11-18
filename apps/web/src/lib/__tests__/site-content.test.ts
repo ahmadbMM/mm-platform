@@ -117,7 +117,9 @@ describe("page switches", () => {
     expect(pageOn(on, "help")).toBe(false);
     expect(pageOn(on, "workshop")).toBe(false); // only an explicit true, as the staff page reads it
     expect(pageOn(null, "club")).toBe(false);
-    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal", "account", "terms", "bikes"]);
+    // and the testimonials while their launch switch is off (lib/testimonials.ts)
+    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal", "account", "terms", "bikes", "testimonials"]);
+    expect(hiddenPages({ ...on, "testimonials.on": true })).not.toContain("testimonials");
   });
   it("knows which addresses belong to a switched page", () => {
     expect(switchedPageOf("/club")).toBe("club");

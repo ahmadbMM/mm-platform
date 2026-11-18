@@ -716,13 +716,13 @@ export function stepAt(ids: readonly number[], held: { id: number | null; index:
 export const ASK_BACK_COOKIE = "mm_ask_back";
 export const ASK_BACK_MAX_AGE = 1800;
 export const ASK_BACK_PATH = "/api/account/handoff";
-/** The address to land on, from the cookie's value: /ask or /ask/<slug>, and nothing else - never an address the
- *  cookie makes up. */
+/** The address to land on, from the cookie's value: /ask or /ask/<slug>, or /testimonials/write (which notes itself in
+ *  the same cookie, components/testimonials/TmSignIn.tsx), and nothing else - never an address the cookie makes up. */
 export function askBack(value: string | null | undefined): string | null {
   if (!value) return null;
   let v = value;
   try { v = decodeURIComponent(value); } catch { return null; }
-  if (v === "/ask") return v;
+  if (v === "/ask" || v === "/testimonials/write") return v;
   const m = /^\/ask\/([a-z0-9-]{3,40})$/.exec(v);
   return m && askSlugOk(m[1]) ? v : null;
 }

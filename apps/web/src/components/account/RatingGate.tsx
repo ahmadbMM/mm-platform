@@ -10,8 +10,11 @@ import RatingForm from "./RatingForm";
 import { ratingWords } from "./RatingForm.words";
 import { ratingFinWords } from "./RatingFin.words";
 import { signOut } from "./quiet";
+import RatingTestimonial, { askTestimonial } from "@/components/testimonials/RatingTestimonial";
+import "@/components/testimonials/testimonials.css";
 import { challengeName, hubMarks, type Fin } from "@/lib/hub";
 import type { RatingForm as Form } from "@/lib/rating";
+import { isAbout, type TmAbout, type TmMine } from "@/lib/testimonials";
 
 // The post-ride rating as a page the rider cannot skip, as the booking app shows it (2026-10-03):
 // once a ride is checked out or its bike returned, the next time the rider opens My Account this
@@ -29,7 +32,12 @@ import type { RatingForm as Form } from "@/lib/rating";
 // or not, sees that path in place of the month's challenge (five marks, "2 of 5" in the page's own words), with Book
 // your next ride (Experiences, nothing chosen) when nothing is booked ahead, before a filled Community, which is then
 // outlined; a non-member's screen has no Community button.
-type Props = { entryId: string; name: string; when: string; form: Form; noBike: boolean; restaurant?: string | null; rgLow?: number; run?: boolean; session?: boolean; onDone?: () => void };
+// Testimonials (2026-11-18, the booking app's ask after a high rating): a rating whose headline score is 9 or 10, while
+// the launch switch is on, first offers to share it as a testimonial (components/testimonials/RatingTestimonial.tsx) in
+// the same pop-up - skippable with "Not now" - and then the last screen, if any, as before. `about`: what the booking
+// was (pending-rating, lib/testimonials.ts tmAboutOfKind).
+type Props = { entryId: string; name: string; when: string; form: Form; noBike: boolean; restaurant?: string | null; rgLow?: number; run?: boolean; session?: boolean; about?: string; onDone?: () => void };
+type TmStep = { mine: TmMine; score: number; note: string; fin: Fin | null };
 
 const FIN_KINDS = new Set(["badge", "me", "goal", "p5"]);
 /** The last screen for this rating, or null: nothing to show, or no answer within eight seconds. */
@@ -57,7 +65,7 @@ function FinProgress({ n, tg, labelledBy, of }: { n: number; tg: number; labelle
   );
 }
 
-export default function RatingGate({ entryId, name, when, form, noBike, restaurant, rgLow, run, session, onDone }: Props) {
+export default function RatingGate({ entryId, name, when, form, noBike, restaurant, rgLow, run, session, about, onDone }: Props) {
   const locale = useTxLocale();
   const t = ratingWords(locale), fw = ratingFinWords(locale);
   // a run says run, a session without a bike says session, a ride says ride (lib/rating.ts rideWord)
@@ -67,20 +75,22 @@ export default function RatingGate({ entryId, name, when, form, noBike, restaura
   const [thanks, setThanks] = useState("");
   const [out, setOut] = useState(false);
   const [fin, setFin] = useState<Fin | null>(null);
+  const [tm, setTm] = useState<TmStep | null>(null);
   const later = useRef(0); // the thank-you's timer, cleared if the pop-up goes first
   const live = useRef(true);
   useEffect(() => { live.current = true; return () => { live.current = false; window.clearTimeout(later.current); }; }, []);
   const finish = () => (onDone ? onDone() : router.refresh());
-  // the thank-you for 1.2 seconds at least, while the last screen is asked for; then that screen, or the pop-up goes
-  const rated = (thx: string) => {
+  // the thank-you for 1.2 seconds at least, while the last screen is asked for (and, after a 9 or 10, whether to ask for a
+  // testimonial); then the testimonial step, else that screen, else the pop-up goes
+  const rated = (thx: string, sent: { score: number; note: string }) => {
     setThanks(thx);
     const from = Date.now();
-    void askFin(entryId, locale).then((f) => {
+    void Promise.all([askFin(entryId, locale), askTestimonial(sent.score)]).then(([f, mine]) => {
       if (!live.current) return;
-      later.current = window.setTimeout(() => (f ? setFin(f) : finish()), Math.max(0, 1200 - (Date.now() - from)));
+      later.current = window.setTimeout(() => (mine ? setTm({ mine, score: sent.score, note: sent.note, fin: f }) : f ? setFin(f) : finish()), Math.max(0, 1200 - (Date.now() - from)));
     });
   };
-  useEffect(() => { if (fin) box.current?.focus({ preventScroll: true }); }, [fin]);
+  useEffect(() => { if (fin || tm) box.current?.focus({ preventScroll: true }); }, [fin, tm]);
 
   useEffect(() => {
     const el = box.current;
@@ -104,6 +114,17 @@ export default function RatingGate({ entryId, name, when, form, noBike, restaura
     setOut(true);
     signOut();
   };
+
+  if (tm) {
+    const next = () => { const f = tm.fin; setTm(null); if (f) setFin(f); else finish(); };
+    return (
+      <div className="rg-gate">
+        <div ref={box} className="rg-box tm-ask-box" role="dialog" aria-modal="true" aria-labelledby={`rg-title-${entryId}`} tabIndex={-1}>
+          <RatingTestimonial entryId={entryId} about={(isAbout(about) ? about : "other") as TmAbout} score={tm.score} note={tm.note} mine={tm.mine} headId={`rg-title-${entryId}`} onDone={next} />
+        </div>
+      </div>
+    );
+  }
 
   if (fin) {
     const title = fin.k === "me" ? challengeName(fin.kind, fin.tg, fw) : fin.k === "p5" ? fw.p5 : fin.name;
@@ -136,7 +157,7 @@ export default function RatingGate({ entryId, name, when, form, noBike, restaura
           <p className="rr-thanks" role="status">{thanks}</p>
         ) : (
           <RatingForm entryId={entryId} form={form} noBike={noBike} restaurant={restaurant} rgLow={rgLow} run={run} session={session}
-            onRated={(w) => rated(w.thanks)}
+            onRated={(w, sent) => rated(w.thanks, sent)}
             footer={<button type="button" className="rg-out" onClick={leave} disabled={out}>{t.signOut}</button>} />
         )}
       </div>

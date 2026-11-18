@@ -1,4 +1,5 @@
 import { edgeStore, memo, resetMemo } from "./memo";
+import { testimonialsOn } from "./testimonials";
 
 // The public website's launch state. micromobility.sa is controlled from the staff page
 // (owner, 2026-09-24): its Website section writes public.site_content, and this file reads it.
@@ -92,9 +93,13 @@ export function hiddenPageTarget(pathname: string, content: SiteContent | null):
   return pathname.match(/^\/(?:en|ar)(?=\/)/)?.[0] ?? "/";
 }
 
-/** The switched pages a visitor does not see, for the menus. */
-export function hiddenPages(content: SiteContent | null): SwitchedPage[] {
-  return SWITCHED_PAGES.filter((p) => !pageOn(content, p));
+/** The switched pages a visitor does not see, for the menus. Testimonials too, while their launch switch is off
+ *  (site_content 'testimonials.on', lib/testimonials.ts): left out of the header, the search, the footer and My
+ *  Account's shortcuts like a page staff have not switched on - but never sent to Home, since the page opens by its
+ *  link whatever the switch says (it is not one of SWITCHED_PAGES). */
+export function hiddenPages(content: SiteContent | null): string[] {
+  const off: string[] = SWITCHED_PAGES.filter((p) => !pageOn(content, p));
+  return testimonialsOn(content) ? off : [...off, "testimonials"];
 }
 
 /** Closed unless Home exists AND staff have explicitly switched Coming Soon off. */

@@ -31,8 +31,9 @@ type Props = {
   run?: boolean;
   /** A session without a bike that is not a run (lib/rating.ts rideWord "session"): the thank-you says session. */
   session?: boolean;
-  /** Called once the rating has landed. */
-  onRated: (t: RatingWords) => void;
+  /** Called once the rating has landed, with the headline score sent (a Saturday's overall, any other ride's service)
+   *  and the comment: a 9 or 10 may be shared as a testimonial (components/testimonials/RatingTestimonial.tsx). */
+  onRated: (t: RatingWords, sent: { score: number; note: string }) => void;
   /** Under the send button: the gate's sign-out. */
   footer?: ReactNode;
 };
@@ -107,7 +108,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, r
         body: JSON.stringify({ entryId, form, s: sent, why: reasons, skipBf: form === "social" && skipBf, note: note.trim() }),
       });
       const b = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (b.ok) { onRated(run ? { ...t, thanks: t.run.thanks } : session ? { ...t, thanks: t.session.thanks } : t); return; }
+      if (b.ok) { onRated(run ? { ...t, thanks: t.run.thanks } : session ? { ...t, thanks: t.session.thanks } : t, { score: sent.overall ?? sent.service ?? 0, note: note.trim() }); return; }
       setFail(t.errors[(b.error || "") as keyof RatingWords["errors"]] || t.errors.generic);
     } catch {
       setFail(t.errors.generic);

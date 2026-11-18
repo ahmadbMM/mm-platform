@@ -7,6 +7,7 @@ import { LOCALES } from "@/i18n/locales";
 import { SITE_URL, langPath, languageAlternates } from "@/lib/seo";
 import { SWITCHED_PAGES, loadJournalContent, pageOn } from "@/lib/site";
 import { pageState } from "@/lib/page-state";
+import { tmSitemapPaths } from "@/lib/testimonials";
 import { loadCatalog, modelPath, subtypesOf, topCategories } from "@/lib/catalog";
 
 // micromobility.sa/sitemap.xml: every page a visitor can open, in every language. Addresses carry
@@ -15,7 +16,8 @@ import { loadCatalog, modelPath, subtypesOf, topCategories } from "@/lib/catalog
 // Empty while the site is Coming Soon; afterwards it lists Home, the Privacy Notice, the pages
 // staff have switched on (not the account page, which is private), the Learn to ride sign-up
 // while Experiences is on and staff offer lessons, the Journal's articles and the bike
-// catalogue's categories, sub-types and models (never the fleet's tag pages).
+// catalogue's categories, sub-types and models (never the fleet's tag pages), and the published testimonials once their
+// launch switch is on (lib/testimonials.ts; never the page where one is written).
 const PRIVATE = new Set(["account"]);
 // Read on every request, as robots.ts is: a sitemap built once kept the build's pages, articles and
 // models (or the Coming Soon empty list) until the next deploy.
@@ -26,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (closed) return [];
   const paths = ["/", "/privacy", ...SWITCHED_PAGES.filter((p) => !PRIVATE.has(p) && pageOn(content, p)).map((p) => `/${p}`)];
   if (pageOn(content, "experiences") && resolvePage(experiencesSchema, content, "en").learn.on) paths.push("/experiences/learn");
+  paths.push(...tmSitemapPaths(content));
   // Addresses that exist in some languages only: an article staff wrote in English alone is not on
   // the Arabic Journal (lib/journal.ts toPosts), so its Arabic address is neither listed nor named.
   const missing = new Map<string, string[]>();
