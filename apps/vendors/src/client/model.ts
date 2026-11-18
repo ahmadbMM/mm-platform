@@ -263,12 +263,16 @@ export const SHARED_LABEL: Record<SharedKey, Key> = {
 };
 
 /** The riders' breakfast ratings MicroMobility chose to share with the venue (vendor_shared_ratings_mine):
- *  averages out of 10 and comments, never a name. */
+ *  averages out of 10 and comments, never a name. Since the shorter Saturday rating (2026-11-18, rentals
+ *  migration 20261119170000) the restaurant, atmosphere, food and service are asked only of a rider who
+ *  scored the breakfast low, so such a part has no average (it would be the unhappy riders' alone) and
+ *  `lows` says how many scored it low instead. Shares made before have no lows. */
 export type SharedRatings = {
   booking_id: number;
   day: Iso;
   riders: number;
   averages: Partial<Record<SharedKey, number>>;
+  lows?: Partial<Record<SharedKey, number>>;
   comments: { k: string; text: string }[];
   shared_at: string;
 };
@@ -291,6 +295,19 @@ export function sharedScores(s: SharedRatings): { key: SharedKey; label: Key; va
     const v = a[key];
     if (typeof v !== "number" || !Number.isFinite(v)) continue;
     out.push({ key, label: SHARED_LABEL[key], value: Math.min(10, Math.max(1, Math.round(v * 10) / 10)) });
+  }
+  return out;
+}
+
+/** The parts riders scored low that have no average, in question order: a whole count of 1 or more each. */
+export function sharedLows(s: SharedRatings): { key: SharedKey; label: Key; n: number }[] {
+  const a = s.averages && typeof s.averages === "object" ? s.averages : {};
+  const l = s.lows && typeof s.lows === "object" ? s.lows : {};
+  const out: { key: SharedKey; label: Key; n: number }[] = [];
+  for (const key of SHARED_KEYS) {
+    const n = l[key];
+    if (key === "breakfast" || typeof a[key] === "number" || typeof n !== "number" || !Number.isInteger(n) || n < 1) continue;
+    out.push({ key, label: SHARED_LABEL[key], n });
   }
   return out;
 }

@@ -9,6 +9,7 @@ type Forms = Partial<Record<Intl.LDMLPluralRule, string>> & { other: string };
 const en = {
   ridersBooked: { one: "1 rider booked", other: "{n} riders booked" },
   srRiders: { one: "1 rider rated the breakfast", other: "{n} riders rated the breakfast" },
+  srLow: { one: "{label}: 1 rider gave it a low score", other: "{label}: {n} riders gave it a low score" },
   fbBanner: { one: "1 breakfast is waiting for your feedback.", other: "{n} breakfasts are waiting for your feedback." },
   datesRequested: { one: "Requested 1 date.", other: "Requested {n} dates." },
   datesCancelled: { one: "Cancelled 1 date.", other: "Cancelled {n} dates." },
@@ -24,6 +25,7 @@ export type PluralKey = keyof typeof en;
 const ar: Record<PluralKey, Forms> = {
   ridersBooked: { zero: "لا يوجد درّاجون مسجّلون", one: "درّاج واحد مسجّل", two: "درّاجان مسجّلان", few: "{n} درّاجين مسجّلين", many: "{n} درّاجًا مسجّلًا", other: "{n} درّاج مسجّل" },
   srRiders: { one: "قيّم درّاج واحد الفطور", two: "قيّم درّاجان الفطور", few: "قيّم {n} درّاجين الفطور", many: "قيّم {n} درّاجًا الفطور", other: "قيّم {n} درّاج الفطور" },
+  srLow: { one: "{label}: أعطاه درّاج واحد درجة منخفضة", two: "{label}: أعطاه درّاجان درجة منخفضة", few: "{label}: أعطاه {n} درّاجين درجة منخفضة", many: "{label}: أعطاه {n} درّاجًا درجة منخفضة", other: "{label}: أعطاه {n} درّاج درجة منخفضة" },
   fbBanner: { one: "لديك موعد فطور واحد بانتظار ملاحظاتك.", two: "لديك موعدا فطور بانتظار ملاحظاتك.", few: "لديك {n} مواعيد فطور بانتظار ملاحظاتك.", many: "لديك {n} موعدًا للفطور بانتظار ملاحظاتك.", other: "لديك {n} موعد فطور بانتظار ملاحظاتك." },
   datesRequested: { one: "طلبت تاريخًا واحدًا.", two: "طلبت تاريخين.", few: "طلبت {n} تواريخ.", many: "طلبت {n} تاريخًا.", other: "طلبت {n} تاريخ." },
   datesCancelled: { one: "أُلغي تاريخ واحد.", two: "أُلغي تاريخان.", few: "أُلغيت {n} تواريخ.", many: "أُلغي {n} تاريخًا.", other: "أُلغي {n} تاريخ." },

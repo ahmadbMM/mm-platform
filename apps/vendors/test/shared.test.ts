@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { barClasses, commentGroups, scoreText, sharedByBooking, sharedScores, type SharedRatings } from "../src/client/model";
+import { barClasses, commentGroups, scoreText, sharedByBooking, sharedLows, sharedScores, type SharedRatings } from "../src/client/model";
+import { plural } from "../src/client/plurals";
 import { fmt, STRINGS } from "../src/client/strings";
 
 const entry = (over: Partial<SharedRatings> = {}): SharedRatings => ({
@@ -23,6 +24,20 @@ describe("what riders said", () => {
     ]);
     expect(sharedScores(entry({ averages: { bf_food: 12, bf_service: 0.2, bf_restaurant: Number.NaN } })).map((x) => x.value)).toEqual([10, 1]);
     expect(sharedScores(entry({ averages: null as unknown as SharedRatings["averages"] }))).toEqual([]);
+  });
+
+  it("says how many scored a part low where the part has no average (the shorter Saturday rating, 2026-11-18)", () => {
+    const s = entry({ averages: { breakfast: 9.4, bf_service: 8 }, lows: { bf_food: 2, bf_restaurant: 1, bf_atmosphere: 0, bf_service: 3, breakfast: 4 } });
+    // in question order; an averaged part, the breakfast itself and a zero are left out
+    expect(sharedLows(s)).toEqual([
+      { key: "bf_restaurant", label: "srRestaurant", n: 1 },
+      { key: "bf_food", label: "srFood", n: 2 },
+    ]);
+    expect(sharedLows(entry())).toEqual([]); // a share from before has no lows
+    expect(sharedLows(entry({ lows: { bf_food: 1.5, bf_service: "2" as unknown as number } }))).toEqual([]);
+    expect(plural("en", "srLow", 2, { label: fmt("en", "srFood") })).toBe("Food: 2 riders gave it a low score");
+    expect(plural("en", "srLow", 1, { label: fmt("en", "srFood") })).toBe("Food: 1 rider gave it a low score");
+    expect(plural("ar", "srLow", 3, { label: fmt("ar", "srFood") })).toBe("الطعام: أعطاه 3 درّاجين درجة منخفضة");
   });
 
   it("sizes the bar with two classes, never an inline style", () => {

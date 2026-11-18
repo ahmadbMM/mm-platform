@@ -10,7 +10,7 @@ import { openFeedback, starRow } from "./feedback";
 import { addDays, hijriLabel, longDate, num, type Iso } from "./dates";
 import { clear, h, uid } from "./dom";
 import { icon } from "./icons";
-import { arrivalWindow, awaitingFeedback, awaitsFeedback, barClasses, BOOKING_KEY, canCancelSeries, cancellable, canRequest, clockText, commentGroups, feedbackOf, feedbackOpen, KIND_KEY, lateCancel, ratingText, reasonText, rideTimes, scoreText, sharedByBooking, sharedScores, staffNoteText, within48h, type CalDay, type Mine, type SharedRatings } from "./model";
+import { arrivalWindow, awaitingFeedback, awaitsFeedback, barClasses, BOOKING_KEY, canCancelSeries, cancellable, canRequest, clockText, commentGroups, feedbackOf, feedbackOpen, KIND_KEY, lateCancel, ratingText, reasonText, rideTimes, scoreText, sharedByBooking, sharedLows, sharedScores, staffNoteText, within48h, type CalDay, type Mine, type SharedRatings } from "./model";
 
 type Row = { day: Iso; mine: Mine; riders: number | null; ride_time?: string | null; decide_by?: Iso | null; others_pending?: number | null };
 
@@ -150,14 +150,15 @@ function feedbackBlock(main: HTMLElement, r: Row): HTMLElement | null {
       : null);
 }
 
-/** "What riders said": the averages out of 10 with a bar each, then the comments by question.
- *  Only on a past confirmed breakfast that MicroMobility shared. */
+/** "What riders said": the averages out of 10 with a bar each, how many scored a part low where it has no
+ *  average (sharedLows), then the comments by question. Only on a past confirmed breakfast that MicroMobility shared. */
 function ridersSaid(r: Row): HTMLElement | null {
   const s = shared.get(r.mine.id);
   if (!s || r.mine.status !== "confirmed" || r.day >= app.me!.today) return null;
   const scores = sharedScores(s);
+  const lows = sharedLows(s);
   const groups = commentGroups(s);
-  if (!scores.length && !groups.length) return null;
+  if (!scores.length && !lows.length && !groups.length) return null;
   const id = uid("said");
   const n = Number(s.riders) || 0;
   return h("section", { class: "said", "aria-labelledby": id },
@@ -167,6 +168,9 @@ function ridersSaid(r: Row): HTMLElement | null {
       ? h("ul", { class: "said-scores" }, ...scores.map((sc) => h("li", { class: "said-score" },
         h("span", { class: "said-label" }, t("srScore", { label: t(sc.label), score: scoreText(app.lang, sc.value) })),
         h("span", { class: "said-bar", "aria-hidden": "true" }, h("span", { class: `said-fill ${barClasses(sc.value).join(" ")}` })))))
+      : null,
+    lows.length
+      ? h("ul", { class: "said-lows" }, ...lows.map((x) => h("li", { class: "said-low" }, tn("srLow", x.n, { label: t(x.label) }))))
       : null,
     ...groups.map((g) => h("div", { class: "said-group" },
       h("h5", {}, t(g.label)),
