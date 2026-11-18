@@ -11,6 +11,7 @@ import "@/components/store/sx-B3.css";
 import { storeState } from "@/components/store/store-data";
 import { T as STORE_T } from "@/components/store/Store.text";
 import { T as W5 } from "@/components/store/w5.text";
+import { T as SPM } from "@/components/store/spm.text";
 import { rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession, type Session } from "@/lib/account-core";
 import { bookingLink } from "@/lib/links";
@@ -102,7 +103,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
   return (
     <PageShell locale={locale} site={site} preview={s.previewing} hidden={s.hidden}>
       <OrderView
-        o={o} t={t} w={serverLocalize(W5, locale)} locale={locale} now={now} today={s.today}
+        o={o} t={t} w={serverLocalize(W5, locale)} x={serverLocalize(SPM, locale)} locale={locale} now={now} today={s.today}
         beside={ar ? { lang: "en", t: STORE_T.en, w: W5.en } : { lang: "ar", t: STORE_T.ar, w: W5.ar }}
         seller={{ trade: "Micromobility", ...seller, address: S(site.contact.address) }}
         whatsapp={S(site.contact.phone).replace(/\D/g, "")}

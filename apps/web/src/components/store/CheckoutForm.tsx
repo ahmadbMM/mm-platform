@@ -340,8 +340,10 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
       }
       const code = b.error || "generic";
       const place = refusalPlace(code);
-      const cap = code === "max_qty" ? lines.find((l) => l.item.variant === b.variant)?.product?.max_per_order ?? null : null;
-      if (place.line && b.variant) setLineErr({ [b.variant]: cap !== null ? sp.perOrder(cap) : t.lineIssue[code] ?? t.lineIssue.gone });
+      // STORE_MAX_QTY names the product (the database's "STORE_MAX_QTY: <product>"): each of its lines says the limit
+      const over = code === "max_qty" && b.variant ? lines.filter((l) => l.product?.id.toLowerCase() === b.variant?.toLowerCase() || l.item.variant === b.variant) : [];
+      if (over.length) setLineErr(Object.fromEntries(over.map((l) => [l.item.variant, l.product?.max_per_order != null ? sp.perOrder(l.product.max_per_order) : sp.errMax])));
+      else if (place.line && b.variant) setLineErr({ [b.variant]: t.lineIssue[code] ?? t.lineIssue.gone });
       // the build of 2026-11-18's refusals: put on their part, in their step (lib/sx-b3.ts sxPlace)
       const sxf = sxPlace(code);
       if (sxf) {

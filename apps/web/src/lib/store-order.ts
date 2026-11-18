@@ -15,6 +15,9 @@ export type OrderFulfil = "pickup" | "jeddah" | "ksa" | "digital";
 export type OrderItem = {
   id: number | null; name: string; variant: string | null; qty: number; unit_price: number; product_id: string | null; variant_id: string | null;
   image: string | null; slug: string | null; gift_card: boolean; reviewed: boolean;
+  /** A pre-order line (the product-management build 2026-11-19, _store_order_json), and its product's ships-on day
+   *  (YYYY-MM-DD); absent on a database without them: not a pre-order. */
+  preorder?: boolean; ships_on?: string | null;
 };
 export type OrderDiscount = { kind: "bundle" | "promo"; ref: string; amount: number };
 export const RETURN_REASONS = ["wrong_size", "changed_mind", "damaged", "not_as_described", "other"] as const;
@@ -88,6 +91,7 @@ export function orderOf(data: unknown, key: string | null = null): Order | null 
       id: i.id == null || !Number.isFinite(Number(i.id)) ? null : Number(i.id), name: String(i.name ?? ""), variant: s(i.variant), qty: n(i.qty),
       unit_price: n(i.unit_price), product_id: s(i.product_id), variant_id: s(i.variant_id), image: s(i.image), slug: s(i.slug),
       gift_card: i.gift_card === true, reviewed: i.reviewed === true,
+      preorder: i.preorder === true, ships_on: typeof i.ships_on === "string" && /^\d{4}-\d{2}-\d{2}/.test(i.ships_on) ? i.ships_on.slice(0, 10) : null,
     })),
     events: arr(o.events).map((e) => ({ at: String(e.at ?? ""), status: String(e.status ?? ""), note: s(e.note) })),
     refunds: arr(o.refunds).map((r) => ({ amount: n(r.amount), dest: String(r.dest ?? ""), status: String(r.status ?? ""), at: String(r.at ?? "") })),

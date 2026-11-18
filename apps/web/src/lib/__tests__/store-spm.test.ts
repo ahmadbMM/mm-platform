@@ -18,6 +18,7 @@ import { feedItems } from "../sx-B1-feed";
 import { payError } from "../pay/http";
 import { isWideCard } from "../sx-B1-list";
 import { refusalPlace } from "../store-form";
+import { orderOf } from "../store-order";
 import { memoSettled } from "../memo";
 import { T as ST } from "../../components/store/Store.text";
 import { T as SPM } from "../../components/store/spm.text";
@@ -393,6 +394,41 @@ describe("the pieces as the server draws them", () => {
     expect(sub).toContain("st-chips-sub");
     expect(sub).toMatch(/aria-current="page"[^>]*href="\/store\/category\/bikes"|href="\/store\/category\/bikes"[^>]*aria-current="page"/);
     expect(sub).toContain('aria-label="Bikes"');
+  });
+});
+
+describe("an order's pre-order lines", () => {
+  const raw = (status: string, items: Record<string, unknown>[]) => ({
+    id: "o", no: 1002, status, fulfil: "pickup", name: "Sara", phone: "•••• 5678", subtotal: 2000, delivery_fee: 0, total: 2000, wallet_paid: 0, vat: 260.87,
+    created_at: "2026-11-19T08:00:00Z", paid_at: status === "pending" ? null : "2026-11-19T08:05:00Z", payment: null, events: [], items,
+  });
+  const PRE_LINE = { name: "Garmin Edge 850", variant: null, qty: 1, unit_price: 1699, variant_id: U(107), image: null, slug: "garmin-edge", preorder: true, ships_on: "2026-12-03" };
+  const PLAIN = { name: "Bottle 750", variant: null, qty: 1, unit_price: 35, variant_id: U(110), image: null, slug: "bottle" };
+  it("read each line's pre-order mark and its product's ships-on day, and a database without them as no pre-order", () => {
+    const o = orderOf(raw("paid", [PRE_LINE, PLAIN, { ...PRE_LINE, ships_on: "soon" }]), "k".repeat(32))!;
+    expect(o.items.map((i) => [i.preorder, i.ships_on])).toEqual([[true, "2026-12-03"], [false, null], [true, null]]);
+  });
+  const draw = async (status: string, locale: string) => {
+    const { default: OrderView } = await import("@/components/store/OrderView");
+    const { T: W5 } = await import("@/components/store/w5.text");
+    const o = orderOf(raw(status, [PRE_LINE, PLAIN]), "k".repeat(32))!;
+    return render(wrap(locale, createElement(OrderView, {
+      o, t: localize(ST, locale, null), w: localize(W5, locale, null), x: localize(SPM, locale, null),
+      beside: locale === "ar" ? { lang: "en", t: ST.en, w: W5.en } : { lang: "ar", t: ST.ar, w: W5.ar },
+      locale, now: NOW, today: TODAY, whatsapp: "", showroom: "Al Sharafeyah", expected: null, slot: null, signup: null, returnsHref: "/returns", policy: "", hidden: [],
+      seller: { trade: "Micromobility", legal: "Micromobility Company Ltd.", vat: "312555068900003", cr: "1009107240", address: "Al Sharafeyah", qrName: "x", legalBeside: "" },
+    })));
+  };
+  it("say a pre-order line on the order page with the day it ships by while the order is still to be got ready", async () => {
+    const en = await draw("paid", "en");
+    expect(en).toMatch(/Pre-order · Ships by \S+ 3 Dec/);
+    expect(en.match(/st-line-pre/g)).toHaveLength(1);
+    const ar = await draw("preparing", "ar");
+    expect(ar).toContain("طلب مسبق · يُشحن بحلول");
+    const done = await draw("delivered", "en");
+    expect(done).toContain("Pre-order");
+    expect(done).not.toContain("Ships by");
+    expect(en + ar).not.toMatch(/\p{Extended_Pictographic}/u);
   });
 });
 

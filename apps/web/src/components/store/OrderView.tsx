@@ -1,6 +1,9 @@
 import { Fragment, type ReactNode } from "react";
 import type { Buyer } from "@/lib/sx-b3";
 import type { SxText } from "./sx-B3.text";
+import { dayLabel } from "@/lib/store-checkout";
+import { T as SPM, type SpmText } from "./spm.text";
+import { PreorderLine } from "./spm-parts";
 import { Link } from "@/i18n/navigation";
 import { intlOf } from "@/i18n/locales";
 import { sized } from "@/lib/img";
@@ -28,6 +31,8 @@ import type { AfterNodes } from "./after/AfterParts";
 // number and ZATCA's QR, the labels in Arabic beside the page's language) with every refund under it, what happened to
 // it, the return terms with a return or exchange to ask for, and the workshop. An unpaid order offers its payment while
 // the items are held; one that was never paid can put its items back in the cart.
+//   The product-management build (2026-11-19): a pre-order line says so, with the day its product ships by while the
+// order is still to be got ready (`x`: those words in the page's language).
 export type Seller = {
   trade: string; legal: string; vat: string; cr: string; address: string;
   /** The legal name the QR carries (the Arabic one, as registered), and the one beside the page's. */
@@ -40,11 +45,14 @@ export type Beside = { lang: "ar" | "en"; t: StoreText; w: W5Text };
 /** The booked delivery day (F78) is said while the order is still to come: not once it is delivered, cancelled or
  *  refunded (the expected dates' own rule, lib/store-order.ts orderExpected, with an order still to pay). */
 const SLOT_SHOWN: readonly string[] = ["pending", "paid", "preparing", "shipped", "out"];
+/** A pre-order line's ships-by day is said while the order is still to be got ready; after that the line says only that
+ *  it was a pre-order. */
+const PRE_DATED: readonly string[] = ["pending", "paid", "preparing"];
 /** A code typed in Latin letters, digits and dashes ("WELCOME-10") as one left-to-right run inside the page's words, so
  *  an Arabic line never shows it as "10-WELCOME" (the same isolates sar() puts round an amount). */
 const ltr = (s: string) => `\u2066${s}\u2069`;
 
-export default function OrderView({ o, t, w, beside, locale, seller, now, today, whatsapp, showroom, expected, slot, signup, returnsHref, policy, hidden, after = null, sx }: {
+export default function OrderView({ o, t, w, beside, locale, seller, now, today, whatsapp, showroom, expected, slot, signup, returnsHref, policy, hidden, after = null, sx, x = SPM.en }: {
   o: Order; t: StoreText; w: W5Text; beside: Beside; locale: string; seller: Seller; now: number; today: string; whatsapp: string; showroom: string;
   expected: string | null; slot: string | null; signup: string | null; returnsHref: string; policy: string; hidden: readonly string[];
   /** After the sale (builder B4, components/store/after/AfterParts.tsx): its parts in their places, and Hijri dates. */
@@ -52,6 +60,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
   /** The build of 2026-11-18 (B3): a company's standard tax invoice (N34: the buyer, with the words in both languages),
    *  the way's own facts (the handover slot, the session, the pin) and what follows it (learning to ride). */
   sx?: { buyer: Buyer | null; x: SxText; bx: SxText; way?: ReactNode; after?: ReactNode; wayName?: string };
+  x?: SpmText;
 }) {
   const hj = after?.hijri;
   const no = orderNo(o.no);
@@ -232,6 +241,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
                 <span className="st-mini-mid">
                   {href ? <Link href={href}><b>{i.name}</b></Link> : <b>{i.name}</b>}
                   <small>{[i.variant, t.qtyN(i.qty)].filter(Boolean).join(" · ")} · <Amt>{t.each(sar(i.unit_price))}</Amt></small>
+                  {i.preorder && <PreorderLine ships={PRE_DATED.includes(o.status) && i.ships_on ? dayLabel(i.ships_on, intl) : null} x={x} className="st-line-pre" />}
                 </span>
                 <Amt>{sar(i.unit_price * i.qty)}</Amt>
               </li>
