@@ -71,11 +71,11 @@ export function storeRules(c: SiteContent | null | undefined): StoreRules {
 
 // ── A product's mark ───────────────────────────────────────────────────────────────────────────
 
-/** The mark a product shows today (YYYY-MM-DD, Riyadh): staff's own until its last day, else "New" while the store marks
- *  new products (store.newBadge) and this one was created within its days; null for none. */
+/** The mark a product shows today (YYYY-MM-DD, Riyadh): staff's own until its last day, else (none, or its day is past)
+ *  "New" while the store marks new products (store.newBadge) and this one was created within its days; null for none. */
 export function shownBadge(p: Pick<StoreProduct, "badge" | "created_at">, rules: Pick<StoreRules, "newDays">, today: string, now: number): ProductBadge | null {
   const b = p.badge;
-  if (b) return !b.until || !DAY.test(today) || today <= b.until ? b : null;
+  if (b && (!b.until || !DAY.test(today) || today <= b.until)) return b;
   if (rules.newDays === null) return null;
   const at = Date.parse(p.created_at);
   return Number.isFinite(at) && at <= now && now - at <= rules.newDays * 86400000 ? { kind: "new", en: null, ar: null, until: null } : null;
