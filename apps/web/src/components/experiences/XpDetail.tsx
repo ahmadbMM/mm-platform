@@ -132,7 +132,8 @@ export default function XpDetail({ s, x, locale, mode, pageHref }: { s: XpItem; 
         {(s.sunrise || s.temp != null || s.pace.length > 0 || s.lang || rating) && (
           <ul className="xq-chips" role="list">
             {s.sunrise && <li><XIc name="sun" size={15} /><bdi>{s.sunrise}</bdi></li>}
-            {s.temp != null && s.start && <li><XIc name="temp" size={15} /><bdi>{fill(t.tempAt, s.temp, s.start)}</bdi></li>}
+            {/* MET Norway's forecast, credited as its licence (CC BY 4.0) asks, where the chip is */}
+            {s.temp != null && s.start && <li title={t.wxCredit}><XIc name="temp" size={15} /><bdi>{fill(t.tempAt, s.temp, s.start)}</bdi></li>}
             {s.pace.map((p, i) => <li key={i}>{i === 0 && <XIc name="pace" size={15} />}{p}</li>)}
             {s.lang && <li><XIc name="lang" size={15} />{s.lang}</li>}
             {rating && <li aria-label={`${t.ratingAria}: ${fill(t.rating, rating.avg, rating.n)}`}><XIc name="star" size={15} /><bdi>{fill(t.rating, rating.avg, rating.n)}</bdi></li>}
