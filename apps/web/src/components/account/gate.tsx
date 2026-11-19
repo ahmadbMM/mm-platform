@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import SignIn from "@/components/account/SignIn";
 import SignOut from "@/components/account/SignOut";
-import HandoffLink from "@/components/account/HandoffLink";
 import { decodeSession } from "@/lib/account-core";
 import { HANDOFF_COOKIE, accountLabel, sessionProfile } from "@/lib/handoff";
 import { fill } from "@/lib/fill";
@@ -59,13 +58,9 @@ export async function signedOutView(o: { tx: L; locale: string; expired: boolean
         <h1>{S(c.title)}</h1>
         <p className="ac-text">{S(c.text)}</p>
         {expired && <p className="ac-err" role="status">{tx("That sign-in link has expired. Please sign in again.", "انتهت صلاحية رابط تسجيل الدخول. يرجى تسجيل الدخول مجدداً.")}</p>}
+        {/* Create account and Forgot password are the sign-in's own, on this site (the user, 2026-11-19): /signup and the
+            forgot panel, as the booking app has them; no second list under it */}
         <SignIn locale={locale} />
-        {/* Sign-up and a password reset happen in the booking app, which hands the rider back here signed in
-            (?handoff=site; api/account/handoff). */}
-        <ul className="ac-notes">
-          <li><HandoffLink href={o.handoff("signup")}>{S(c.create)}</HandoffLink></li>
-          <li><HandoffLink href={o.handoff("forgot")}>{S(c.forgot)}</HandoffLink></li>
-        </ul>
       </section>
     </div>
   );
