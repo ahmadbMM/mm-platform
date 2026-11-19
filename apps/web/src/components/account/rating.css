@@ -64,3 +64,6 @@ html:is([lang="ar"], [lang="ur"]) .rg-kicker { letter-spacing: 0; font-size: 13p
   .rg-scale { gap: 2px; }
   .rg-scale button { font-size: 12.5px; border-radius: 8px; }
 }
+/* The check-up pop-up (FixGateLoader): Add details is a link to the booking app, drawn as the send button */
+a.rr-send.fx-gate-go { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.fx-gate-go:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }

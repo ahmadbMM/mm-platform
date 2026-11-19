@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import RatingGate from "./RatingGate";
-import TestimonialAskLoader from "./TestimonialAskLoader";
+import FixGateLoader from "./FixGateLoader";
 import { RATE_QUIET, BUSY, BUSY_RETRY_MS, isQuiet } from "./quiet";
 import type { RatingForm as Form } from "@/lib/rating";
 
@@ -17,8 +17,9 @@ import type { RatingForm as Form } from "@/lib/rating";
 // to share their details: WaiverGateLoader mounts ShareGateLoader once no waiver waits, and that
 // mounts this once no run waits either.
 // The ten quiet minutes are the signed-in account's: every sign-in and sign-out forgets them (./quiet.ts).
-// With no ride to rate (or none known: signed out, a quiet window), the one-time ask about an old comment may come next
-// (TestimonialAskLoader, testimonials 2026-11-18): it asks only a signed-in rider, and only while the switch is on.
+// With no ride to rate (or none known: signed out, a quiet window), the details the account owes come next (FixGateLoader,
+// the booking app's 3ebaf706), and then the one-time ask about an old comment (TestimonialAskLoader, testimonials
+// 2026-11-18); both ask only a signed-in rider.
 // `restaurant` (2026-10-05): where a Saturday ride's breakfast was, by name in the page's language; an
 // answer from before it reads as none. `rgLow` (2026-10-09): the booking app's rg_low, the score at or
 // under which the form asks why; an answer without it reads as the default.
@@ -62,6 +63,6 @@ export default function RatingGateLoader({ locale }: { locale: string }) {
     return () => { live = false; clearTimeout(wait); };
   }, [path, locale, pending, round, retry]);
 
-  if (!pending) return clear ? <TestimonialAskLoader locale={locale} /> : null;
+  if (!pending) return clear ? <FixGateLoader locale={locale} /> : null;
   return <RatingGate key={pending.entryId} {...pending} onDone={() => { try { sessionStorage.removeItem(KEY); } catch { /* */ } setPending(null); setRound((n) => n + 1); }} />;
 }

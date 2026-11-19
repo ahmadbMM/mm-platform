@@ -1,10 +1,12 @@
 // A stand-in for the database's customer functions (POST /rest/v1/rpc/<name>), in memory, for the account pages' browser
 // test (tests/account-menu.spec.ts, playwright.account.config.ts): one signed-in rider, "Sara Khalid" (id c-test, any
 // token), her profile, contacts, wallet, invite code, bookings (a ride in two days, a circuit night in five, one done, one
-// cancelled), a workshop appointment ahead and one done, a locker taken alone, a volunteer shift, desk purchases. The
-// writes the pages make change it (customer_update_profile, customer_set_about ...). Every other read answers empty (the
-// site's own content: its defaults), and a function it does not know answers as one the database does not have (404,
-// PGRST202). Test-only routes (POST /__reset, GET /__state) set and read the scene; they are not part of any real API.
+// cancelled), a workshop appointment ahead and one done, a locker taken alone, a volunteer shift, desk purchases, ride news
+// on and three updates (one unread). The writes the pages make change it (customer_update_profile, customer_set_about,
+// customer_consents, company_challenge_join, testimonial_old_answer ...). Every other read answers empty (the site's own
+// content: its defaults), and a function it does not know answers as one the database does not have (404, PGRST202).
+// Test-only routes (POST /__reset, POST /__scene with any of {learner, freshBadge, tmAsk, member, owes}, GET /__state) set and
+// read the scene; they are not part of any real API.
 // Nothing here reaches a real database.
 import { createServer } from "node:http";
 
@@ -25,6 +27,17 @@ function fresh() {
     blood: "B-",
     sport: { competes: false, federations: [], other: null, asked: false },
     deletion: null,
+    rideNews: true,
+    updates: [
+      { id: 3, kind: "waitlist", title: "A place is free", body: "Take your place on Saturday's ride.", at: new Date(Date.now() - 2 * 3600e3).toISOString(), url: "/?claim=0123456789abcdef0123456789abcdef", read: false },
+      { id: 2, kind: "reminder", title: "Your ride is tomorrow", body: "Meet at the circuit at 8 PM.", at: `${day(-2)}T15:00:00Z`, url: "/my-bookings?tk=e-jcc1", read: true },
+      { id: 1, kind: "note", title: "From the team", body: "Thank you for riding with us.", at: `${day(-9)}T09:00:00Z`, url: null, read: true },
+    ],
+    company: [],
+    tmAnswered: null,
+    badgeAt: new Date(Date.now() - 20 * 3600e3).toISOString(), // when staff gave the scene's badge: yesterday
+    // the scene: a learner on a lesson, a badge staff gave yesterday, an old comment due, a Community member
+    scene: { learner: false, freshBadge: false, tmAsk: false, member: false, owes: false },
     writes: [],
   };
 }
@@ -69,7 +82,7 @@ const READS = {
     { id: 42, ref: "W-0042", status: "confirmed", service: "Full service", preferred_date: day(3), preferred_time: "17:00", scheduled_for: null, lane: "dropoff", price_quoted: 150, price_final: null, bike: "Trek FX 3", created_at: `${day(-1)}T10:00:00Z` },
     { id: 17, ref: "W-0017", status: "completed", service: "Tune-up", preferred_date: day(-25), preferred_time: "18:00", scheduled_for: null, lane: "wait", price_quoted: 90, price_final: 90, bike: null, created_at: `${day(-27)}T10:00:00Z` },
   ],
-  company_challenge_mine: () => ({ ok: true, rows: [], open: false }),
+  company_challenge_mine: () => ({ ok: true, rows: st.company, open: st.company.length > 0 }),
   calendar_link: () => ({ ok: false }),
   customer_deletion_request: (a) => {
     if (a.p_request === true) st.deletion = new Date().toISOString();
@@ -77,7 +90,33 @@ const READS = {
     return { requested_at: st.deletion };
   },
   customer_lockers: () => [{ id: "lk-1", booking_id: null, day: day(4), period: "both", code: "B7", name: "Sara Khalid", status: "reserved", pay: "wallet", paid: true }],
-  learn_ladder: () => ({ ok: true, skills: [], learners: [] }),
+  learn_ladder: () => (st.scene.learner ? {
+    ok: true,
+    skills: [
+      { key: "b1", level: 1, name: { en: "Glide with both feet up", ar: "الانزلاق بالقدمين مرفوعتين" } }, { key: "b2", level: 1, name: { en: "Look ahead, not down", ar: "النظر إلى الأمام" } },
+      { key: "p1", level: 2, name: { en: "Start from a stop", ar: "الانطلاق من التوقف" } }, { key: "p2", level: 2, name: { en: "Pedal in a straight line", ar: "التبديل في خط مستقيم" } },
+      { key: "s1", level: 3, name: { en: "Turn in a wide circle", ar: "الدوران في دائرة واسعة" } }, { key: "s2", level: 3, name: { en: "Brake to a stop", ar: "الفرملة حتى التوقف" } },
+      { key: "c1", level: 4, name: { en: "One lap of the circuit", ar: "لفة واحدة في الحلبة" } },
+    ],
+    learners: [
+      { who: "self", name: null, lesson_at: `${day(-3)}T13:00:00Z`, feedback: "Great balance already. Keep your eyes up when you pedal.", ticked: { b1: `${day(-3)}T13:20:00Z`, b2: `${day(-3)}T13:30:00Z`, p1: `${day(-3)}T13:50:00Z` } },
+      { who: "child", name: "Omar", lesson_at: `${day(-3)}T13:00:00Z`, feedback: "", ticked: {} },
+    ],
+  } : { ok: true, skills: [], learners: [] }),
+  customer_consents: (a) => {
+    if (a.p_ride_news === true || a.p_ride_news === false) st.rideNews = a.p_ride_news;
+    return { privacy_version: "2026-11-18", privacy_at: `${day(-30)}T10:00:00Z`, ride_news: st.rideNews, ride_news_at: `${day(-30)}T10:00:00Z` };
+  },
+  customer_updates_unread: () => ({ ok: true, n: st.updates.filter((u) => !u.read).length, comm: 0 }),
+  customer_updates: () => {
+    const rows = st.updates.map(({ read, ...u }) => ({ ...u, unread: !read }));
+    st.updates.forEach((u) => { u.read = true; });
+    return { ok: true, rows };
+  },
+  testimonial_mine: () => ({ ok: true, on: st.scene.tmAsk, names: { full: "Sara Khalid", short: "Sara K." }, since: { year: 2025, rides: 1 }, items: [],
+    ask: st.scene.tmAsk && !st.tmAnswered ? { entry_id: "e-old1", body: "The best evening at the circuit, the team made sure everyone felt safe and had fun.", rating: 10, date: day(-12), about: "session", title: null, title_ar: null } : null }),
+  customer_fix_fields: () => (st.scene.owes ? ["birth_date", "whatsapp"] : []),
+  hub_pulse: () => ({ ok: true, member: st.scene.member, dot: false, me: null, goals: [], fresh: [] }),
   my_bookings: () => BOOKINGS(),
   list_sessions: (_a, q) => {
     const ids = /id=in\.\(([^)]*)\)/.exec(decodeURIComponent(q))?.[1]?.split(",") ?? null;
@@ -85,7 +124,7 @@ const READS = {
   },
   community_member: () => false,
   customer_helper_path: () => ({ ok: true, member: false }),
-  customer_my_badges: () => [],
+  customer_my_badges: () => (st.scene.freshBadge ? [{ slug: "spirit", at: st.badgeAt, note: "For helping a new rider all evening." }] : []),
   customer_badge_requests: () => [],
   customer_vl_teams: () => [],
 };
@@ -108,6 +147,19 @@ const WRITES = {
   customer_set_emergency2: (a) => { Object.assign(st.emergency, { emergency2_name: a.p_name, emergency2_phone: a.p_phone, emergency2_relation: a.p_relation }); return true; },
   customer_set_blood_type: (a) => { st.blood = a.p_type ?? null; return true; },
   customer_change_password: (a) => (a.p_current === "wrong-one" ? "BAD_PASSWORD" : "0123456789abcdef0123456789abcdef0123456789abcdef"),
+  company_challenge_join: (a) => {
+    if (a.p_code !== "ACME2026") return { ok: false, error: "code" };
+    st.company = [{ id: 1, company: "Acme", starts_on: day(-3), ends_on: day(25), state: "on", team: null, sessions: null, mine: 0, badge: false }];
+    return { ok: true, joined: 1, rows: st.company, open: true };
+  },
+  testimonial_old_answer: (a) => {
+    if (st.tmAnswered) return { ok: false, error: "done" };
+    if (a.p_yes && !a.p_consent) return { ok: false, error: "consent" };
+    st.tmAnswered = a.p_yes ? "yes" : "no";
+    return { ok: true, id: a.p_yes ? 12 : null };
+  },
+  hub_seen: () => null,
+  customer_handoff_create: () => "0123456789abcdef0123456789abcdef0123456789abcdef",
 };
 
 const send = (res, status, body) => {
@@ -121,6 +173,7 @@ createServer((req, res) => {
   req.on("data", (c) => { raw += c; });
   req.on("end", () => {
     if (url.pathname === "/__reset") { st = fresh(); return send(res, 200, { ok: true }); }
+    if (url.pathname === "/__scene") { try { Object.assign(st.scene, JSON.parse(raw || "{}")); } catch { /* the scene as it was */ } return send(res, 200, st.scene); }
     if (url.pathname === "/__state") return send(res, 200, st);
     const m = /^\/rest\/v1\/rpc\/([a-z0-9_]+)$/.exec(url.pathname);
     if (m) {

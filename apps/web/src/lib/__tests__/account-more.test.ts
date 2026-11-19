@@ -10,6 +10,7 @@ import { AccCompany } from "@/components/account/AccPages";
 import { NOTIFY_WORDS } from "@/components/account/Notify.words";
 import { LEARN_WORDS } from "@/components/account/LearnLadder.words";
 import { TM_ASK_WORDS } from "@/components/account/TestimonialAsk.words";
+import { FIX_GATE_WORDS } from "@/components/account/FixGate.words";
 import { LOCALE_CODES } from "@/i18n/locales";
 import { ACC_PAGES, accountRoute, parentOf } from "../account-menu";
 import { rideNewsOf, unreadOf, updateWhere, updatesOf, updLang } from "../account-notify";
@@ -24,6 +25,8 @@ import { resetSiteContent } from "../site";
 import { GET as badgeNewGet, POST as badgeNewPost } from "../../app/api/account/badge-new/route";
 import { POST as consentsPost } from "../../app/api/account/consents/route";
 import { GET as tmAskGet, POST as tmAskPost } from "../../app/api/account/testimonial-ask/route";
+import { GET as pendingFixGet } from "../../app/api/account/pending-fix/route";
+import { GET as appSigninGet } from "../../app/api/account/app-signin/route";
 
 // The booking app's Account pieces the website gained on 2026-11-19 (the owner, 2026-10-01: everything a customer sees or
 // does in the booking app is also on the main website): Notifications (Ride news) and Updates, Learn to ride, the
@@ -80,7 +83,7 @@ afterEach(() => { jar.account = ""; vi.unstubAllEnvs(); vi.unstubAllGlobals(); }
 
 describe("the words", () => {
   it("are there in all 16 languages, every key with its placeholders, no emoji", () => {
-    for (const [name, W] of [["notify", NOTIFY_WORDS], ["learn", LEARN_WORDS], ["tm ask", TM_ASK_WORDS]] as const) {
+    for (const [name, W] of [["notify", NOTIFY_WORDS], ["learn", LEARN_WORDS], ["tm ask", TM_ASK_WORDS], ["fix", FIX_GATE_WORDS]] as const) {
       const en = W.en as Record<string, string>, keys = Object.keys(en).sort();
       for (const l of LOCALE_CODES) {
         const x = W[l] as Record<string, string>;
@@ -97,6 +100,7 @@ describe("the words", () => {
     expect(NOTIFY_WORDS.ar.updates).toBe("التحديثات");
     expect(LEARN_WORDS.ar.title).toBe("تعلّم ركوب الدراجة");
     expect(TM_ASK_WORDS.en).toEqual({ askT: "May we publish your words?", askYes: "Publish it", askNo: "No thanks" });
+    expect(FIX_GATE_WORDS.en).toEqual({ kicker: "Account check-up", title: "A few details for your account", add: "Add details", logOut: "Log out" });
   });
 });
 
@@ -391,5 +395,24 @@ describe("the company challenge's join link", () => {
     expect(findAll(p, AccCompany)[0]?.props).toMatchObject({ rows: [], open: false, empty: "Nothing here yet." });
     const home = await draw(undefined);
     expect(findAll(home.p, CompanyLink)[0]?.props).toEqual({ signedIn: true, onPage: false });
+  });
+});
+
+describe("details the account owes (the booking app's 3ebaf706)", () => {
+  const req = (path: string, signedIn = true) => new Request(`https://micromobility.sa${path}`, { headers: signedIn ? { cookie: "mm_acct=c1~a1b2c3d4e5f6a7b8c9d0" } : {} });
+  it("are counted by /api/account/pending-fix from customer_fix_fields; none for a database without it", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => json(["birth_date", "whatsapp", "birth_date", "bad key!"])));
+    expect(await (await pendingFixGet(req("/api/account/pending-fix"))).json()).toEqual({ signedIn: true, owed: 2 });
+    vi.stubGlobal("fetch", vi.fn(async () => ABSENT()));
+    expect(await (await pendingFixGet(req("/api/account/pending-fix"))).json()).toEqual({ signedIn: true, owed: 0 });
+    expect(await (await pendingFixGet(req("/api/account/pending-fix", false))).json()).toEqual({ signedIn: false });
+  });
+  it("Add details opens the booking app staff set, signed in by a one-time code, in the visitor's language", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => (String(url).includes("/rpc/customer_handoff_create") ? json("ab".repeat(24)) : json([]))));
+    const r = await appSigninGet(req("/api/account/app-signin?lang=ar"));
+    expect(r.status).toBe(303);
+    expect(r.headers.get("location")).toBe(`https://experiences.micromobility.sa/?lang=ar&signin=${"ab".repeat(24)}`);
+    const out = await appSigninGet(req("/api/account/app-signin?lang=xx", false));
+    expect(out.headers.get("location")).toBe("https://experiences.micromobility.sa/");
   });
 });

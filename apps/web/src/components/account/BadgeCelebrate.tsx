@@ -30,6 +30,14 @@ const ss = {
   set(k: string, v: string) { try { window.sessionStorage.setItem(k, v); } catch { /* storage off */ } },
   del(k: string) { try { window.sessionStorage.removeItem(k); } catch { /* storage off */ } },
 };
+// One ask at a time: a page drawn twice at once (or an effect run twice in development) shares it.
+let asking: Promise<Answer | null> | null = null;
+function ask(locale: string): Promise<Answer | null> {
+  asking ??= fetch(`/api/account/badge-new?locale=${encodeURIComponent(locale)}`, { cache: "no-store", credentials: "same-origin" })
+    .then((r) => (r.ok ? (r.json() as Promise<Answer>) : null)).catch(() => null)
+    .finally(() => { setTimeout(() => { asking = null; }, 0); });
+  return asking;
+}
 /** Another pop-up holds the page (the rating and the other gates make the page inert; a dialog is open). */
 const held = () => document.documentElement.classList.contains("rg-lock") || !!document.querySelector(".rg-gate, dialog[open]");
 
@@ -45,30 +53,25 @@ export default function BadgeCelebrate({ locale, short }: { locale: string; shor
     if (short) ss.set(SHORT, "1");
     if (!filled && Number(ss.get(BDG_ASKED) || 0) > Date.now()) return;
     let live = true, wait: ReturnType<typeof setTimeout> | undefined;
-    ss.set(BDG_ASKED, String(Date.now() + ASK_GAP));
-    (async () => {
-      let a: Answer | null = null;
-      try {
-        const r = await fetch(`/api/account/badge-new?locale=${encodeURIComponent(locale)}`, { cache: "no-store", credentials: "same-origin" });
-        a = r.ok ? ((await r.json()) as Answer) : null;
-      } catch { a = null; }
+    void ask(locale).then((a) => {
       if (!live) return;
-      if (!a?.ok || !a.who) { ss.del(BDG_ASKED); return; } // no answer: the next page asks again
+      if (!a?.ok || !a.who) return; // no answer: the next page asks again
+      ss.set(BDG_ASKED, String(Date.now() + ASK_GAP));
       if (filled) ss.del(SHORT);
       const close = a.close || "Close";
       const open = () => {
         if (!live) return;
         if (held()) { wait = setTimeout(open, 1500); return; }
-        if (a?.community) {
+        if (a.community) {
           setShow({ c: a.community, close, comm: true });
           void fetch("/api/account/badge-new", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ seen: a.seen ?? [] }) }).catch(() => null);
           return;
         }
-        const c = pickCheer(a?.items ?? [], { who: a!.who!, store, rode: a?.rode ?? null, filled, pulse: !!a?.pulse });
+        const c = pickCheer(a.items ?? [], { who: a.who!, store, rode: a.rode ?? null, filled, pulse: !!a.pulse });
         if (c) setShow({ c, close, comm: false });
       };
       open();
-    })();
+    });
     return () => { live = false; clearTimeout(wait); };
   }, [short, path, locale]);
 

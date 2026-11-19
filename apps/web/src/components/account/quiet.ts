@@ -12,6 +12,8 @@ export const SHARE_QUIET = "mm_share_none";
 export const CLUB_QUIET = "mm_club_none";
 export const RACE_QUIET = "mm_race_none";
 export const RATE_QUIET = "mm_rate_none";
+/** Details the account owes (FixGateLoader): none owed is kept ten minutes in a tab. */
+export const FIX_QUIET = "mm_fix_none";
 /** The one-time ask about an old comment (TestimonialAskLoader): the server is asked once an hour in a tab. */
 export const TM_ASK_QUIET = "mm_tm_ask_none";
 /** A check the site's meter turned away (429: the minute's checks are used up, lib/rate-limit.ts) is not an answer: the
@@ -53,6 +55,7 @@ export function forgetQuiet(): void {
     sessionStorage.removeItem(RACE_QUIET);
     sessionStorage.removeItem(RATE_QUIET);
     sessionStorage.removeItem(TM_ASK_QUIET);
+    sessionStorage.removeItem(FIX_QUIET);
     sessionStorage.removeItem(BDAY_SEEN);
     sessionStorage.removeItem(BDG_ASKED);
   } catch { /* storage off: nothing kept */ }
