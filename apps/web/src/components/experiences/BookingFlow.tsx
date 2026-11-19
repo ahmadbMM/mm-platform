@@ -24,6 +24,9 @@ import { CalendarIcon } from "@/components/site/Icons";
 import { T, type BookingText } from "./Booking.text";
 import { bookMoreWords, type BookMoreWords } from "./BookMore.words";
 import PartyStepper from "./PartyStepper";
+import LockerPick, { lockerSay, reserveLockers, type LockerState } from "@/components/booking/LockerPick";
+import { manageWords } from "@/components/booking/Manage.words";
+import { fillN } from "@/components/booking/manage-client";
 import "./booking-flow.css";
 
 // Booking on micromobility.sa itself (the owner, 2026-10-03: "full booking on the website"; the user, 2026-11-19: "make
@@ -88,7 +91,9 @@ type Modal =
   | { kind: "profile"; community: boolean; ask: PgField[]; next: string | null }
   | { kind: "bike"; type: BikeType; slot: number } | { kind: "group"; g: RideGroup } | { kind: "waiver" } | null;
 /** `booked`: the rows the database stored (the route's), so a ticket my_bookings did not return in time is still counted. */
-type Done = { tickets: TicketRow[]; booked: { id: string; status: string }[]; session: TicketSession | null; addonsSaved: boolean; route: TicketRoute | null };
+type Done = { tickets: TicketRow[]; booked: { id: string; status: string }[]; session: TicketSession | null; addonsSaved: boolean; route: TicketRoute | null;
+  /** The locker picked on the review, once reserved: said when the database held another door, or could not hold one. */
+  locker?: string };
 
 /** An amount as the booking app writes it (_sar): the riyal sign left of the number, isolated left to right, two decimals
  *  only when it has a fraction (57.50); a range "lo – hi" when a type's fare may rise. The sign is drawn for the eye alone
@@ -115,6 +120,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const t = useLocalize(T);
   const tk = useLocalize(TICKET);
   const m = bookMoreWords(locale);
+  const mw = manageWords(locale);
   const rtl = isRtl(locale);
   const top = useRef<HTMLDivElement>(null);
   const ev = events.find((e) => e.key === start.ev) ?? events[0] ?? null;
@@ -139,6 +145,10 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const [promoMsg, setPromoMsg] = useState("");
   const [promoBusy, setPromoBusy] = useState(false);
   const [promoOpen, setPromoOpen] = useState(false);
+  // A locker for the evening, picked on the review where the session offers lockers (the booking app's _lkReviewHtml,
+  // components/booking/LockerPick.tsx), reserved once the booking is made (_lkAfterBook)
+  const NO_LOCKER: LockerState = { period: "", codes: [], fee: 0, ready: true, offered: false };
+  const [lk, setLk] = useState<LockerState>(NO_LOCKER);
   const [fieldErr, setFieldErr] = useState<{ key: string; msg: string } | null>(null);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -187,7 +197,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     }
     const gate = gateFor(s, a);
     if (gate) { setModal(gate); return; }
-    if (selId !== s.id) { setAddons([]); setPromo(null); setPromoIn(""); setPromoMsg(""); setAlready(false); setErr(""); }
+    if (selId !== s.id) { setAddons([]); setPromo(null); setPromoIn(""); setPromoMsg(""); setAlready(false); setErr(""); setLk(NO_LOCKER); }
     setSelId(s.id);
     funnel("pick", evKey ?? s.kind);
     // a party carried over from another night may be past this night's allowance
@@ -385,7 +395,10 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const acctLite = acctNow ? { name: acctNow.name, house: acctNow.house } : null;
   const [lo, hi] = sel ? rentalTotal(sel, riders, prices, acctLite, maxPrices) : [0, 0];
   const disc = sel ? promoDiscount(promo, sel, riders, prices, acctLite) : 0;
-  const addonTotal = free ? 0 : addonsCost(addons, items);
+  // the locker's fee rides with the add-ons, as on the booking app's review
+  const addonOnly = free ? 0 : addonsCost(addons, items);
+  const lkFee = !free && lk.period ? lk.fee : 0;
+  const addonTotal = addonOnly + lkFee;
   const word = t.sarWord;
   const freeAmt = <bdi className="tk-amt">{t.free}</bdi>;
   const grand = free ? freeAmt : disc > 0 ? <Money n={Math.max(0, lo - disc) + addonTotal} word={word} /> : <Money n={lo + addonTotal} hi={hi + addonTotal} word={word} />;
@@ -446,7 +459,14 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         const n = bookedRows.length || b.tickets.length;
         const rowsNow: { status: string }[] = b.tickets.length ? b.tickets : bookedRows;
         funnel(rowsNow.length > 0 && rowsNow.every((r) => r.status === "waitlist") ? "waitlisted" : "booked", fk()); funnelDone();
-        setDone({ tickets: b.tickets, booked: bookedRows, session: b.session ?? null, addonsSaved: b.addonsSaved !== false, route: b.route ?? null });
+        // the locker picked on the review, on the rows just booked (a paid row cannot hold one; the database says why)
+        let lockerLine: string | undefined;
+        if (lk.period && !free) {
+          const ids = (bookedRows.length ? bookedRows : b.tickets).filter((x) => x.status !== "active").map((x) => x.id);
+          const got = await reserveLockers(ids, lk);
+          lockerLine = got.ok ? (got.swap ? fillN(mw.lkGotOther, got.lockers.map((x) => x.code).filter(Boolean).join(", ")) : undefined) : lockerSay(mw, got, true);
+        }
+        setDone({ tickets: b.tickets, booked: bookedRows, session: b.session ?? null, addonsSaved: b.addonsSaved !== false, route: b.route ?? null, locker: lockerLine });
         setAcctNow((a) => {
           if (!a) return a;
           // the next booking asks what this one made due (_pgDue counts the rows)
@@ -632,6 +652,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           {missing && <p className="bk-sub">{t.doneInAccount}</p>}
         </div>
         {!done.addonsSaved && <p className="bk-warn" role="status">{t.addonsNotSaved}</p>}
+        {done.locker && <p className="bk-warn" role="status">{done.locker}</p>}
         <div className="tk-grid bk-tickets">
           {done.tickets.map((r) => (
             <TicketCard key={r.id} locale={locale} today={today} rows={[r]} session={ds ?? undefined} name={name}
@@ -877,6 +898,12 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
             </div>}
           </div>
         )}
+        {/* a locker for the evening, where the session offers lockers (none on a free ride): it draws nothing otherwise */}
+        {!free && !isAlready && (
+          <div className={`bk-card bk-lk${lk.offered ? "" : " bk-lk-none"}`}>
+            <LockerPick sessionId={sel.id} day={sel.date} locale={locale} max={riders.length} value={lk} onChange={setLk} words={mw} sarWord={word} />
+          </div>
+        )}
         <div className="bk-card">
           <div className="bk-rv-head">
             <div>
@@ -931,7 +958,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           {addonTotal > 0 && (
             <>
               <p className="bk-sum-row"><span>{t.rental}</span>{rental}</p>
-              <p className="bk-sum-row"><span>{t.addons}</span><Money n={addonTotal} word={word} /></p>
+              {addonOnly > 0 && <p className="bk-sum-row"><span>{t.addons}</span><Money n={addonOnly} word={word} /></p>}
+              {lkFee > 0 && <p className="bk-sum-row"><span>{mw.lkTitle}</span><Money n={lkFee} word={word} /></p>}
             </>
           )}
           <p className={`bk-sum-tot${addonTotal > 0 ? " sep" : ""}`}><span>{t.total}</span>{grand}</p>
@@ -954,7 +982,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           <>
             {err && <p className="bk-err" role="alert">{err}</p>}
             {/* the button says the outcome: Join waitlist on a full session, else Book; it rests until the waiver is ticked */}
-            <button type="button" className="bk-btn grow" disabled={busy || (wvAsk && !wvOk)} aria-busy={busy} onClick={() => void submit(full)}>
+            <button type="button" className="bk-btn grow" disabled={busy || (wvAsk && !wvOk) || !lk.ready} aria-busy={busy} onClick={() => void submit(full)}>
               {busy ? <span className="bk-spin" aria-hidden="true" /> : null}{full ? t.joinWl : t.book}
             </button>
           </>

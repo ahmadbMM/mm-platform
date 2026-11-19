@@ -350,3 +350,6 @@ html[dir="rtl"] .sx6-kit a { padding: 6px 6px 6px 12px; }
 /* A bike type whose own places are taken: Full where its price would be, dimmed, never picked (the booking app's tp-shut). */
 .bk-pill.shut { opacity: .55; cursor: not-allowed; }
 .bk-pill.shut .bk-pill-p { color: #a33b2e; font-weight: 700; }
+
+/* The locker's card on the review stays mounted (it reads the session's offer) but shows only where lockers are offered. */
+.bk-card.bk-lk-none { display: none; }
