@@ -11,7 +11,8 @@ const json = (route: Route, body: unknown, status = 200) => route.fulfill({ stat
 
 async function jccSession(page: Page): Promise<string | null> {
   const res = await page.request.get("/experiences");
-  const m = /ev=jcc&(?:amp;)?session=([A-Za-z0-9_-]+)/.exec(await res.text());
+  // the last step's link to the booking steps rides in the page's own data, its & written as \u0026
+  const m = /ev=jcc(?:&|&amp;|\\u0026)session=([A-Za-z0-9_-]+)/.exec(await res.text());
   return m ? m[1] : null;
 }
 
@@ -47,8 +48,8 @@ test("the confirmation's ticket cancels with a reason and edits its party, on th
   await page.locator(".bk-foot .bk-btn").click();
   await page.locator("#bk-wv-cb").check();
   await page.locator(".bk-foot .bk-btn.grow").click();
+  await expect(page.locator("#bk-done-h")).toBeVisible();
   const card = page.locator("article.tk-card").first();
-  test.skip(!(await card.isVisible().catch(() => false)), "the booking flow did not reach a confirmation here");
   // Edit: the party as it stands, names read-only, a height changed
   await card.locator(".tk-manage").getByRole("button", { name: "Edit" }).click();
   const d = page.locator("dialog[open]");
