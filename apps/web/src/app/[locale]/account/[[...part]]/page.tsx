@@ -204,7 +204,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         ...(amb ? [row("ambassador", "flag", { text: amb.code, add: false, ltr: true })] : []),
         ...(volunteerCardShows(volunteer) ? [row("volunteer", "clock", Number(volunteer.hours) > 0 ? { text: hoursText(Math.round(Number(volunteer.hours) * 100) / 100, locale), add: false } : null)] : []),
         ...(purch ? [row("purchases", "doc", purch.rows.length ? { text: String(purch.total), add: false, node: <Sar n={purch.total} word={sar} /> } : null)] : []),
-        row("workshop", "wrench", jobsUp[0]?.date ? { text: shortDay(jobsUp[0].date, intlOf(locale)), add: false } : null),
+        // the Workshop row only while the Workshop page is on, or for a rider who has an appointment (staff switch it off)
+        ...(!hidden.includes("workshop") || jobs.length ? [row("workshop", "wrench", jobsUp[0]?.date ? { text: shortDay(jobsUp[0].date, intlOf(locale)), add: false } : null)] : []),
         ...(cochOn ? [row("company", "briefcase", cochRows.length ? { text: cochRows.map((r) => r.company).join(" · "), add: false } : null)] : []),
         ...(!hidden.includes("club") ? [{ id: "club", label: w.clubCard, icon: "card" as const, href: localHref("/club#card", locale), out: true }] : []),
         ...(!hidden.includes("testimonials") ? [{ id: "testimonial", label: w.testimonial, icon: "star" as const, href: localHref("/testimonials/write", locale), out: true }] : []),

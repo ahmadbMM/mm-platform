@@ -145,18 +145,20 @@ describe("the menu", () => {
     expect(rowOf(plain.p, "ambassador")).toBeUndefined();
     expect(rowOf(plain.p, "volunteer")).toBeUndefined();
     expect(rowOf(plain.p, "company")).toBeUndefined();
-    expect(rowOf(plain.p, "workshop")).toBeDefined(); // the website's own: always there, empty until the function is
+    expect(rowOf(plain.p, "workshop")).toBeUndefined(); // the Workshop page is off and the rider has no appointment
     const more = await draw(undefined, (fn) => (
       fn === "ambassador_mine" ? json({ ok: true, ambassador: true, code: "SARA10", status: "active", earned: 40, balance: 10, uses: 3 })
         : fn === "volunteer_me" ? json({ hours: 6, status: "active" })
           : fn === "company_challenge_mine" ? json({ ok: true, rows: [{ id: 1, company: "Acme", starts_on: day(-3), ends_on: day(20), state: "on", mine: 2 }], open: true })
             : fn === "customer_emergency" ? json([{ emergency_name: "", emergency_phone: "", emergency_relation: "" }])
-              : fn === "customer_deletion_request" ? json({ requested_at: "2026-11-01T10:00:00Z" }) : null));
+              : fn === "customer_deletion_request" ? json({ requested_at: "2026-11-01T10:00:00Z" })
+                : fn === "customer_workshop_jobs" ? json([{ id: 42, ref: "W-0042", status: "confirmed", service: "Full service", preferred_date: day(3), created_at: "2026-11-18T10:00:00Z" }]) : null));
     expect(rowOf(more.p, "ambassador")?.value).toMatchObject({ text: "SARA10" });
     expect(rowOf(more.p, "volunteer")?.value?.text).toBe("6 hours");
     expect(rowOf(more.p, "company")?.value?.text).toBe("Acme");
     expect(rowOf(more.p, "emergency")?.value).toEqual({ text: "Add a contact", add: true });
     expect(menuOf(more.p)?.del?.value).toEqual({ text: "Requested", add: true });
+    expect(rowOf(more.p, "workshop")).toBeDefined(); // a rider with an appointment keeps the row while the page is off
   });
   it("opens a page beside it: Personal details when none is picked, else the one at the address, its row the current one", async () => {
     const home = await draw(undefined);
