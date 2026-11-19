@@ -14,7 +14,9 @@ import { pageState } from "@/lib/page-state";
 import { readAccount, rpcServer } from "@/lib/account";
 import { readAskList } from "@/lib/ask-server";
 import { memberArea, memberTitle } from "@/lib/members";
-import { readBuildup, readInterests, readMemberHub, readSeason, readSuggestions } from "@/lib/member-hub-server";
+import { readBuildup, readFirstFive, readHubFeed, readInterests, readInviteCode, readMemberHub, readMentor, readSeason, readSuggestions } from "@/lib/member-hub-server";
+import { readBookings } from "@/lib/account";
+import { lastAndAhead, recapLeads } from "@/lib/hub-feed";
 import { seasonKind } from "@/lib/hub-season";
 import { bloodName } from "@/content/blood-words";
 import { FARM_NAME, farmName } from "@/content/farm-words";
@@ -64,9 +66,19 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   // The Build-up plan (the booking app's _bupHtml, 2026-11-18; lib/buildup-plan.ts): the member's bookings and the sessions
   // as the account sees them, begun here too; a ride's Book waits for the booking window, as the app's _bwOpen(s, 1) does
   const bwin = siteBookingWindow(content);
+  const isMember = !!(acct && area?.ok && area.member);
+  // the member's own bookings, read once for the Build-up plan, the first five rides and the recap
+  const rowsP = acct && isMember ? readBookings(acct) : null;
   const bupP = acct && area?.ok && area.member
-    ? readBuildup(acct, riyadhClock(new Date()).slice(0, 10), sessionGender(acct.profile?.gender), (s) => !(bwin && notOpenYet(s.date, bwin, riyadhClock(new Date()), s.kind)))
+    ? readBuildup(acct, riyadhClock(new Date()).slice(0, 10), sessionGender(acct.profile?.gender), (s) => !(bwin && notOpenYet(s.date, bwin, riyadhClock(new Date()), s.kind)), rowsP ?? undefined)
     : null;
+  // The Community tab's own cards (lib/hub-feed.ts; the booking app's member-hub.js): its one read (hub_feed), the
+  // Mentorship programme (mentor_feed), the invitation's code (member_invite_code) and the first five rides (from the
+  // bookings above), begun here too
+  const hubP = acct && isMember ? readHubFeed(acct) : null;
+  const mtP = acct && isMember ? readMentor(acct) : null;
+  const invP = acct && isMember ? readInviteCode(acct) : null;
+  const p5P = acct && rowsP ? rowsP.then((rows) => readFirstFive(acct, rows)) : null;
   // My interests (the booking app's _intFetch, 2026-11-18; lib/member-interests.ts), begun here too
   const intP = acct && area?.ok && area.member ? readInterests(acct) : null;
   // and Suggest a ride's own rows (the booking app's _rsgFetch; lib/ride-suggestions.ts)
@@ -111,10 +123,16 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const interests = intP ? await intP : null;
   const suggestions = rsgP ? await rsgP : null;
   const season = seasonKind(ssnP ? await ssnP : null, today);
+  const [hubFeed, mentor, invite, p5, myRows] = await Promise.all([hubP, mtP, invP, p5P, rowsP]);
+  // the Saturday report of the member's own ride just finished leads the area, with nothing booked ahead (the app's recap)
+  const la = lastAndAhead(myRows ?? [], today);
+  const recap = !!myRows && recapLeads(hubFeed?.post ?? null, la.last, la.ahead, drawn.getTime());
   // the event the Build-up plan is for, named as its ticket names it (an Arabic page by its Arabic name)
   const bupName = bup ? sessionName({ kind: bup.ev.kind, title: bup.ev.title, titleAr: bup.ev.titleAr }, kindName, enName, L !== "en", L === "ar") : "";
   // My month's kinds, named as My Account's Stats names them (a Petromin night, the Blood Donation event too)
   const kindOf: Record<RideKind, string> = { ...kindName, petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
+  // Your year's kinds tried, named as My month names them (a kind the site has no name for is left out)
+  const yearKinds = (hubFeed?.year?.kinds ?? []).filter((k) => k in kindOf && kindOf[k as RideKind]).map((k) => ({ k, name: kindOf[k as RideKind] }));
   // a members' ride not open to book yet says when it opens, beside a clock; within a day of it, a countdown to the
   // real window that the browser keeps up to date each minute and that turns into Book on time, as on Experiences
   const window = siteBookingWindow(content);
@@ -167,7 +185,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         )}
         <section className="club-join" id="card">
           {members?.member ? (
-            <MembersArea bup={bup ? { plan: bup, name: bupName } : null} interests={interests} suggestions={suggestions} season={season} plan={plan} month={month} kindName={(k) => kindOf[k] || enName[k] || k} asks={asks} title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens} opensAt={opensWhen} opensWords={opensInWords(tx)}
+            <MembersArea hub={hubFeed} recap={recap} yearKinds={yearKinds} p5={p5} mentor={mentor} invite={invite} bup={bup ? { plan: bup, name: bupName } : null} interests={interests} suggestions={suggestions} season={season} plan={plan} month={month} kindName={(k) => kindOf[k] || enName[k] || k} asks={asks} title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens} opensAt={opensWhen} opensWords={opensInWords(tx)}
               sgOf={(r) => (r.gender === undefined ? null : genderChip(r, sgWords))} refusalOf={(r) => genderBlock(r, viewer, sgWords)} />
           ) : members ? (
             <div className="club-lookup">

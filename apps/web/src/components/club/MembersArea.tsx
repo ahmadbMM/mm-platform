@@ -27,6 +27,16 @@ import SuggestRide from "./SuggestRide";
 import SeasonCard from "./SeasonCard";
 import type { RsgRow } from "@/lib/ride-suggestions";
 import { memberHubWords } from "./MemberHub.words";
+import { yearFrom, type HubFeed } from "@/lib/hub-feed";
+import type { MtFeed } from "@/lib/mentorship";
+import { fill } from "@/i18n/tx";
+import { ratingFinWords } from "@/components/account/RatingFin.words";
+import { CHALLENGE_KEYS, communityWords, mentorWords, pickWords, YEAR_KEYS } from "./Community.words";
+import { ClubGoalCard, FirstFiveCard, ReportCard, SeasonGoalCard, TipCard, VolunteerCallCard } from "./HubCards";
+import ChallengeCard from "./ChallengeCard";
+import YearCard from "./YearCard";
+import Mentorship from "./Mentorship";
+import InviteFriend from "./InviteFriend";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
 // their card - name, since when, credits, tier and what is left to the next - their attendance
@@ -45,6 +55,14 @@ import { memberHubWords } from "./MemberHub.words";
 // stands near the end of its tab, before its invitation; the Ramadan season (SeasonCard.tsx, lib/hub-season.ts): its card
 // leads the area while Ramadan runs and on Eid al-Fitr's first three days, and the members' sessions take its night blue
 // and gold, as the app's next session's card does.
+// The Community tab's own cards (2026-11-19, the owner's rule of 2026-10-01: what the booking app shows a customer, the
+// website shows too), from its one read, hub_feed (lib/hub-feed.ts), placed as the app's tab places them: with nothing
+// booked ahead, the Saturday report of the member's own ride just finished leads the area (`recap`); Your year
+// (December and January) after My interests; Your challenge - or, under five rides, the first five rides (`p5`) - after
+// the upcoming sessions; the season challenges and the club goal after Plan my Saturdays; then the staff card (the
+// Saturday report, the announcements, else the tip of the week), the Mentorship programme (mentor_feed, lib/
+// mentorship.ts), Volunteers needed, Suggest a ride, and the invitation to a Saturday social ride (`invite`, the member's
+// code). hub_feed's club numbers and each session's riders are never read (no head counts for customers, 2026-11-13).
 type Props = {
   locale: string;
   L: Locale;
@@ -90,9 +108,20 @@ type Props = {
   suggestions?: RsgRow[] | null;
   /** The Ramadan season today (lib/hub-season.ts seasonKind): its card and look; "" or none: neither. */
   season?: "ramadan" | "eid" | "";
+  /** The Community tab's read (hub_feed, lib/hub-feed.ts); none: none of its cards. `recap`: its Saturday report leads. */
+  hub?: HubFeed | null;
+  recap?: boolean;
+  /** The kinds the member tried this year, named in the page's language, for Your year's slides. */
+  yearKinds?: { k: string; name: string }[];
+  /** The first five rides in the challenge's place (lib/first-five.ts firstFiveTab); none: the challenge. */
+  p5?: { n: number; tg: number } | null;
+  /** The Mentorship programme (mentor_feed); none: no card. */
+  mentor?: MtFeed | null;
+  /** The member's invitation code (member_invite_code); none: no invitation. */
+  invite?: string | null;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions, season }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions, season, hub, recap, yearKinds, p5, mentor, invite }: Props) {
   const t = serverLocalize(T, locale);
   const ask = serverLocalize(ASK_T, locale);
   const N = (n: number) => fmtNum(n, locale);
@@ -101,6 +130,8 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
   const since = a.since ? new Intl.DateTimeFormat(intlOf(locale), { month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(a.since)) : "";
   const pct = a.tier >= 2 || !a.next ? 100 : Math.min(100, Math.round((a.credits / a.next) * 100));
   const anns = announcementsOf(a.announcements, L);
+  const cw = communityWords(locale), rf = ratingFinWords(locale), first = firstNameOf(a.firstName);
+  const report = hub?.post ? <ReportCard p={hub.post} locale={locale} w={cw} /> : null;
   const when = (time: string | null) => {
     const m = /^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/.exec(time || "");
     return m ? <bdi dir="ltr">{m[1]} – {m[2]}</bdi> : time ? <bdi dir="ltr">{time}</bdi> : null;
@@ -113,6 +144,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
       {isBirthday(a.birthDate, today) && (
         <p className="club-bday" role="status"><strong>{t.birthday(a.firstName)}</strong><span>{t.birthdayText}</span></p>
       )}
+      {recap && report}
       <div className={`club-cardviz tier-${a.tier}`}>
         <div className="club-cardviz-top">
           <span className="club-cardviz-brand"><img src={a.tier === 2 ? "/site/logo-mark-dark.png" : "/site/logo-mark.png"} alt="Micromobility" /><span>{t.label}</span></span>
@@ -129,6 +161,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
 
       {bup && <BuildupPlan locale={locale} plan={bup.plan} name={bup.name} bookAt={(id) => bookAt(id, "saturday")} />}
       <InterestsCard at="first" />
+      {hub?.year && <YearCard y={hub.year} locale={locale} w={pickWords(cw, YEAR_KEYS)} kinds={yearKinds ?? []} from={yearFrom(hub.year, locale)} />}
 
       {title && (
         <section className="club-comm" aria-labelledby="club-comm-h">
@@ -195,15 +228,26 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
         ) : <p className="club-att-empty">{empty}</p>}
       </section>
 
+      {hub && (p5
+        ? <FirstFiveCard n={p5.n} tg={p5.tg} name={rf.p5} of={fill(rf.p5Of, N(p5.n), N(p5.tg))} w={cw} />
+        : hub.me && <ChallengeCard me={hub.me} locale={locale} w={pickWords(cw, CHALLENGE_KEYS)} name={first} />)}
+
       {plan && <PlanSaturdays boxes={planBoxes(plan, locale)} title={memberHubWords(locale).plan} month={plan.month ? monthName(plan.month, locale) : ""} err={memberHubWords(locale).err} />}
 
+      {hub?.goals.map((g) => <SeasonGoalCard key={g.id || g.name} g={g} locale={locale} w={cw} shareLabel={cw.kMile} first={first} />)}
+      {hub?.club && <ClubGoalCard g={hub.club} locale={locale} w={cw} />}
+      {!recap && report}
       {anns.length > 0 && (
         <section className="club-ann" aria-labelledby="club-ann-h">
           <h3 id="club-ann-h">{t.announcements}</h3>
           <ul>{anns.map((x, i) => <li key={i}>{x.text}{x.cta && x.href ? <> <a href={localHref(x.href, locale)}>{x.cta} {arrow}</a></> : null}</li>)}</ul>
         </section>
       )}
+      {hub && !hub.post && !anns.length && <TipCard today={hub.today || today} w={cw} />}
+      {mentor && <Mentorship feed={mentor} locale={locale} w={{ ...mentorWords(cw), cancel: memberHubWords(locale).intCancel }} />}
+      {hub?.volunteer && <VolunteerCallCard id={hub.volunteer} w={cw} />}
       {suggestions && <SuggestRide locale={locale} rows={suggestions} words={suggestWords(locale)} />}
+      {invite && <InviteFriend code={invite} locale={locale} label={cw.invBtn} msg={cw.invMsg} />}
       <InterestsCard at="end" />
     </div>
     </InterestsBox>

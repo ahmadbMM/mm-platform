@@ -7,6 +7,10 @@ import type { SessionGender } from "./session-gender";
 import { interestsOf, type Interests } from "./member-interests";
 import { rsgRows, type RsgRow } from "./ride-suggestions";
 import { ramadanOf, type Ramadan } from "./hub-season";
+import { hubFeedOf, inviteCodeOf, type HubFeed } from "./hub-feed";
+import { mentorFeedOf, type MtFeed } from "./mentorship";
+import { firstFiveIds, firstFiveTab } from "./first-five";
+import { loadRecordSessions } from "./ride-record-data";
 
 /** Plan my Saturdays and My month for a signed-in member of /club (lib/member-hub.ts), read with the account's own
  *  token, at once: hub_plan always, hub_month only from the 26th (Riyadh's `today`, "YYYY-MM-DD"), as the booking app
@@ -26,10 +30,11 @@ const rowsOf = (v: unknown): Record<string, unknown>[] => (Array.isArray(v) ? v.
  *  card's first Saturday to the day before the event. Nothing else is read, and nothing is kept. `gender`: the member's,
  *  for a ride for one gender; `open(s)`: the booking window has opened on that ride. Null: no card (none marked, no
  *  Saturday left, or a read that failed). */
-export async function readBuildup(acct: Session, today: string, gender: SessionGender | null, open: (s: BupSession) => boolean): Promise<BupPlan | null> {
+export async function readBuildup(acct: Session, today: string, gender: SessionGender | null, open: (s: BupSession) => boolean,
+  rows?: Promise<Record<string, unknown>[] | null>): Promise<BupPlan | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key || !/^\d{4}-\d\d-\d\d$/.test(today)) return null;
-  const raw = await readBookings(acct);
+  const raw = await (rows ?? readBookings(acct));
   if (!raw) return null;
   const bookings = bupBookings(raw);
   const held = [...new Set(rowsOf(raw).filter((r) => (r.status === "waiting" || r.status === "active") && String(r.session_date ?? "").slice(0, 10) > today)
@@ -69,4 +74,33 @@ export async function readSuggestions(acct: Session): Promise<RsgRow[] | null> {
  *  with the account's own token. Null: no Ramadan known, a refusal, or a database without the function. */
 export async function readSeason(acct: Session): Promise<Ramadan | null> {
   return ramadanOf(await rpcServer<unknown>("hub_season", { p_id: acct.id, p_token: acct.token }));
+}
+
+/** The Community tab's one read for a signed-in member of /club (lib/hub-feed.ts; the booking app's _hubFetch): hub_feed
+ *  with the account's own token, never kept. It is asked without an entry point (p_src), as the app's own re-reads are, so
+ *  the app's count of where its tab is opened from is not changed by the website. Null: none of its cards. */
+export async function readHubFeed(acct: Session): Promise<HubFeed | null> {
+  return hubFeedOf(await rpcServer<unknown>("hub_feed", { p_id: acct.id, p_token: acct.token }));
+}
+
+/** The Mentorship programme for a signed-in member of /club (lib/mentorship.ts; the booking app's _mtFetch): mentor_feed
+ *  with the account's own token, never kept. Null: no card (a database without the programme, a refusal, no answer). */
+export async function readMentor(acct: Session): Promise<MtFeed | null> {
+  return mentorFeedOf(await rpcServer<unknown>("mentor_feed", { p_id: acct.id, p_token: acct.token }));
+}
+
+/** The member's own invitation code (member_invite_code, the booking app's _invEnsure: made on its first read), read
+ *  before the tap, as a phone opens its share sheet only from the tap itself. Null: no invitation button. */
+export async function readInviteCode(acct: Session): Promise<string | null> {
+  return inviteCodeOf(await rpcServer<unknown>("member_invite_code", { p_id: acct.id, p_token: acct.token }));
+}
+
+/** The first five rides on /club (lib/first-five.ts firstFiveTab; the booking app's _p5Tab), from the account's own
+ *  bookings (`rows`, read once for the page) and their sessions' kinds, counted only once every finished booking's
+ *  session came back, as the app counts only from a whole read. Null: the month's challenge stays. */
+export async function readFirstFive(acct: Session, rows: Record<string, unknown>[] | null): Promise<{ n: number; tg: number } | null> {
+  if (!rows) return null;
+  const ids = firstFiveIds(rows);
+  const sessions = ids.length ? await loadRecordSessions(ids, acct) : new Map();
+  return ids.every((id) => sessions.has(id)) ? firstFiveTab(rows, sessions) : null;
 }
