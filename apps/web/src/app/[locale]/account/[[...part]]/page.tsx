@@ -1,35 +1,31 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
-import SignIn from "@/components/account/SignIn";
-import SignOut from "@/components/account/SignOut";
-import HandoffLink from "@/components/account/HandoffLink";
 import "@/components/account/account.css";
+import "@/components/account/account-menu.css";
 import "@/components/booking/booking.css";
-import TicketCard, { TicketCancelled } from "@/components/booking/TicketCard";
-import { TicketWake } from "@/components/booking/TicketParts";
-import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
 import RideMore from "@/components/account/RideMore";
 import HelperPath, { helperLine } from "@/components/account/HelperPath";
 import { Anniversary, TriedKinds } from "@/components/account/Landmarks";
-import AccountParts, { accountPartHref, accountPartOf } from "@/components/account/AccountParts";
+import AccountParts from "@/components/account/AccountParts";
 import WalletCard from "@/components/account/WalletCard";
 import ReferralCard from "@/components/account/ReferralCard";
 import VolunteerCard, { volunteerCardShows, type VolunteerMe } from "@/components/account/VolunteerCard";
+import { hoursText } from "@/components/account/Volunteer.words";
+import { walletWords } from "@/components/account/Wallet.words";
+import { Sar } from "@/components/booking/Sar";
 import { walletOf } from "@/lib/wallet";
 import { referralOf, referralRodeOf } from "@/lib/referral";
-import BloodTypeCard from "@/components/account/BloodTypeCard";
 import { bloodTypeWords } from "@/components/account/BloodType.words";
 import SportCard from "@/components/account/SportCard";
-import { sportWords } from "@/components/account/Sport.words";
 import CalendarFeed from "@/components/account/CalendarFeed";
 import { calendarWords } from "@/components/account/Calendar.words";
 import { calfHost, calfLang, calfPeekOn } from "@/lib/calendar-feed";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
+import { T as WS_TRACK } from "@/components/workshop/WorkshopTrack.text";
 import "../handoff.css";
 import { accountSchema } from "@/content/pages/account";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
@@ -37,28 +33,15 @@ import { FARM_NAME, farmBadge, farmName } from "@/content/farm-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { readAccount, readBookings, rpcServer } from "@/lib/account";
-import { bloodRewards, isBloodId, rewardGood } from "@/lib/blood";
 import { btOf } from "@/lib/blood-type";
-import { spOf, spOptionsOf } from "@/lib/sport";
-import { emAbsent } from "@/lib/emergency";
-import { decodeSession } from "@/lib/account-core";
-import { HANDOFF_COOKIE, accountLabel, sessionProfile } from "@/lib/handoff";
+import { spName, spOf, spOptionsOf } from "@/lib/sport";
+import { emAbsent, emState } from "@/lib/emergency";
 import { asLocale, resolvePage } from "@/lib/content";
-import { fill } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { kindNames, sessionName, type RideKind } from "@/lib/rides";
-import { routeItems } from "@/lib/route-names";
-import { routePageOf } from "@/lib/route-track";
-import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
-import { tmAboutOfKind } from "@/lib/testimonials";
-import { isNonBike } from "@/lib/bike-kinds";
-import { loadAddonItems } from "@/lib/ticket-addons";
-import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
-import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
-import { bikeReport } from "@/lib/bike-report";
+import { kindNames, type RideKind } from "@/lib/rides";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
-import { bikeName, loadBadgeData, loadBikeTypes, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
+import { loadBadgeData, loadBikeTypes, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
 import { myRecords } from "@/lib/my-records";
 import MyRecords from "@/components/account/MyRecords";
 import { anniversaryOf, annivLine, triedKinds } from "@/lib/landmarks";
@@ -66,428 +49,292 @@ import { helperPathOf } from "@/lib/helper-path";
 import { shareDays } from "@/lib/share-days";
 import { firstNameOf } from "@/lib/share-picture";
 import { riyadhClock } from "@/lib/workshop-days";
+import { purchasesOf } from "@/lib/account-profile";
+import { pastJobs, upcomingJobs, workshopJobsOf } from "@/lib/workshop-mine";
+import { ACC_DEFAULT_PAGE, accHref, accountRoute, detailValues, initialsOf, lcLabel, pageTitle, shortDay, type AccPage, type RowValue } from "@/lib/account-menu";
+import { fmtDayDate } from "@/lib/tickets";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
-import { intlOf } from "@/i18n/locales";
-import { bizOf } from "@/lib/biz";
+import { LOCALES, intlOf, localeInfo } from "@/i18n/locales";
+import { Link } from "@/i18n/navigation";
 import { ArrowIcon } from "@/components/site/Icons";
-import Qr from "@/components/booking/Qr";
+import { accWords } from "@/components/account/AccountMenu.words";
+import AccMenu, { type MenuGroup, type MenuRow, type MenuTile } from "@/components/account/AccMenu";
+import AccIcon from "@/components/account/AccIcon";
+import CityLabel from "@/components/account/CityLabel";
+import { AccFocus, AccGuard } from "@/components/account/AccForm";
+import { AccAbout, AccContact, AccPersonal, AccResidence, AccRiding, type WaState } from "@/components/account/AccDetails";
+import { AccAmbassador, AccCompany, AccDelete, AccEmergency, AccPassword, type AmbMine, type CompanyRow, type EmRow } from "@/components/account/AccPages";
+import { AccPurchases, AccWorkshop } from "@/components/account/AccLists";
+import { handoffNotice, signedOutView, unreadView } from "@/components/account/gate";
 
-// micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
-// the next rides as the booking app's own tickets (changing one opens the booking app), a link to the
-// Club card (on /club, read with the account's own session since club_card was closed, 2026-11-11),
-// and shortcuts. After the booking app hands a rider back (api/account/handoff), it says whom they are
-// signed in as (?handoff=done), or, when the account handed back is not the one signed in here, asks
-// which one this browser keeps.
-// In three parts since 2026-11-09, as the booking app's account page (the owner: "divide the customer my account page
-// into 3 separate pages account stats badges"): Account at /account (the tickets, the Club card link, the wallet, Invite
-// friends and the rest), Stats at /account/stats (Your rides and more of the record), Badges at /account/badges. The
-// switch under the greeting moves between them; any other /account/... is not a page.
+// micromobility.sa/account - sign in with the Micromobility account riders book with; signed in, the booking app's own
+// Account (the user, 2026-11-19: "i want the account page to be very similar on main for it on booking app"): the profile
+// card above the Account | Stats | Badges switch, then on Account the Wallet and Invite friends tiles and the menu, whose
+// rows open small pages at their own addresses (/account/personal, /account/contact ...; lib/account-menu.ts), each with
+// its own Save. A wide screen shows the menu and the open page side by side (Personal details when none is picked); a
+// phone the menu, or one page with Back. The bookings are their own page, /bookings (a ticket in the header). Stats at
+// /account/stats and Badges at /account/badges are the record, as before (2026-11-09). After the booking app hands a rider
+// back (api/account/handoff), the page says whom they are signed in as, or asks which account this browser keeps.
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const TYPE_NAME: Record<string, { en: string; ar: string }> = {
   Road: phrase("Road", "طريق"), Hybrid: phrase("Hybrid", "هجين"), Mountain: phrase("Mountain", "جبلي"), "Road Carbon": phrase("Road Carbon", "طريق كربون"),
   Kids: phrase("Kids", "أطفال"), Gravel: phrase("Gravel", "حصى"), Any: phrase("Any bike", "أي دراجة"), Own: phrase("Own bike", "دراجتي الخاصة"),
 };
+const TECH_WA = "966579543997";
+const TECH_SHOWN = "+(966) 57 954 3997";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; part?: string[] }> }): Promise<Metadata> {
   const { locale, part } = await params;
-  return pageMeta({ path: accountPartHref(accountPartOf(part) ?? "account"), locale, title: `${serverL(locale)("Account", "الحساب")} · Micromobility`, noindex: true });
+  const route = accountRoute(part);
+  const w = accWords(locale);
+  const view = route?.view ?? "account", page = route?.page ?? null;
+  const name = page ? pageTitle(page, w, { calendar: calendarWords(locale).row }) : view === "account" ? w.account : view === "stats" ? w.stats : w.badges;
+  return pageMeta({ path: page ? accHref(page) : accHref(view), locale, title: `${name}${name === w.account ? "" : ` · ${w.account}`} · Micromobility`, noindex: true });
 }
 
 export default async function AccountPage({ params, searchParams }: { params: Promise<{ locale: string; part?: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { locale, part: seg } = await params;
-  const part = accountPartOf(seg);
-  if (!part) notFound();
+  const route = accountRoute(seg);
+  if (!route) notFound();
+  const { view, page } = route;
   const handoffState = (await searchParams).handoff;
-  const expired = handoffState === "expired";
   const L = asLocale(locale);
   const tx = serverL(locale);
+  const w = accWords(locale);
   const [{ content, previewing, hidden }, read] = await Promise.all([pageState("account"), readAccount()]);
   const acct = read === "unread" ? null : read;
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(accountSchema, content, L);
   const app = navFrom(site).booking; // the booking app as staff set it
-  const book = bookingLink(app, locale);
   const handoff = (auth?: string) => bookingLink(`${app.replace(/[?#].*$/, "")}?handoff=site${auth ? `&auth=${auth}` : ""}`, locale);
-  const again = localHref(accountPartHref(part), locale); // this page once more, when a read failed
+  const here = page ? accHref(page) : accHref(view);
+  const again = localHref(here, locale); // this page once more, when a read failed
+  const shell = (body: React.ReactNode) => <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>{body}</PageShell>;
+
+  if (read === "unread") return shell(unreadView(tx, again));
+  if (!acct) return shell(await signedOutView({ tx, locale, expired: handoffState === "expired", signin: c.signin, handoff }));
+
+  const notice = await handoffNotice({ tx, acct, state: handoffState });
+  const a = { p_id: acct.id, p_token: acct.token };
+  const prof = (acct.profile ?? {}) as Record<string, unknown>;
+  const now = riyadhClock(new Date());
+  const today = now.slice(0, 10);
+  const recordBase = serverLocalize(RECORD, locale);
+  const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
   const tryAgain = tx("Try again", "حاول مرة أخرى");
-
-  // The session could not be checked just now (the database slow or out of reach): said so, with the page once more and
-  // Sign out, rather than the sign-in form, which told a rider who is signed in that they were not.
-  if (read === "unread") {
-    return (
-      <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
-        <div className="ac">
-          <section className="ac-card">
-            <img src="/site/logo-dark.png" alt="Micromobility" className="ac-logo" />
-            <h1>{tx("Something went wrong", "حدث خطأ ما")}</h1>
-            <p className="ac-text" role="alert">{tx("Please try again in a moment.", "يرجى المحاولة مرة أخرى بعد قليل.")}</p>
-            <a className="ac-go ac-vol-go" href={again}>{tryAgain}</a>
-            <ul className="ac-notes"><li><SignOut label={tx("Sign out", "تسجيل الخروج")} /></li></ul>
-          </section>
-        </div>
-      </PageShell>
-    );
-  }
-
-  if (!acct) {
-    // A hand-back this browser did not ask for (api/account/handoff), kept aside: the account it would sign in as is
-    // named, and signed in only when the rider says so.
-    const parked = decodeSession((await cookies()).get(HANDOFF_COOKIE)?.value);
-    const offeredP = parked ? await sessionProfile(parked) : null;
-    const offered = offeredP && offeredP !== "none" ? offeredP : null;
-    if (offered) {
-      return (
-        <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
-          <div className="ac">
-            <section className="ac-card" aria-labelledby="ac-ho-h">
-              <img src="/site/logo-dark.png" alt="Micromobility" className="ac-logo" />
-              <h1 id="ac-ho-h">{fill(tx("Sign in as {name}?", "تسجيل الدخول باسم {name}؟"), { name: offered.name || offered.email || offered.phone })}</h1>
-              <p className="ac-text">{fill(tx("This link signs this site in as {who}. Continue only if this is your account.", "يسجّل هذا الرابط الدخول إلى هذا الموقع باسم {who}. تابع فقط إن كان هذا حسابك."), { who: accountLabel(offered) })}</p>
-              <form method="post" action="/api/account/handoff" className="ac-ho-btns">
-                <button type="submit" name="do" value="switch" className="ac-go">{tx("Continue", "متابعة")}</button>
-                <button type="submit" name="do" value="stay" className="ac-out">{tx("Cancel", "إلغاء")}</button>
-              </form>
-            </section>
-          </div>
-        </PageShell>
-      );
-    }
-    return (
-      <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
-        <div className="ac">
-          <section className="ac-card">
-            <img src="/site/logo-dark.png" alt="Micromobility" className="ac-logo" />
-            <p className="ac-eyebrow">{S(c.signin.eyebrow)}</p>
-            <h1>{S(c.signin.title)}</h1>
-            <p className="ac-text">{S(c.signin.text)}</p>
-            {expired && <p className="ac-err" role="status">{tx("That sign-in link has expired. Please sign in again.", "انتهت صلاحية رابط تسجيل الدخول. يرجى تسجيل الدخول مجدداً.")}</p>}
-            <SignIn locale={locale} />
-            {/* Sign-up and a password reset happen in the booking app, which hands the rider back
-                here signed in (?handoff=site; api/account/handoff). */}
-            <ul className="ac-notes">
-              <li><HandoffLink href={handoff("signup")}>{S(c.signin.create)}</HandoffLink></li>
-              <li><HandoffLink href={handoff("forgot")}>{S(c.signin.forgot)}</HandoffLink></li>
-            </ul>
-          </section>
-        </div>
-      </PageShell>
-    );
-  }
-
-  // A session the booking app handed back while this account was signed in (lib/handoff.ts): named
-  // here, with the choice of account, until the rider answers or five minutes pass.
-  const kept = decodeSession((await cookies()).get(HANDOFF_COOKIE)?.value);
-  const handedP = kept && kept.id !== acct.id ? await sessionProfile(kept) : null;
-  const handed = handedP && handedP !== "none" ? handedP : null;
-  // the bookings; when they could not be read, the rides and the record say so rather than that there are none
-  const booked = await readBookings(acct);
-  const unread = booked === null;
-  const rows = booked ?? [];
+  const sar = tx("SAR", "ريال");
   const failed = (
     <p className="ac-empty" role="alert">
       {tx("Something went wrong at our end. Check your connection and try again.", "حدث خلل لدينا. تحقق من اتصالك وحاول مرة أخرى.")} <a href={again}>{tryAgain} <ArrowIcon size={15} /></a>
     </p>
   );
-  const now = riyadhClock(new Date());
-  const today = now.slice(0, 10);
-  const d = resolvePage(experiencesSchema, content, L).dates;
-  // (the Farm House Night's name is the server's, content/farm-words.ts: on a member's own ticket and their Stats)
-  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx), farm: farmName(tx) };
-  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME, farm: FARM_NAME };
-  const ticketText = serverLocalize(TICKET, locale);
-  const recordBase = serverLocalize(RECORD, locale);
-  const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
-  const first = acct.name.trim().split(/\s+/)[0] || acct.name;
-  // Invite friends (rentals 20261108160000): the account's code is made the first time it is asked for; no card while
-  // the database has none, referrals are switched off, or it cannot be read. Stats and Badges ask too: the Recruiter
-  // badge counts the friends who rode.
-  const referralP = rpcServer<unknown>("customer_referral", { p_id: acct.id, p_token: acct.token, p_make: true }).then((r) => (r.status === 200 ? r.data : null));
+  // Invite friends (rentals 20261108160000): the account's code is made the first time it is asked for; no tile while the
+  // database has none, referrals are switched off, or it cannot be read. Stats and Badges ask too: the Recruiter badge
+  // counts the friends who rode.
+  const referralP = rpcServer<unknown>("customer_referral", { ...a, p_make: true }).then((r) => (r.status === 200 ? r.data : null));
 
-  // Account: the tickets, the rating, the Club card link, the wallet, Invite friends, the blood type, the sport and the shortcuts.
+  // ── Account: the menu and the open page ──────────────────────────────────────────────────────────────────────────
   const accountMain = async () => {
-    // the calendar address (2026-11-13): its section shows only once calendar_link's peek answers, which makes nothing and
-    // sends no key; a database without it, or a failed read, shows none (lib/calendar-feed.ts)
-    const calendarP = rpcServer<unknown>("calendar_link", { p_id: acct.id, p_token: acct.token, p_op: "peek" }).then(calfPeekOn);
-    const groups = ticketGroups(rows, today);
-    const doneTonight = doneToday(rows, today);
-    const cancelled = cancelledGroups(rows, today); // kept, said as such, until their day has gone (2026-11-10)
-    const donorEarlier = bloodDone(rows, today); // the Blood Donation event, over: kept below while its free ride is good
-    // Finished rides not rated yet, one per night (a party rates once, on its first rider): the
-    // booking app's post-ride rating. The oldest from the day it went live on is the pop-up the
-    // rider cannot skip (RatingGateLoader, on every page; the booking app's _pendingRatingId), and
-    // every later one is that pop-up in its turn: only rides from before that day are cards here.
-    const gate = pendingRating(rows, today);
-    const toRate = unratedRides(rows, today).filter((r) => r.date < RATE_FROM && r.entryId !== gate?.entryId).reverse().slice(0, 5);
-    // every booked session, whatever its state now (a Petromin night, one staff closed since), read
-    // with the account's token so a private ride (one its tag holders alone may see) keeps its name
-    const [sessions, blood, walletRead, referralRaw, lockersRaw, sport] = await Promise.all([
-      loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : []), ...cancelled.map((g) => g.sessionId)], acct),
-      // the blood type (2026-10-14): no card while the database has no customer_blood_type yet, nor
-      // when it cannot be read just now (a card showing none would invite saving over the real one)
-      rpcServer<unknown>("customer_blood_type", { p_id: acct.id, p_token: acct.token })
-        .then((r) => (r.status === 0 || r.status >= 400 || emAbsent(r) ? null : { type: btOf(r.data) })),
-      // the wallet (rentals 20261102210000): no card and no pay button while the database has none or cannot be read
-      rpcServer<unknown>("customer_wallet", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? walletOf(r.data) : null)),
+    const shown: AccPage = page ?? ACC_DEFAULT_PAGE; // the page drawn beside the menu (on a phone /account shows the menu alone)
+    const cal = calendarWords(locale);
+    // Everything the rows say, read at once with the account's own session; each read that fails, or a database without
+    // the function, leaves its row out (or says nothing on it), as the booking app hides what the server cannot answer for.
+    const [aboutR, emR, spR, walletR, referralRaw, ambR, volR, purR, wsR, cochR, calOn, delR] = await Promise.all([
+      rpcServer<Record<string, unknown>[]>("customer_about", a),
+      rpcServer<unknown[]>("customer_emergency", a),
+      rpcServer<unknown>("customer_sport", a),
+      rpcServer<unknown>("customer_wallet", a),
       referralP,
-      // the lockers (rentals 20261109120000): the period and number on a ticket's locker line; none read, the line says Locker
-      rpcServer<unknown>("customer_lockers", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? r.data : null)),
-      // whether they compete in a sport (rentals 20261110233000): no card while the database has no customer_sport
-      // yet, nor when it cannot be read just now (a card asking the question would invite saving over the answer)
-      // (and the sports staff added to the list, which the card offers after the user's)
-      Promise.all([
-        rpcServer<unknown>("customer_sport", { p_id: acct.id, p_token: acct.token }),
-        rpcServer<unknown>("sport_option_list", {}),
-      ]).then(([r, o]) => {
-        const row = r.status === 200 && Array.isArray(r.data) ? spOf(r.data[0]) : null;
-        if (!row) return null;
-        // a list that cannot be read just now keeps the rider's own added sports: an empty one would drop them on Save
-        const added = o.status === 200 ? spOptionsOf(o.data) : row.feds.filter((c) => c.startsWith("x_")).map((code) => ({ code, en: code, ar: null }));
-        return { ...row, added };
-      }),
+      rpcServer<Record<string, unknown>>("ambassador_mine", a),
+      rpcServer<VolunteerMe>("volunteer_me", a),
+      rpcServer<unknown[]>("customer_purchases", a),
+      rpcServer<unknown[]>("customer_workshop_jobs", a),
+      rpcServer<{ ok?: boolean; rows?: unknown[]; open?: boolean }>("company_challenge_mine", a),
+      rpcServer<unknown>("calendar_link", { ...a, p_op: "peek" }).then(calfPeekOn),
+      rpcServer<{ requested_at?: string | null }>("customer_deletion_request", { ...a, p_request: null }),
     ]);
-    // A ride whose breakfast spot is for community members only (bike_slots._bfm; the booking app's _bfOff, 2026-11-13)
-    // tells it to a member alone: the members gate's own answer (community_member), asked only when such a ride is here;
-    // a failed check reads as no.
-    if ([...sessions.values()].some((x) => x.bfMembers)) {
-      const mem = (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data === true;
-      for (const [k, v] of sessions) sessions.set(k, bfFor(v, mem));
-    }
-    const lockers = lockersRaw == null ? null : lockersOf(lockersRaw);
-    // the rider's own lockers with no booking behind them (the lockers page; 2026-11-09): on that evening's ride ticket,
-    // and as Your lockers below the rides, each evening with the QR the desk scans to hand the keys
-    const own = ownLockersOf(lockersRaw, today);
+    const about = aboutR.status === 200 && Array.isArray(aboutR.data) ? (aboutR.data[0] ?? null) : null;
+    const aboutOn = !!about; // gender, profession, company and how they heard: once customer_about answers (the app's 'workplace' in cust)
+    // the emergency contacts (customer_emergency): the row and its page, unless the database has no such function
+    const emRow = Array.isArray(emR.data) ? (emR.data[0] as Record<string, unknown> | undefined) ?? null : null;
+    const emOn = emR.status === 200 && !!emRow;
+    const em = emRow ? emState(emRow) : null;
+    const emOf = (p: "" | "2"): EmRow | null => (emRow && S(emRow[`emergency${p}_name`]) ? { name: S(emRow[`emergency${p}_name`]), phone: S(emRow[`emergency${p}_phone`]), rel: S(emRow[`emergency${p}_relation`]) } : null);
+    // the sport question (rentals 20261110233000): its row once answered or asked
+    const sp = spR.status === 200 && Array.isArray(spR.data) ? spOf(spR.data[0]) : null;
+    const wallet = walletR.status === 200 ? walletOf(walletR.data) : null;
     const referral = referralOf(referralRaw, today);
-    // tonight's ride already over stays as a past card until the day ends; one done but not yet marked paid is a ride done
-    // too (its rows say what is still to pay): it used to vanish until the desk marked it paid (the booking app, 2026-11-10)
-    const pastTonight = doneTonight;
-    // The Blood Donation event (2026-11-03): a donor's free ride, asked only when a ticket is on the event; a database
-    // without customer_blood_rewards, or a failed read, gives none and the ticket shows no code. The event over, its ticket
-    // stays as a past card while the code on it is still good: it is good for a month, and this page lists no past bookings.
-    const isDonation = (id: string) => sessions.get(id)?.kind === "blood" || isBloodId(id);
-    const donorRewards = [...groups, ...pastTonight, ...donorEarlier].some((g) => isDonation(g.sessionId))
-      ? await rpcServer<unknown>("customer_blood_rewards", { p_id: acct.id, p_token: acct.token }).then((r) => bloodRewards(r.data))
-      : null;
-    const past = [...pastTonight, ...donorEarlier.filter((g) => g.rows.some((r) => rewardGood(donorRewards?.get(r.id), today)))];
-    const donor = donorRewards ? { words: bloodWords(tx), rewards: donorRewards } : null;
-    const routes = routeItems(content, L); // a ride that follows a route on the Routes page names it on its ticket
-    // tonight's bike, by name, for the steps and the line under the header
-    const bikeOf = new Map(await Promise.all([...groups, ...past].filter((g) => g.date === today).map(async (g) => [g.sessionId, await bikeName(g.rows.find((r) => r.bikeId)?.bikeId ?? null)] as const)));
-    // the add-ons the tickets list, by name and price
-    const addonItems = await loadAddonItems([...groups, ...past].flatMap((g) => g.rows.flatMap((r) => r.addonLines.map((a) => a.id))));
-    // Victory Lap: each Doubles booking's partner by first name (customer_vl_teams, rentals 20261017210000:
-    // a rider never reads another account's booking), asked only when a ticket holds a team; a database
-    // without the function, or a failed read, names nobody (the ticket then says it waits for the partner).
-    // Arena Heros' teams (2026-10-28) too, when the function names them; when it does not, the ticket says the
-    // partner books with the code.
-    const vlPartners = [...groups, ...past].some((g) => g.rows.some((r) => r.vl?.team || r.ah?.team))
-      ? await rpcServer<unknown>("customer_vl_teams", { p_id: acct.id, p_token: acct.token }).then((r) => new Map(
-        (Array.isArray(r.data) ? (r.data as Record<string, unknown>[]) : [])
-          .filter((x) => x && typeof x.entry_id === "string" && typeof x.partner === "string" && x.partner.trim())
-          .map((x) => [x.entry_id as string, (x.partner as string).trim()] as const)))
-      : null;
-    // Volunteering (rentals 20261105120000): a database without it, or a failed read, shows no card.
-    const volunteer = await rpcServer<VolunteerMe>("volunteer_me", { p_id: acct.id, p_token: acct.token }).then((r) => r.data).catch(() => null);
-    // "You're next" on a numbered night: whether anyone still waiting holds a lower number. Said on
-    // the ride's day only, as the booking app does: a week ahead it counts a queue nobody stands in.
-    const ahead = await Promise.all(groups.map((g) => {
-      const s = sessions.get(g.sessionId), first = g.rows.find((r) => r.status === "waiting" && r.queueNum != null);
-      return s && !s.approval && first && g.date === now.slice(0, 10) ? anyoneAhead(g.sessionId, first.queueNum as number) : Promise.resolve(null);
-    }));
-    // a session that did not load is named by what it is: never "Ride" on one without a bike (2026-10-18)
-    const rideName = (s: TicketSession | undefined, sessionId: string) =>
-      (s ? sessionName(s, names, enNames, L !== "en") : isNonBike(null, sessionId) ? tx("Session", "الفعالية") : tx("Ride", "جولة"));
-    const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
-    // "Report a bike problem" (2026-11-13): a booking holding more than one bike asks which one, by the bikes' names
-    const brpBikes = [...new Set([...groups, ...past].flatMap((g) => {
-      const o = bikeReport(g.rows, sessions.get(g.sessionId), drawn)?.options ?? [];
-      return o.length > 1 ? o.map((x) => x.bike) : [];
-    }))].slice(0, 12);
-    const bikeNames = new Map(await Promise.all(brpBikes.map(async (id) => [id, await bikeName(id)] as const)));
-    // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
-    // Edit does; Reschedule and Cancel open its My Bookings. (A Run for Her place is only cancelled;
-    // its event is still named, as the booking app's event link takes it.)
-    // (Victory Lap's details change in My Bookings there: it is never edited or rescheduled; nor Arena Heros'.) The Farm
-    // House Night (2026-11-13) is a community date, its Edit the booking app's, where the member adds or drops family.
-    const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community" };
-    const appLink = (params: Record<string, string>) => {
-      try { const u = new URL(app); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
-      catch { return book; }
+    const ambD = ambR.data;
+    const amb: AmbMine | null = ambD && ambD.ok === true && ambD.ambassador === true
+      ? { code: S(ambD.code), status: S(ambD.status), earned: Number(ambD.earned) || 0, balance: Number(ambD.balance) || 0, uses: Number(ambD.uses) || 0 } : null;
+    const volunteer = volR.status === 200 ? volR.data : null;
+    const purch = purR.status === 200 && Array.isArray(purR.data) ? purchasesOf(purR.data) : null;
+    const jobs = wsR.status === 200 ? workshopJobsOf(wsR.data) : [];
+    const jobsUp = upcomingJobs(jobs, today);
+    const coch = cochR.data && cochR.data.ok === true ? cochR.data : null;
+    const cochRows: CompanyRow[] = (Array.isArray(coch?.rows) ? coch.rows : []).map((x) => {
+      const o = (x ?? {}) as Record<string, unknown>;
+      const n = (v: unknown) => (v == null || !Number.isFinite(Number(v)) ? null : Number(v));
+      return { id: Number(o.id) || 0, company: S(o.company), starts: S(o.starts_on), ends: S(o.ends_on), state: o.state === "soon" || o.state === "ended" ? o.state : "on",
+        team: n(o.team), sessions: n(o.sessions), mine: n(o.mine) ?? 0, badge: o.badge === true };
+    });
+    const cochOn = !!coch && (cochRows.length > 0 || coch.open === true);
+    const del = delR.data && typeof delR.data === "object" && "requested_at" in delR.data ? { at: delR.data.requested_at ?? null } : null;
+
+    // ── the menu ──
+    const go = (p: AccPage) => localHref(accHref(p), locale);
+    const dv = detailValues(prof, about as { profession?: string | null } | null, w, locale, (city) => city);
+    const v = (x: RowValue | null | undefined) => (x && x.text ? x : null);
+    const spAdded = spR.status === 200 && sp?.competes ? await rpcServer<unknown>("sport_option_list", {}).then((o) => (o.status === 200 ? spOptionsOf(o.data) : [])) : [];
+    const spValue: RowValue | null = !sp ? null : sp.competes === null ? { text: w.addX.replace("{0}", lcLabel(w.sport, locale)), add: true }
+      : sp.competes ? { text: sp.feds.map((k) => (k === "other" && sp.other ? sp.other : spName(k, locale, spAdded))).join(" · "), add: false } : { text: w.no, add: false };
+    const row = (p: AccPage, icon: MenuRow["icon"], value?: MenuRow["value"]): MenuRow => ({ id: p, label: pageTitle(p, w, { calendar: cal.row }), icon, href: go(p), value: value ?? null });
+    const cityVal = !dv.residence.add && S(prof.city)
+      ? { ...dv.residence, node: <CityLabel city={S(prof.city)} country={S(prof.country)} locale={locale} /> } : dv.residence;
+    const groups: MenuGroup[] = [
+      { id: "details", title: w.grpDetails, rows: [
+        row("personal", "person", v(dv.personal)), row("contact", "phone", v(dv.contact)), row("residence", "pin", v(cityVal)),
+        ...(emOn ? [row("emergency", "people", em?.has ? { text: S(emRow?.emergency_name), add: false } : { text: w.addContact, add: true })] : []),
+        row("riding", "bike", v(dv.riding)),
+        ...(sp ? [row("sport", "run", spValue)] : []),
+        row("about", "info", v(dv.about)),
+      ] },
+      { id: "activity", title: w.grpActivity, rows: [
+        ...(amb ? [row("ambassador", "flag", { text: amb.code, add: false, ltr: true })] : []),
+        ...(volunteerCardShows(volunteer) ? [row("volunteer", "clock", Number(volunteer.hours) > 0 ? { text: hoursText(Math.round(Number(volunteer.hours) * 100) / 100, locale), add: false } : null)] : []),
+        ...(purch ? [row("purchases", "doc", purch.rows.length ? { text: String(purch.total), add: false, node: <Sar n={purch.total} word={sar} /> } : null)] : []),
+        row("workshop", "wrench", jobsUp[0]?.date ? { text: shortDay(jobsUp[0].date, intlOf(locale)), add: false } : null),
+        ...(cochOn ? [row("company", "briefcase", cochRows.length ? { text: cochRows.map((r) => r.company).join(" · "), add: false } : null)] : []),
+        ...(!hidden.includes("club") ? [{ id: "club", label: w.clubCard, icon: "card" as const, href: localHref("/club#card", locale), out: true }] : []),
+        ...(!hidden.includes("testimonials") ? [{ id: "testimonial", label: w.testimonial, icon: "star" as const, href: localHref("/testimonials/write", locale), out: true }] : []),
+      ] },
+      { id: "settings", title: w.grpSettings, rows: [
+        ...(calOn ? [row("calendar", "cal")] : []),
+        row("language", "globe", { text: localeInfo(locale).name, add: false }),
+        row("password", "lock", { text: w.change, add: false }),
+        ...(!hidden.includes("help") ? [{ id: "help", label: w.help, icon: "help" as const, href: localHref("/help", locale), out: true }] : []),
+        { id: "support", label: w.support, icon: "chat", href: `https://wa.me/${TECH_WA}`, out: true, value: { text: TECH_SHOWN, add: false, ltr: true } },
+      ] },
+    ];
+    const tiles: MenuTile[] = [
+      ...(wallet ? [{ id: "wallet", label: w.wallet, icon: "wallet" as const, href: go("wallet"), value: String(wallet.balance), node: <Sar n={wallet.balance} word={sar} /> }] : []),
+      ...(referral ? [{ id: "invite", label: w.invite, icon: "gift" as const, href: go("invite"), value: referral.code, ltr: true }] : []),
+    ];
+    const delRow: MenuRow | null = del ? { ...row("delete", "trash", del.at ? { text: w.requested, add: true } : null), red: true } : null;
+
+    // ── the open page ──
+    const empty = <p className="acm-card acm-empty">{walletWords(locale).empty}</p>;
+    const pane = async (): Promise<React.ReactNode> => {
+      switch (shown) {
+        case "personal":
+          return <AccPersonal key="personal" w={w} locale={locale} initial={{ name: acct.name, birth: S(prof.birth_date), nationality: S(prof.nationality), gender: S(prof.gender), photo: S(prof.photo) || null, aboutOn }} />;
+        case "contact": {
+          const waR = await rpcServer<unknown[]>("customer_whatsapp", a);
+          const wr = waR.status === 200 && Array.isArray(waR.data) ? ((waR.data[0] ?? {}) as Record<string, unknown>) : null;
+          const wa: WaState = wr ? { phone: S(wr.phone) || acct.phone, same: wr.whatsapp_same === true ? true : wr.whatsapp_same === false ? false : null, wa: S(wr.whatsapp) } : null;
+          return <AccContact w={w} initial={{ email: acct.email, phone: acct.phone }} wa={wa} />;
+        }
+        case "residence":
+          return <AccResidence w={w} locale={locale} initial={{ country: S(prof.country), city: S(prof.city) }} />;
+        case "emergency":
+          return emOn ? <AccEmergency w={w} initial={{ one: emOf(""), two: emOf("2") }} offerTwo={!!em?.two} own={acct.phone} /> : empty;
+        case "riding": {
+          const bt = await rpcServer<unknown>("customer_blood_type", a);
+          const bw = bloodTypeWords(locale);
+          const blood = bt.status === 200 && !emAbsent(bt) ? { label: bw.title, pick: bw.pick, unknown: bw.unknown, value: btOf(bt.data) ?? "" } : null;
+          const ty = S(prof.type_preference);
+          return <AccRiding w={w} initial={{ type: ty === "Any" ? "" : ty, height: prof.height == null ? "" : String(prof.height) }} blood={blood} />;
+        }
+        case "sport": {
+          if (!sp) return empty;
+          // a list that cannot be read just now keeps the rider's own added sports: an empty one would drop them on Save
+          const o = await rpcServer<unknown>("sport_option_list", {});
+          const added = o.status === 200 ? spOptionsOf(o.data) : sp.feds.filter((k) => k.startsWith("x_")).map((code) => ({ code, en: code, ar: null }));
+          return <div className="acm-card acm-host"><SportCard initial={{ competes: sp.competes, feds: sp.feds, other: sp.other }} added={added} /></div>;
+        }
+        case "about":
+          return <AccAbout w={w} aboutOn={aboutOn} initial={{ profession: S(about?.profession), workplace: S(about?.workplace), heard: S(about?.heard_from), socials: prof.socials ?? null }} />;
+        case "wallet":
+          return wallet ? <div className="acm-card acm-host"><WalletCard wallet={wallet} locale={locale} /></div> : empty;
+        case "invite":
+          return referral ? <div className="acm-card acm-host"><ReferralCard r={referral} locale={locale} /></div> : empty;
+        case "ambassador":
+          return amb ? <AccAmbassador w={w} a={amb} locale={locale} /> : empty;
+        case "volunteer":
+          return volunteerCardShows(volunteer) ? <div className="acm-card acm-host"><VolunteerCard me={volunteer} locale={locale} /></div> : empty;
+        case "purchases":
+          return purch ? <AccPurchases rows={purch.rows} total={purch.total} w={w} locale={locale} sarWord={sar} /> : <p className="acm-card acm-empty">{w.purchEmpty}</p>;
+        case "workshop": {
+          const t = serverLocalize(WS_TRACK, locale);
+          return <AccWorkshop up={jobsUp} past={pastJobs(jobs, today)} w={w} locale={locale} sarWord={sar} empty={walletWords(locale).empty}
+            t={{ stages: t.stages, scheduled: t.scheduled, price: t.price, cancelled: t.cancelled, reference: tx("Reference", "رقم الطلب") }}
+            request={hidden.includes("workshop") ? null : { href: localHref("/workshop", locale), label: tx("Request a service", "اطلب صيانة") }} />;
+        }
+        case "company": {
+          const when = Object.fromEntries(cochRows.map((r) => [r.id, [r.starts, r.ends].filter((d) => /^\d{4}-\d{2}-\d{2}/.test(d)).map((d) => fmtDayDate(d.slice(0, 10), locale)).join(" – ")]));
+          return cochOn ? <AccCompany w={w} rows={cochRows} open={coch?.open === true} when={when} /> : empty;
+        }
+        case "calendar":
+          return calOn ? <div className="acm-card acm-host"><CalendarFeed host={calfHost(app)} lang={calfLang(locale)} words={cal} /></div> : empty;
+        case "language":
+          return (
+            <ul className="acm-card acm-card-list acm-langs">
+              {LOCALES.map((l) => (
+                <li key={l.code}>
+                  <Link href={accHref("language")} locale={l.code} hrefLang={l.html} className="acm-lang" aria-current={l.code === locale ? "true" : undefined}>
+                    <bdi lang={l.html}>{l.name}</bdi>{l.code === locale && <AccIcon name="tick" size={18} />}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          );
+        case "password":
+          return <AccPassword w={w} />;
+        case "delete":
+          return del ? <AccDelete w={w} locale={locale} requestedAt={del.at} /> : empty;
+      }
     };
-    const manage = appLink({ tab: "bookings" });
-    // the booking app's My Bookings, which a ticket's calendar entry leads back to (its URL line)
-    const myBookings = (() => { try { return new URL("/my-bookings", app).toString(); } catch { return null; } })();
-    const shortcuts = [
-      ["experiences", tx("Book a ride", "احجز جولة"), "/experiences"],
-      ["workshop", tx("Request a service", "اطلب صيانة"), "/workshop"],
-      ["ambassadors", tx("Ambassador Program", "برنامج السفراء"), "/ambassadors"],
-      ["help", tx("Help", "المساعدة"), "/help"],
-      // Testimonials (2026-11-18): only while their launch switch is on (lib/site.ts hiddenPages)
-      ["testimonials", tx("Write a testimonial", "اكتب شهادة"), "/testimonials/write"],
-    ].filter(([k]) => !hidden.includes(k));
-    const calendarOn = await calendarP;
+    const title = pageTitle(shown, w, { calendar: cal.row });
+    const H = page ? "h1" : "h2";
     return (
-      <>
-        <section className="ac-sec" aria-labelledby="ac-rides-h">
-          <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <ArrowIcon size={15} /></a></div>
-          {/* today's code large on the page: the phone stays awake while it shows (the booking app's _wakeWant, 2026-11-10) */}
-          {groups.some((g) => todayCode(g.rows, sessions.get(g.sessionId), today)) && <TicketWake />}
-          {groups.length === 0 && past.length === 0 ? (unread ? failed : (
-            <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <ArrowIcon size={15} /></a>}</p>
-          )) : null}
-          {(groups.length > 0 || past.length > 0 || cancelled.length > 0) && (
-            <div className="tk-grid">
-              {groups.map((g, i) => {
-                const s = sessions.get(g.sessionId);
-                const ev = s ? EV[s.kind] : undefined;
-                // a ride staff approve and Run for Her meet at the point staff set (meetsAt), Arena Heros and the Blood
-                // Donation event are at their venue's map, a ride at another named place is searched by its name, the rest
-                // at the booth on the circuit (BOOTH_DIR, 2026-11-10; it was the circuit's map link, which led to the gate)
-                const place = placeLink(s, BOOTH_DIR);
-                return (
-                  <TicketCard key={g.key} locale={locale} today={now.slice(0, 10)} rows={g.rows} session={s}
-                    name={rideName(s, g.sessionId)}
-                    cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place,
-                      // the live map follows the ride leader: a bike session's only (2026-10-18)
-                      live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null,
-                      share: shareLink(app, ev, g.sessionId), bookings: myBookings }}
-                    route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} bikeNames={bikeNames} account={acct.name} />
-                );
-              })}
-              {/* the bookings cancelled, after the bookings ahead: one quiet row each, until their day has gone */}
-              {cancelled.length > 0 && (
-                <ul className="tk-cx-list">
-                  {cancelled.map((g) => {
-                    const s = sessions.get(g.sessionId);
-                    return <li key={g.key}><TicketCancelled locale={locale} date={g.date} session={s} name={rideName(s, g.sessionId)} by={g.by} t={ticketText} gather={S(d.gather)} start={S(d.start)} /></li>;
-                  })}
-                </ul>
-              )}
-              {past.map((g) => {
-                const s = sessions.get(g.sessionId);
-                return (
-                  <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
-                    name={rideName(s, g.sessionId)}
-                    cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} bikeNames={bikeNames} account={acct.name} />
-                );
-              })}
-            </div>
-          )}
+      <div className={`acm-split${page ? " acm-has-pg" : ""}`}>
+        <AccMenu label={w.account} tiles={tiles} groups={groups} current={page} logOut={w.logOut} del={delRow} />
+        <section className="acm-pane" aria-labelledby="acm-pg-h">
+          {page && <Link href={accHref("account")} className="acm-back"><AccIcon name="back" size={18} />{w.back}</Link>}
+          <H className="acm-pg-h" id="acm-pg-h" tabIndex={-1}>{title}</H>
+          <AccFocus key={`focus-${shown}`} target="acm-pg-h" />
+          {await pane()}
         </section>
-
-        {own.length > 0 && (
-          <section className="ac-sec" aria-labelledby="ac-lk-h">
-            <div className="ac-sec-head"><h2 id="ac-lk-h">{tx("Your lockers", "خزائنك")}</h2><a href={`/api/account/lockers-link?lang=${L}`}>{tx("Manage", "إدارة")} <ArrowIcon size={15} /></a></div>
-            <div className="lk-acc">
-              {[...new Set(own.map((l) => l.day))].map((d) => {
-                const ls = own.filter((l) => l.day === d), due = ls.find((l) => l.status === "reserved");
-                return (
-                  <div key={d} className="lk-acc-ev">
-                    <p className="lk-acc-h"><bdi>{fmtDayDate(d, locale)}</bdi></p>
-                    {ls.map((l) => (
-                      <div key={l.id} className="lk-acc-row">
-                        <b className="lk-acc-n"><bdi>{l.code ?? ""}</bdi></b>
-                        <span className="lk-acc-t">
-                          <bdi>{lockerText("", { period: l.period, code: null, status: l.status }, locale)}</bdi>
-                          {l.name && l.name.trim() !== acct.name.trim() && <> · <bdi>{l.name}</bdi></>}
-                          {(l.paid || l.pay === "desk") && <small>{l.paid ? tx("Paid from your wallet", "مدفوعة من محفظتك") : tx("Pay at the desk", "الدفع في المكتب")}</small>}
-                        </span>
-                      </div>
-                    ))}
-                    {due && (
-                      <div className="lk-acc-qr">
-                        <p>{tx("Show this at the desk", "اعرض هذا في المكتب")}</p>
-                        <Qr payload={`https://micromobility.sa/lockers/r/${due.id}`} label={tx("Show this at the desk", "اعرض هذا في المكتب")} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {volunteerCardShows(volunteer) && <VolunteerCard me={volunteer} locale={locale} />}
-
-        {toRate.length > 0 && (
-          <section className="ac-sec" aria-labelledby="ac-rate-h">
-            <h2 id="ac-rate-h">{toRate.some((r) => rideWord(sessions.get(r.sessionId)?.kind, r.sessionId) !== "ride") ? tx("Rate your sessions", "قيّم فعالياتك") : tx("Rate your rides", "قيّم جولاتك")}</h2>
-            <div className="rr-grid">
-              {toRate.map((r) => {
-                const s = sessions.get(r.sessionId);
-                // a Saturday ride's form names the restaurant its breakfast was at, as the pop-up's does
-                const word = rideWord(s?.kind, r.sessionId);
-                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s, r.sessionId)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={ratingNoBike(r.ownBike, s, r.sessionId)} run={word === "run"} session={word === "session"} restaurant={breakfastFor(s, locale)?.name ?? null} rgLow={bizOf(content).rgLow} about={tmAboutOfKind(s?.kind)} />;
-              })}
-            </div>
-          </section>
-        )}
-
-        {!hidden.includes("club") && (
-          <section className="ac-sec" aria-labelledby="ac-club-h">
-            {/* the card itself is on /club (member_area, with this account's own session) */}
-            <div className="ac-sec-head"><h2 id="ac-club-h">{S(c.home.clubTitle)}</h2><a href={localHref("/club#card", locale)}>{tx("Open my card", "افتح بطاقتي")} <ArrowIcon size={15} /></a></div>
-          </section>
-        )}
-
-        {walletRead && <WalletCard wallet={walletRead} locale={locale} />}
-
-        {referral && <ReferralCard r={referral} locale={locale} />}
-
-        {blood && (
-          <section className="ac-sec bt-sec" aria-labelledby="ac-bt-h">
-            <h2 id="ac-bt-h">{bloodTypeWords(locale).title}</h2>
-            <p id="ac-bt-sub" className="ac-text bt-sub">{bloodTypeWords(locale).sub}</p>
-            <BloodTypeCard initial={blood.type} />
-          </section>
-        )}
-
-        {sport && (
-          <section className="ac-sec bt-sec" aria-labelledby="ac-sp-h">
-            <h2 id="ac-sp-h">{sportWords(locale).title}</h2>
-            <SportCard initial={{ competes: sport.competes, feds: sport.feds, other: sport.other }} added={sport.added} />
-          </section>
-        )}
-
-        {/* the booking app's calendar address (webcal), on its own host: the section, then its pop-up */}
-        {calendarOn && <CalendarFeed host={calfHost(app)} lang={calfLang(locale)} words={calendarWords(locale)} />}
-
-        {shortcuts.length > 0 && (
-          <nav className="ac-links" aria-label={tx("Shortcuts", "اختصارات")}>
-            {shortcuts.map(([k, label, href]) => <a key={k} href={localHref(href, locale)}>{label} <ArrowIcon size={15} /></a>)}
-          </nav>
-        )}
-      </>
+      </div>
     );
   };
 
-  // Stats and Badges: the record, read from every night booked (the kind of ride, whether it was free, whether staff
-  // approve it). Stats: Your rides, then more of it (RideMore) and the badges earned; Badges: the closest badges and
-  // every badge.
-  // A community member's Helper path (customer_helper_path, rentals 20261114082300; the booking app's F23): the card on
-  // Badges, the helper days under Rides led on Stats; a rider who is not a member, or a read that failed, sees neither.
-  // Stats' personal landmarks (the booking app's F16): the first ride's anniversary card leads it for that week, and the
-  // kinds tried sit under By event (the kinds the account can still book: loadOpenKinds). My records (the booking app's
-  // _recHtml, 2026-11-18; lib/my-records.ts) follow Your rides on Stats.
+  // ── Stats and Badges: the record, read from every night booked ───────────────────────────────────────────────────
+  // (the kind of ride, whether it was free, whether staff approve it). Stats: Your rides, then more of it (RideMore) and the
+  // badges earned; Badges: the closest badges and every badge. A community member's Helper path (customer_helper_path,
+  // rentals 20261114082300; the booking app's F23): the card on Badges, the helper days under Rides led on Stats. Stats'
+  // personal landmarks (F16): the first ride's anniversary card leads it for that week, and the kinds tried sit under By
+  // event. My records (the booking app's _recHtml, 2026-11-18; lib/my-records.ts) follow Your rides on Stats.
   const recordMain = async (p: "stats" | "badges") => {
+    const booked = await readBookings(acct);
     // no record from bookings that could not be read: every ride badge would read as not earned
-    if (unread) return <section className="ac-sec" aria-label={p === "stats" ? recordBase.stats : recordBase.badges}>{failed}</section>;
+    if (booked === null) return <section className="ac-sec" aria-label={p === "stats" ? recordBase.stats : recordBase.badges}>{failed}</section>;
+    const rows = booked;
+    const d = resolvePage(experiencesSchema, content, L).dates;
+    const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx), farm: farmName(tx) };
+    const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME, farm: FARM_NAME };
+    const ticketText = serverLocalize(TICKET, locale);
     const record = recordRows(rows);
-    // My records' Bike types tried (lib/my-records.ts): the type of each bike handed over on a booking made for no type, read
-    // only when Stats has such a booking
     const anyBikes = p === "stats" ? record.filter((r) => r.type === "Any" && r.bikeId && (r.status === "done" || r.status === "active")).map((r) => r.bikeId as string) : [];
     const [recSessions, badges, referralRaw, helperRaw, openKinds, bikeTypes] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP,
-      rpcServer<unknown>("customer_helper_path", { p_id: acct.id, p_token: acct.token }), p === "stats" ? loadOpenKinds(today, acct) : Promise.resolve(null),
+      rpcServer<unknown>("customer_helper_path", a), p === "stats" ? loadOpenKinds(today, acct) : Promise.resolve(null),
       anyBikes.length ? loadBikeTypes(anyBikes) : Promise.resolve(new Map<string, string>())]);
     const helper = helperPathOf(helperRaw.data);
     badges.referralRode = referralRodeOf(referralRaw); // the Recruiter badge counts these friends
     const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
     // the Blood Donation Visitor and Farmhouse Night badges are worded by their events' own words (content/blood-words.ts,
-    // content/farm-words.ts), handed on only to one who holds them; the farm night's only once earned or given, even were staff
-    // to show it to everyone, as it is for community members' eyes alone
+    // content/farm-words.ts), handed on only to one who holds them
     const recordText = { ...recordBase, names: { ...recordBase.names,
       ...(allBadges.some((x) => x.slug === "blood_visitor") ? { blood_visitor: bloodWords(tx).visitorBadge } : {}),
       ...(allBadges.some((x) => x.slug === "farmhouse_night" && x.on) ? { farmhouse_night: farmBadge(tx) } : {}) } };
@@ -500,15 +347,13 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       </section>
     );
     const stats = rideStats(record, recSessions, today);
-    const led = ledRides(record, recSessions); // Rides led under Your rides (the booking app, 2026-11-06)
+    const led = ledRides(record, recSessions);
     const kindName = (k: RideKind) => names[k] || enNames[k] || k;
     const more = rideMore(record, recSessions, today, { type: typeName, kind: kindName, locale: intlOf(locale) });
     const anniv = anniversaryOf(stats?.first, today);
-    // My records (the booking app's _recHtml, 2026-11-18): after Your rides, for two or more finished sessions
     const recs = myRecords(record, recSessions, (id) => bikeTypes.get(id) ?? null);
-    // a Farm House Night on offer is named to a community member alone (2026-11-13: "not to public"); one the rider
-    // went to is theirs, and stays among the kinds done
-    if (openKinds?.has("farm") && (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data !== true) openKinds.delete("farm");
+    // a Farm House Night on offer is named to a community member alone (2026-11-13: "not to public")
+    if (openKinds?.has("farm") && (await rpcServer<boolean>("community_member", a)).data !== true) openKinds.delete("farm");
     const tried = openKinds ? triedKinds(more.byKind.map(([k]) => k), openKinds) : [];
     return (
       <section className="ac-sec" aria-label={recordText.stats}>
@@ -517,44 +362,28 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         <RideRecord part="stats" locale={locale} stats={stats} led={led} badges={[]} t={recordText} typeName={typeName} dur={dur} helper={helperLine(locale, helper)} />
         {recs && <MyRecords locale={locale} recs={recs} />}
         <RideMore locale={locale} more={more} t={recordText} typeName={typeName} kindName={kindName}
-          earned={{ n: allBadges.filter((x) => x.on).length, of: allBadges.length, href: localHref(accountPartHref("badges"), locale) }}
+          earned={{ n: allBadges.filter((x) => x.on).length, of: allBadges.length, href: localHref(accHref("badges"), locale) }}
           tried={tried.length > 0 ? <TriedKinds locale={locale} kinds={tried} name={kindName} /> : null} />
       </section>
     );
   };
-  const main = part === "account" ? await accountMain() : await recordMain(part);
+  const main = view === "account" ? await accountMain() : await recordMain(view);
+  const photo = S(prof.photo);
 
-  return (
-    <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
-      <div className="ac ac-in">
-        {handed ? (
-          <section className="ac-sec ac-ho" aria-labelledby="ac-ho-h">
-            <h2 id="ac-ho-h">{tx("Switch account?", "تبديل الحساب؟")}</h2>
-            <p className="ac-text">
-              {fill(tx("This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?",
-                "هذا المتصفح مسجّل الدخول باسم {current}، وقد سجّلت الدخول للتو في تطبيق الحجز باسم {next}. أي الحسابين تريد أن يستخدمه هذا الموقع؟"),
-              { current: accountLabel(acct), next: accountLabel(handed) })}
-            </p>
-            <form method="post" action="/api/account/handoff" className="ac-ho-btns">
-              <button type="submit" name="do" value="switch" className="ac-go">{fill(tx("Switch to {name}", "التبديل إلى {name}"), { name: handed.name || handed.email || handed.phone })}</button>
-              <button type="submit" name="do" value="stay" className="ac-out">{fill(tx("Stay signed in as {name}", "البقاء مسجّلاً باسم {name}"), { name: acct.name || acct.email || acct.phone })}</button>
-            </form>
-          </section>
-        ) : handoffState === "done" && (
-          <p className="ac-ho-done" role="status">{fill(tx("You are signed in as {who}. If this is not your account, sign out.", "أنت مسجّل الدخول باسم {who}. إن لم يكن هذا حسابك، فسجّل الخروج."), { who: accountLabel(acct) })}</p>
-        )}
-        {/* the ride to rate first is the pop-up every page shows (RatingGateLoader in the layout) */}
-        <header className="ac-head">
-          <div>
-            <p className="ac-eyebrow">{S(c.signin.eyebrow)}</p>
-            <h1>{fill(S(c.home.hello), { name: first })}</h1>
-            <p className="ac-who" dir="ltr">{[acct.email, acct.phone].filter(Boolean).join(" · ")}</p>
-          </div>
-          <SignOut label={tx("Sign out", "تسجيل الخروج")} />
-        </header>
-        <AccountParts part={part} locale={locale} t={{ account: recordBase.account, stats: recordBase.stats, badges: recordBase.badges }} />
-        {main}
-      </div>
-    </PageShell>
+  return shell(
+    <div className={`ac ac-in acm${page ? " acm-in-pg" : ""}`}>
+      <AccGuard w={w} />
+      {notice}
+      {!page && <h1 className="acm-sr">{view === "account" ? w.account : view === "stats" ? w.stats : w.badges}</h1>}
+      {/* the profile card above the switch (the booking app's _accIdHtml): it opens Personal details */}
+      <Link href={accHref("personal")} className="acm-id">
+        {photo ? <img src={photo} alt="" className="acm-id-ph" width={56} height={56} decoding="async" /> : <span className="acm-id-ph acm-id-in" aria-hidden="true">{initialsOf(acct.name)}</span>}
+        <span className="acm-id-txt"><span className="acm-id-n"><bdi>{acct.name}</bdi></span><span className="acm-id-s"><bdi dir="ltr">{acct.email || acct.phone}</bdi></span></span>
+        <AccIcon name="go" size={16} className="acm-row-go" />
+      </Link>
+      <AccountParts part={view} locale={locale} t={{ account: w.account, stats: w.stats, badges: w.badges }} />
+      {main}
+    </div>,
   );
 }
+

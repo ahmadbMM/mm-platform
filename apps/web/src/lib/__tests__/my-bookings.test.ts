@@ -3,7 +3,7 @@ import { createElement, isValidElement, type ReactElement } from "react";
 // The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
-import AccountPage from "../../app/[locale]/account/[[...part]]/page";
+import BookingsPage from "../../app/[locale]/bookings/page";
 import TicketCard, { TicketCancelled } from "@/components/booking/TicketCard";
 import { TicketWake } from "@/components/booking/TicketParts";
 import Countdown from "@/components/booking/Countdown";
@@ -180,7 +180,7 @@ function findAll(n: unknown, type: unknown, out: ReactElement[] = []): ReactElem
   findAll((n.props as { children?: unknown }).children, type, out);
   return out;
 }
-describe("My Account's rides", () => {
+describe("Bookings' rides (/bookings, moved from My Account 2026-11-19)", () => {
   beforeEach(() => {
     resetRides(); resetSiteContent();
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
@@ -205,7 +205,7 @@ describe("My Account's rides", () => {
       if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/0" } });
       return json([]);
     }));
-    const p = await AccountPage({ params: Promise.resolve({ locale: "en", part: undefined }), searchParams: Promise.resolve({}) });
+    const p = await BookingsPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) });
     const cx = findAll(p, TicketCancelled).map((e) => e.props as { date: string; by: string });
     expect(cx).toEqual([expect.objectContaining({ date: "2099-03-05", by: "staff" })]);
     const cards = findAll(p, TicketCard).map((e) => e.props as { past?: boolean; rows: TicketRow[]; links: { share?: string | null; place: string | null } });

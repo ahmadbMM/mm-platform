@@ -79,9 +79,11 @@ export function pageOn(content: SiteContent | null, page: SwitchedPage): boolean
   return TEST_OPEN || content?.[`page.${page}.visible`] === true;
 }
 
-/** The switched page an address belongs to (/club, /help/..., and the old /en/club), or null. */
+/** The switched page an address belongs to (/club, /help/..., and the old /en/club), or null. Bookings (/bookings, the
+ *  rider's bookings, moved out of the account page on 2026-11-19) opens and closes with the account page. */
 export function switchedPageOf(pathname: string): SwitchedPage | null {
   const m = pathname.match(/^(?:\/(?:en|ar))?\/([a-z_]+)(?:\/|$)/);
+  if (m?.[1] === "bookings") return "account";
   return m && (SWITCHED_PAGES as readonly string[]).includes(m[1]) ? (m[1] as SwitchedPage) : null;
 }
 

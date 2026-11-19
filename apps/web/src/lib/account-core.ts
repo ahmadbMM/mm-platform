@@ -48,6 +48,10 @@ export function sameOrigin(origin: string | null, requestUrl: string): boolean {
   try { return !!origin && origin === new URL(requestUrl).origin; } catch { return false; }
 }
 
+/** The Set-Cookie value that keeps a session (or, with "" and 0, forgets it). */
+export const sessionCookie = (value: string, maxAge: number = ACCOUNT_MAX_AGE) =>
+  `${ACCOUNT_COOKIE}=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`;
+
 type Answer = { status: number; data: unknown; message: string };
 
 /** customer_pwd_state's answer (lib/account.ts rpcServer's shape): true when the account's

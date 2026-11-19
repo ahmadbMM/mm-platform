@@ -227,6 +227,8 @@ export function addonLines(rows: Pick<TicketRow, "id" | "name" | "addonLines">[]
 export const LOCKER_LINE = "locker";
 export type TicketLocker = { period: string; code: string | null; status: string };
 const LOCKER_TIMES: Record<string, [string, string]> = { early: ["18:00", "20:00"], late: ["21:00", "23:00"], both: ["18:00", "23:00"], pm: ["19:00", "21:00"] }; // both: one span, 6 PM - 11 PM (the owner, 2026-11-09)
+/** When a locker period starts ("18:00"), for Bookings' soonest-first order; "" for a period it does not know. */
+export const lockerStart = (period: string): string => LOCKER_TIMES[period]?.[0] ?? "";
 /** customer_lockers' rows by booking, the ones not cancelled; an empty map when the answer is not a list. */
 export function lockersOf(data: unknown): Map<string, TicketLocker> {
   const out = new Map<string, TicketLocker>();
