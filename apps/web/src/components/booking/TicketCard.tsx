@@ -38,12 +38,17 @@ import { comingCancelLink, stillComing } from "@/lib/still-coming";
 import { bikeReport } from "@/lib/bike-report";
 import { rideHelp } from "@/lib/ride-help";
 import TicketRoutePage from "./TicketRoutePage";
+import TicketManage from "./TicketManage";
+import TicketLockers from "./TicketLockers";
+import { manageWords } from "./Manage.words";
 import { routePageWords } from "./RoutePage.words";
 import { gpxFileName, type RoutePage } from "@/lib/route-track";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
-// Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
-// never changes a booking behind its back. A Run for Her ticket (2026-10-05) says "Runner number",
+// Its actions are the booking app's own, made here on the website since 2026-11-19 (the user: "make sure all customers
+// can do everything they want in the booking app to do it on the main website"; TicketManage.tsx): Edit, Reschedule,
+// Add-ons, Add a locker and Cancel (Leave waitlist) open centred dialogs in the app's words, and a locker on the booking
+// has Change and Remove on its line (TicketLockers.tsx), each through the booking app's token-checked functions. A Run for Her ticket (2026-10-05) says "Runner number",
 // lists each runner's distance where a ride lists the bike type, and is never changed, only
 // cancelled ("A run booking is never modified"). A Victory Lap ticket (2026-10-17) says "Athlete number",
 // the race and division where a ride shows the bike type, the team's code and the partner (Doubles), the
@@ -191,11 +196,11 @@ const Cal = () => (
   </svg>
 );
 
-const Again = () => (
-  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" />
-  </svg>
-);
+/** The kinds whose Edit changes the party though they have no bike to size: an event's seats, the workshop's places, a
+ *  Petromin night's guest (the booking app's _partyRide and the workshop's three per account). */
+const PARTY_KINDS = ["event", "workshop", "petromin"];
+/** The bike types a rider picks from (lib/booking.ts RIDER_TYPES), named in the page's language for the edit's pills. */
+const RIDER_TYPES = ["Road", "Hybrid", "Mountain", "Kids", "Road Carbon", "Own"];
 
 export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, bikeNames = null, routePage = null, account = null }: Props) {
   const primary = rows[0];
@@ -303,6 +308,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const looked = extras.filter((x) => !x.locker), lockerLines = extras.filter((x) => x.locker);
   // the rider's note for the desk (the booking app's _dntTkHtml, 2026-11-19): the booking's, read-only, behind Details
   const deskNote = rows.map((r) => r.riderNote).find(Boolean) ?? null;
+  const mw = manageWords(locale); // the change dialogs' words (Manage.words.ts)
   const addonRows = (list: typeof extras, head: string) => list.length > 0 && rows.map((r) => {
     const mine = list.filter((x) => x.rowId === r.id);
     return mine.length > 0 && (
@@ -505,8 +511,12 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             {addonRows(looked, t.addons)}
           </TicketMore>
         )}
-        {/* a locker on the booking stays in view: its number is what the rider gives at the desk (the booking app's _lkTkHtml) */}
-        {addonRows(lockerLines, t.locker)}
+        {/* a locker on the booking stays in view: its number is what the rider gives at the desk (the booking app's _lkTkHtml);
+            ahead of the ride, Change and Remove on its line */}
+        {past || lockerLines.length === 0 ? addonRows(lockerLines, t.locker) : (
+          <TicketLockers sessionId={primary.sessionId} day={primary.date} ids={rows.map((r) => r.id)} locale={locale} heading={t.locker} w={mw} sarWord={t.sarWord}
+            lines={lockerLines.map((x) => ({ rowId: x.rowId, who: rows.length > 1 ? x.rider : null, text: lockerText("", lockers?.get(x.rowId), locale) || t.locker, amount: x.amount }))} />
+        )}
         {!!ownLockers?.length && (
           <div className="tk-addons">
             <p className="tk-addons-h">{t.locker}</p>
@@ -643,18 +653,23 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           is offered, as the pool's (its passes know yoga since 2026-11-12). */}
       {wallet && !past && !allWl && ready && !defe && !arena && !donor && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
       {canEdit && (
-        <div className="tk-manage">
-          {/* a run booking is never changed, only cancelled, as in the booking app; a ride staff approve neither, but for the
-              Farm House Night, whose member adds or drops family members from Edit there (2026-11-13) */}
-          {(!noNum || farm) && !run && !vlap && !arena && !donor && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
-          {(!noNum || farm) && !run && !vlap && !arena && !donor && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}
-          {/* Victory Lap: the division, T-shirt and 5 km time change in the booking app's My Bookings (_vlEditOpen) */}
-          {vlap && rows.length === 1 && primary.vl && <a className="tk-btn solid" href={links.manage}>{t.vlEdit}</a>}
-          {/* Arena Heros: the athlete's details and division change there too (the booking app's _vlEditOpen) */}
-          {arena && rows.length === 1 && primary.ah && <a className="tk-btn solid" href={links.manage}>{t.vlEdit}</a>}
-          {/* nothing is held on a waitlist: the rider leaves it (the booking app's leaveWlBtn, 2026-11-10) */}
-          <a className="tk-btn red" href={links.manage}>{allWl ? t.leaveWl : t.cancel}</a>
-        </div>
+        // a run booking is never changed, only cancelled, as in the booking app; a ride staff approve neither, but for the Farm
+        // House Night, whose Edit takes family members off by name (2026-11-13, _fhDropOpen); Victory Lap's and Arena Heros'
+        // details change in the booking app (Change details, _vlEditOpen: the race, division, shirt and partner are its own
+        // steps); nothing is held on a waitlist: the rider leaves it (leaveWlBtn)
+        <TicketManage sessionId={primary.sessionId} day={primary.date} ids={rows.map((r) => r.id)} locale={locale} allWl={allWl} noBike={!bikes}
+          can={{
+            edit: !noNum && !run && !vlap && !arena && !donor && (bikes || PARTY_KINDS.includes(s?.kind ?? "")),
+            farm: farm && rows.length > 1,
+            // moved only to another circuit night (_rsTarget), so a booking with a bike that staff do not approve, never the
+            // National Day ride: a session without a bike or one staff approve would be offered nothing (the database refuses
+            // a move off a ride staff approve)
+            move: !noNum && !run && !vlap && !arena && !donor && bikes && s?.kind !== "snd96",
+            extras: !noNum && !run && !vlap && !arena && !donor && !s?.free,
+          }}
+          vlEdit={(vlap && rows.length === 1 && primary.vl) || (arena && rows.length === 1 && primary.ah) ? links.manage : null}
+          t={{ edit: t.edit, reschedule: t.reschedule, cancel: t.cancel, leaveWl: t.leaveWl, vlEdit: t.vlEdit, cancelled: t.cancelled, sarWord: t.sarWord }}
+          w={mw} typeNames={Object.fromEntries(RIDER_TYPES.map((x) => [x, typeName(x)]))} />
       )}
     </article>
   );
