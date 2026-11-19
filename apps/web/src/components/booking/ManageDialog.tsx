@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { intlOf } from "@/i18n/locales";
 import type { ManageWords } from "./Manage.words";
 import { fillN, type Answer } from "./manage-client";
 
@@ -74,6 +75,6 @@ export function mfWhen(iso: string | undefined, locale: string): string {
   const ms = iso ? Date.parse(iso) : NaN;
   if (!Number.isFinite(ms)) return "";
   try {
-    return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : locale, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Riyadh", numberingSystem: "latn" }).format(new Date(ms));
+    return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Riyadh", numberingSystem: "latn" }).format(new Date(ms));
   } catch { return ""; }
 }
