@@ -11,7 +11,10 @@ import { emergencyWords, type EmergencyWords } from "./Emergency.words";
 // are related; then "Add a second contact", which opens the optional second one (all three boxes or
 // none). Used by the learn form's two steps and the account's check-up (EmergencyGate), each in its
 // own look (`look`: the class names). The problem on show sits under its box.
-export type EmLook = { block: string; head: string; sub: string; field: string; input: string; select: string; ph: string; err: string; add: string; opt: string };
+export type EmLook = { block: string; head: string; sub: string; field: string; input: string; select: string; ph: string; err: string; add: string; opt: string;
+  /** The required mark after each label and the first contact's title, as the booking app's sign-up draws it (cu-req);
+   *  none when left out. */
+  req?: string };
 export type EmProblem = { error: EmError; which: 1 | 2 } | null;
 
 /** A problem as the rider reads it. */
@@ -41,6 +44,7 @@ export default function EmergencyFields({ one, two, onChange, offerTwo, problem,
   const [open, setOpen] = useState(() => !emBlank(two));
   const showTwo = offerTwo && (open || !emBlank(two));
 
+  const star = look.req ? <> <span className={look.req} aria-hidden="true">*</span></> : null;
   const fields = (which: 1 | 2) => {
     const v = which === 1 ? one : two;
     const set = (patch: Partial<EmFields>) => (which === 1 ? onChange({ ...one, ...patch }, two) : onChange(one, { ...two, ...patch }));
@@ -52,14 +56,14 @@ export default function EmergencyFields({ one, two, onChange, offerTwo, problem,
     return (
       <>
         <label className={look.field}>
-          <span>{w.name}</span>
+          <span>{w.name}{star}</span>
           <input className={look.input} value={v.name} maxLength={80} autoComplete="off" autoCapitalize="words" data-em={`${which}-name`}
             aria-invalid={at === "name" || undefined} aria-describedby={described("name")}
             onChange={(e) => set({ name: e.target.value.replace(/[-‐-―−]/g, " ") })} />
           {err("name")}
         </label>
         <div className={look.field}>
-          <label htmlFor={`${p}phone`}>{w.phone}</label>
+          <label htmlFor={`${p}phone`}>{w.phone}{star}</label>
           <div className="em-phone" dir="ltr">
             <select className={`${look.select} em-cc`} aria-label={w.dialCode} value={v.cc} data-em={`${which}-cc`} onChange={(e) => set({ cc: e.target.value })}>
               {dials.map((o, i) => <option key={`${i}-${o.value}`} value={o.value}>{o.label}</option>)}
@@ -71,7 +75,7 @@ export default function EmergencyFields({ one, two, onChange, offerTwo, problem,
           {err("phone")}
         </div>
         <label className={look.field}>
-          <span>{w.relation}</span>
+          <span>{w.relation}{star}</span>
           <select className={`${look.select}${v.rel ? "" : ` ${look.ph}`}`} value={v.rel} data-em={`${which}-rel`}
             aria-invalid={at === "rel" || undefined} aria-describedby={described("rel")}
             onChange={(e) => set({ rel: e.target.value as EmRel | "" })}>
@@ -92,7 +96,7 @@ export default function EmergencyFields({ one, two, onChange, offerTwo, problem,
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
             </svg>
-            <span>{w.title}</span>
+            <span>{w.title}{star}</span>
           </p>
           <p className={look.sub}>{w.sub}</p>
         </>
