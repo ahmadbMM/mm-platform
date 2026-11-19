@@ -247,6 +247,30 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-stc-err { grid-column: 1 / -1; margin: 0; font-size: 13px; font-weight: 600; color: #a33b2e; }
 .tk-live .tk-stc-err { color: #ff9a8c; }
 .tk-card:is(.ev-vlap, .ev-defe5k, .ev-yoga, .ev-farm, .ev-blood) .tk-stc-err { color: #b42318; } /* the events' white tickets */
+/* Running late (TicketComing, the booking app's .stc-3, .rl-one, .rl-chip and .rl-acts, 2026-11-19): a third button between
+   I'm coming and Can't come, one alone after the start, or one amber chip that says the answer and opens it again; the
+   pop-up's three times side by side and "I'm on time" under them */
+.tk-stc.rl-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tk-stc.rl-one { grid-template-columns: minmax(0, 1fr); }
+.tk-stc.rl-ok > .tk-stc-ok { grid-column: auto; align-self: center; }
+.tk-rl-chip { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 14px; border-radius: 999px;
+  border: 1px solid rgba(138, 92, 20, .45); background: rgba(138, 92, 20, .08); color: #8a5c14; font: inherit; font-size: 13px; font-weight: 600;
+  text-align: start; cursor: pointer; }
+.tk-rl-chip svg { flex: none; }
+.tk-rl-chip:hover { background: rgba(138, 92, 20, .14); }
+.tk-rl-chip:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.tk-live .tk-rl-chip { border-color: #f2c66d; background: transparent; color: #f2c66d; }
+.tk-live .tk-rl-chip:hover { background: #262524; }
+.tk-rl-dlg .tk-dlg-in { padding-top: 22px; }
+.tk-rl-acts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tk-rl-acts button { min-width: 0; min-height: 48px; padding: 0 6px; border-radius: 10px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; color: #1a1919;
+  font: inherit; font-size: 15px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.tk-rl-acts button:hover { background: #f4f1ea; }
+.tk-rl-acts button[aria-pressed="true"] { background: #1a1919; border-color: #1a1919; color: #fbf9f4; }
+.tk-rl-acts button:disabled { opacity: .6; cursor: default; }
+.tk-rl-acts .tk-rl-ontime { grid-column: 1 / -1; background: #077a4b; border-color: #077a4b; color: #fff; white-space: normal; }
+.tk-rl-acts .tk-rl-ontime:hover { background: #06603b; }
+.tk-rl-said { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.45; color: #8a5c14; }
 
 /* A waitlist place is not a ticket yet: paper, a dashed edge, the number quiet. */
 .tk-card.tk-wl { border: 1.5px dashed #b98a1a; }

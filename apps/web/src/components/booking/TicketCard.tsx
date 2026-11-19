@@ -249,8 +249,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const handed = rows.some((r) => !!r.bikeId);
   // On the ride's day a held ticket (or tonight's finished ride) shows where the rider is.
   const night = onDay && (look === "live" || (past && allDone)) ? ticketStages(rows, bikes, bikeName, locale) : null;
-  // "Still coming?" from 24 hours before the time to turn up until the start, and "Report a bike problem" once checked in
-  // with a bike (the booking app's _stcHtml and _brpHtml, 2026-11-13; lib/still-coming.ts, lib/bike-report.ts)
+  // "Still coming?" from 24 hours before the time to turn up until the start, with "Running late" from two hours before the
+  // time to turn up until an hour after the start where there is one (2026-11-19), and "Report a bike problem" once checked
+  // in with a bike (the booking app's _stcHtml, _rlWin and _brpHtml; lib/still-coming.ts, lib/bike-report.ts)
   const stc = stillComing(rows, s, now, past);
   const brp = bikeReport(rows, s, now);
   const brpW = brp ? bikeReportWords(locale) : null;
@@ -387,7 +388,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             <span>{{ underReview: bikes ? t.underReview : t.underReviewNb, pending: t.pending, waitlist: t.waitlistCue, onBike: t.onBike, next: t.next, inQueue: t.inQueue }[cue]}</span>
           </div>
         ) : null}
-        {stc && <TicketComing sessionId={stc.sessionId} ok={stc.ok} cancel={comingCancelLink(links.bookings, stc.bookingId, locale) ?? links.manage} words={comingWords(locale)} failed={t.rrFailed} />}
+        {stc && <TicketComing sessionId={stc.sessionId} ask={stc.ask} ok={stc.ok} late={stc.late} lateOn={stc.lateOn} cancel={comingCancelLink(links.bookings, stc.bookingId, locale) ?? links.manage} words={comingWords(locale)} failed={t.rrFailed} />}
         {partnerPlace(rows) === "defe" && !past && <p className="tk-line tk-partner">{t.withDefe}</p>}
         {night && (
           <ol className="tk-stages">

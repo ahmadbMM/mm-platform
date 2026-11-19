@@ -60,6 +60,9 @@ export type TicketRow = {
   /** "Still coming?" (rentals 20261114080200; lib/still-coming.ts): when the rider said they are coming, null before; absent
    *  when the read has no such column (nothing is asked). */
   comingAt?: string | null;
+  /** "Running late" (rentals 20261119600100; lib/still-coming.ts): the minutes the rider said they will be late (10, 20 or
+   *  30) and when they said it, null before; absent when the read has no such columns (nothing is offered). */
+  lateMin?: number | null; lateAt?: string | null;
   /** "Report a bike problem" (rentals 20261114081500; lib/bike-report.ts): the rider's last report on the booking, null
    *  before; absent when the read has no such column (no button). */
   bikeReportAt?: string | null;
@@ -145,6 +148,8 @@ export type TicketSession = {
 type Row = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() && Number.isFinite(Number(v)) ? Number(v) : null);
+/** The minutes a rider said they will be late, as the database allows them (queue_entries_late_min_chk), else null. */
+const lateMinOf = (v: unknown): number | null => { const n = N(v); return n === 10 || n === 20 || n === 30 ? n : null; };
 
 /** A my_bookings row as the ticket reads it, or null for a status it never shows. */
 export function ticketRow(r: Row): TicketRow | null {
@@ -179,6 +184,8 @@ export function ticketRow(r: Row): TicketRow | null {
     rideCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.ride_code)) ? S(r.ride_code) : null,
     // "Still coming?" and "Report a bike problem" (2026-11-13): only a read that carries the columns has them
     ...("coming_at" in r ? { comingAt: S(r.coming_at) || null } : {}),
+    // "Running late" (2026-11-19): 10, 20 or 30 minutes and when, only from a read that carries the columns
+    ...("late_min" in r ? { lateMin: lateMinOf(r.late_min), lateAt: S(r.late_at) || null } : {}),
     ...("bike_report_at" in r ? { bikeReportAt: S(r.bike_report_at) || null } : {}),
     ...(bikes.length > 1 && bikes[0] === bike ? { bikeIds: bikes } : {}),
   };
