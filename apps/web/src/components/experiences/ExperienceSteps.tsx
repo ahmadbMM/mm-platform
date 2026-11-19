@@ -15,6 +15,9 @@ import { hasKindArt, kindsInOrder, rowsOfKind } from "@/lib/kind-theme";
 import type { Held } from "@/lib/held";
 import { calDayLabel, calDayOf, calKey, calMonth, calMonths, calMove, calOffered, calPlan, calTitle, calToday, calViewRead, calViewSave, calWeekdays, type CalPlan, type CalView } from "@/lib/reserve-calendar";
 import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
+import RemindBell from "@/components/site/RemindBell";
+import type { RemindWords } from "@/components/site/Remind.words";
+import { remindIcsHref } from "@/lib/open-remind";
 import { SOCIAL_ICONS } from "@/components/site/social-icons";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
@@ -83,6 +86,12 @@ import { SOCIAL_ICONS } from "@/components/site/social-icons";
 // shows, a date is still picked on its card. The arrows go to the month before or after that has dates; the keys move
 // along the days with dates (Left and Right turned round in Arabic and Urdu, Up and Down a week, Home and End, Page Up
 // and Page Down a month).
+// Remind me when booking opens (the booking app's customer features round, 2026-11-19, item 2; lib/open-remind.ts): a date
+// in its event's list that this visitor could book but not yet, only because booking has not opened for them (the booking
+// window, or members book first for a visitor who is not one), carries a bell at its card's foot, beside the card and never
+// inside it (components/site/RemindBell.tsx): "Remind me", or "Reminder set" once the ask stands. Never on a Featured card
+// (the card is itself a button), a date full or closed as fully booked, one the visitor holds a place on, a members' date
+// to someone who is not one, or a Saturday ride taken by code alone; it goes when the date opens.
 export type StepSession = {
   id: string; kind: string; name: string;
   /** Its day as stored, YYYY-MM-DD: the calendar's day for it (absent: the first ten characters of its id). */
@@ -147,6 +156,10 @@ export type StepSession = {
    *  A member reads a "Members first" mark and books; anyone else reads "Members book first" and cannot choose it. Absent
    *  once everyone may book, and on every other date. */
   mf?: { at: number; held: boolean; everyone: string };
+  /** Remind me when booking opens (lib/open-remind.ts, 2026-11-19): when booking opens for this visitor (epoch ms) and the
+   *  pop-up's words for it ("Sat 21 Nov · 9 AM"), on a date they may be reminded of while it is not open to them; absent
+   *  otherwise. */
+  orm?: { at: number; when: string };
   /** A featured date (lib/rides.ts featuredOf, 2026-11-13): its day as its Featured card's tile, short weekday, day
    *  number and short month ("Sat", "21", "Nov"), and how long yoga runs ("90 min", null on any other date or when it
    *  cannot be told); absent on a date that is not featured. */
@@ -280,13 +293,17 @@ export type StepText = {
   /** The date step's List / Calendar switch: its name for a screen reader, its two buttons' names, and the calendar's
    *  arrows to the month before and after (the booking app's shGrpView, calViewList, calViewCal, calPrev, calNext). */
   cal: { view: string; list: string; cal: string; prev: string; next: string };
+  /** Remind me when booking opens (StepSession.orm): the bell's and its pop-up's words (components/site/Remind.words.ts).
+   *  Absent: no bell. */
+  remind?: RemindWords;
 };
 // clubHref: the Club page, "" while staff have it switched off (its address then leads Home), so no link is offered.
 // member: the visitor is a signed-in community member (the page asks community_member), so the
 // members-only cards and dates show their links too. petromin: the visitor holds the Petromin tag
 // (petromin_member), for whom Petromin Days and its dates show theirs (the owner, 2026-10-12).
 // featured: the Featured cards in order, each naming one of `events` and one of its dates (lib/event-info.ts featuredDates).
-type Props = { locale: string; events: StepEvent[]; featured?: { ev: string; id: string }[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; member: boolean; petromin: boolean; text: StepText };
+// signedIn: the page was drawn for a signed-in account, so a date's Remind me offers "Tell me in Updates" too.
+type Props = { locale: string; events: StepEvent[]; featured?: { ev: string; id: string }[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; member: boolean; petromin: boolean; signedIn?: boolean; text: StepText };
 type Fact = { k: string; v: ReactNode };
 
 /** The DEFE 5KM Run's logo: the ribbon woven into دفء, in Defe's rose (assets/defe-logo.svg in the booking app). */
@@ -361,7 +378,7 @@ const Plate = ({ b }: { b: StepBlood }) => (
   <span className="bld-plate"><img src={b.plate.src} alt={b.plate.alt} width={b.plate.width} height={b.plate.height} decoding="async" /></span>
 );
 
-export default function ExperienceSteps({ locale, events, featured, prices, bookHref, clubHref, member, petromin, text: t }: Props) {
+export default function ExperienceSteps({ locale, events, featured, prices, bookHref, clubHref, member, petromin, signedIn = false, text: t }: Props) {
   const [step, setStep] = useState(1);
   const [ev, setEv] = useState<StepEvent | null>(null);
   const [sess, setSess] = useState<StepSession | null>(null);
@@ -424,6 +441,8 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   /** Why a date cannot be chosen yet, as its card says it now: its booking window first, then members booking first for a
    *  visitor who is not one (the booking app's _bwOpensOn); null when it may be chosen. */
   const opensOf = (s: StepSession): string | null => winOf(s) ?? (mfOn(s)?.held ? (mfOn(s)?.everyone ?? null) : null);
+  /** Remind me (the booking app's _ormBtn): while the date is still not open to this visitor, its bell beside the card. */
+  const ormOf = (s: StepSession) => (t.remind && s.orm && opensOf(s) && (nowMs == null || s.orm.at > nowMs) ? s.orm : null);
   useEffect(() => {
     const d = dlg.current;
     if (!info || !d) return;
@@ -496,6 +515,11 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
       : s.few ? <span className="sc-spots low">{t.few}</span>
       : mf ? <span className="sc-spots mf"><PeopleIcon /><span>{t.mf.mark}</span></span>
       : null;
+  };
+  // The bell, named for the date as its Details are (the booking app's aria-label: what it does, the date's name, its day).
+  const bell = (e: StepEvent, s: StepSession) => {
+    const o = ormOf(s);
+    return o && t.remind ? <RemindBell id={s.id} at={o.at} when={o.when} label={`${named(e) ? s.name : e.title} · ${s.day}`} href={remindIcsHref(s.id, locale)} signedIn={signedIn} words={t.remind} /> : null;
   };
   const tags = (s: StepSession) => (
     <span className="xs-tags">
@@ -839,11 +863,13 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                     <InfoIcon size={20} />
                   </button>
                 );
+                // Remind me when booking opens, at the card's foot, while the date is not open to this visitor
+                const ring = bell(ev, s);
                 // Full, no waitlist (the booking app's sess-card-fbk, 2026-11-13), whatever its kind, as the booking app
                 // draws it before its own cards: no button and no radio, so nothing chooses it; its name and its chip, its
                 // day and Fully booked (or the visitor's own place), its time, and where to go next under it. Never greyed.
                 if (s.fbk) return (
-                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
+                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}${ring ? " has-orm" : ""}`}>
                     <div className={`sc-card fbk ev-${s.kind}${hasKindArt(s.kind) ? " has-motif" : ""}`}>
                       {(named(ev) || s.sg) && (
                         <span className="sc-kicker">
@@ -860,13 +886,13 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       {!s.held && <span className="sc-meta sc-fbk-l"><CalendarIcon size={13} /><bdi>{s.fbk}</bdi></span>}
                       {hasKindArt(s.kind) && <span className="k-art sc-motif" aria-hidden="true" />}
                     </div>
-                    {about}
+                    {about}{ring}
                   </div></Fragment>
                 );
                 // Yoga's own card (the booking app's _ygSessCard, 2026-11-12): cream, the low sun rising from the far corner,
                 // the mark, its name, when, how long and where, and who leads it along the foot with its state
                 if (s.yoga) return (
-                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
+                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}${ring ? " has-orm" : ""}`}>
                     <button type="button" className={`sc-card sc-yoga ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
                       <YogaScene />
                       <span className="sc-yg-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-yg-mark" src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} decoding="async" /></span>
@@ -876,7 +902,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       <span className="sc-yg-meta">{s.yoga.meta.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>
                       <span className="sc-yg-foot"><span className="sc-yg-with">{s.yoga.with}</span>{spots}</span>
                     </button>
-                    {about}
+                    {about}{ring}
                   </div></Fragment>
                 );
                 // The Farm House Night's own card (the booking app's _fhSessCard, 2026-11-13): the venue's rust tile, the fan of
@@ -884,7 +910,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                 // and who it is for along the foot with its state alone: never Available nor how many places are left, as on
                 // every card of a ride staff approve in the booking app
                 if (s.farm) return (
-                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
+                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}${ring ? " has-orm" : ""}`}>
                     <button type="button" className={`sc-card sc-farm ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
                       <FarmScene />
                       <span className="sc-fh-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-fh-mark" src={FARM_MARK} alt="" width={FARM_MARK_SIZE.width} height={FARM_MARK_SIZE.height} decoding="async" /></span>
@@ -896,14 +922,14 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       <span className="sc-fh-meta"><span className="sc-fh-mi">{s.farm.meta.map((x, i) => <span key={i}><i aria-hidden="true" /><bdi>{x}</bdi></span>)}</span></span>
                       <span className="sc-fh-foot"><span className="sc-fh-line">{s.farm.line}</span>{stateOf(s)}</span>
                     </button>
-                    {about}
+                    {about}{ring}
                   </div></Fragment>
                 );
                 // The DEFE 5KM Run's own card (the booking app's _defeSessCard, 2026-10-18): white with Defe's
                 // pink washed in from the far corner, the logo, the race's name, when, how far and where, the
                 // cause along the foot with its state
                 if (s.defe) return (
-                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
+                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}${ring ? " has-orm" : ""}`}>
                     <button type="button" className={`sc-card sc-defe ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
                       <span className="sc-defe-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-defe-logo" src={DEFE_LOGO} alt="" width={977} height={660} decoding="async" /></span>
                       <span className="sc-defe-title">{s.name}</span>
@@ -912,11 +938,11 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       <span className="sc-defe-meta">{s.defe.meta.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>
                       <span className="sc-defe-foot"><span className="sc-defe-cause"><Ribbon /><span>{s.defe.cause}</span></span>{spots}</span>
                     </button>
-                    {about}
+                    {about}{ring}
                   </div></Fragment>
                 );
                 return (
-                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
+                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}${ring ? " has-orm" : ""}`}>
                     <button type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}${hasKindArt(s.kind) ? " has-motif" : ""}`} {...radio} onClick={() => pickDate(s)}>
                       {(named(ev) || clubOnly(s) || s.free || s.sg) && (
                         <span className="sc-kicker">
@@ -945,7 +971,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       {/* the kind's motif along the foot: the Saturday ride's dawn band, the pool's water, Petromin's stripes */}
                       {hasKindArt(s.kind) && <span className="k-art sc-motif" aria-hidden="true" />}
                     </button>
-                    {about}
+                    {about}{ring}
                   </div></Fragment>
                 );
               })}

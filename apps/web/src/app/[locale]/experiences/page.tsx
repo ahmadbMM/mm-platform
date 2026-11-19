@@ -41,6 +41,8 @@ import { kindThemeWords } from "@/components/experiences/KindTheme.words";
 import { kindMarks, sunriseHhmm } from "@/lib/kind-theme";
 import { mfAt } from "@/lib/members-first";
 import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
+import { remindable, remindAt, remindWhen } from "@/lib/open-remind";
+import { remindWords } from "@/components/site/Remind.words";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -81,6 +83,12 @@ import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 // booked is listed among its event's dates, said Fully booked, with See you next Saturday on the Saturday ride and See you
 // at the next session on any other, and nothing books it; it never brings back a card that shows only while it has dates,
 // nor stands as an event's next date.
+// Remind me when booking opens (the booking app's customer features round, 2026-11-19, item 2; lib/open-remind.ts): a date
+// this visitor could book once it opens, held only by the booking window or by members book first, carries a bell
+// (ExperienceSteps, components/site/RemindBell.tsx): its calendar file comes from /api/booking-opens and, for a signed-in
+// visitor (the account's cookie), "Tell me in Updates" from /api/account/remind. Whether they may be reminded of it is
+// the database's _open_remind_ok as the page knows the visitor: a members' date for a member (a Petromin night for its
+// tag's holders, Victory Lap for those who may book it), never a Saturday ride taken by code alone, nor a date they hold.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -150,6 +158,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const L = asLocale(locale);
   const tx = serverL(locale);
   const [{ content, previewing, hidden }, rides, member, petromin, gv, mine] = await Promise.all([pageState("experiences"), loadRides(), communityMember(), petrominMember(), genderViewer(), heldDates()]);
+  // a signed-in visitor (the account's cookie): a date's Remind me offers "Tell me in Updates" too
+  const signedIn = !!decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
   // asked only while a Victory Lap date is on the books: its price is said to those who may book it
   const vlBook = (rides?.sessions ?? []).some((s) => s.kind === "vlap") ? await vlapMember() : false;
   // and while a Saturday date is: whether it is booked at micromobility.sa/saturday with a code
@@ -300,6 +310,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     // members book first while it lasts (2026-11-18): when everyone may, as the booking app's _mfWhen says it
     const mfMs = s.fbk ? 0 : mfAt(s, drawn.getTime());
     const mfLine = mfMs ? fillAt(mfW.everyone, revealWhen(s.publicAt, locale, now.slice(0, 10), nearWords)) : "";
+    // the booking window's opening while it is ahead, and Remind me when booking opens for this visitor (2026-11-19)
+    const winMs = !s.fbk && window && notOpenYet(s.date, window, now, s.kind) ? opensAt(s.date, window) : null;
+    const ormMs = remindable({ ...s, held: own }, { member, petromin, vlap: vlBook, satLink }) ? remindAt({ opensAt: winMs, mf: mfMs ? { at: mfMs, held: !member } : null }, drawn.getTime()) : 0;
     return {
       // the booking app's session card: "Sunday · 26 Sept", the year said only when it is not this one (the owner's
       // pick 7, 2026-11-13: every date listed is still ahead), and its times in the rider's clock
@@ -359,7 +372,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // within a day of opening, a countdown to the real window that the browser keeps up to date each minute (opensAt);
       // never on a date closed as fully booked, which no window opens
       opens: !s.fbk && window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null,
-      opensAt: !s.fbk && window && notOpenYet(s.date, window, now, s.kind) ? opensAt(s.date, window) : null,
+      opensAt: winMs,
+      // Remind me when booking opens: when it opens for this visitor and the pop-up's words for it
+      ...(ormMs ? { orm: { at: ormMs, when: remindWhen(ormMs, locale) } } : {}),
       // its Details: staff's own line for the date shows under the text, except on an event, whose
       // description is the text
       info: {
@@ -466,6 +481,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     // the date step's List / Calendar switch and the month's arrows: the booking app's shGrpView, calViewList, calViewCal,
     // calPrev and calNext (KindTheme.words.ts)
     cal: kw.cal,
+    // Remind me when booking opens (2026-11-19): the bell's and its pop-up's words, the booking app's own
+    remind: remindWords(locale),
   };
 
   const good = list(c.good.items).filter((g) => S(g.title));
@@ -486,7 +503,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
 
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
-            <ExperienceSteps locale={locale} events={events} featured={featuredDates(cards)} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} petromin={petromin} text={text}
+            <ExperienceSteps locale={locale} events={events} featured={featuredDates(cards)} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} petromin={petromin} signedIn={signedIn} text={text}
               prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? sarRange(p.type, p.price) : S(d.free) }))} />
           </section>
 
