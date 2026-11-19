@@ -153,7 +153,7 @@ export default function LockerPick({ sessionId, day, locale, max, value, onChang
               const on = picked.includes(u.code), no = u.out || tk.has(u.code);
               return (
                 <button key={u.code} type="button" className={`tk-lk-d${on ? " on" : ""}${no ? " no" : ""}`} aria-pressed={on}
-                  disabled={!on && (no || picked.length >= most)} onClick={() => door(u.code)}
+                  disabled={!on && (no || (!one && picked.length >= most))} onClick={() => door(u.code)}
                   aria-label={fillN(w.lkDoor, u.code) + (no ? ` · ${u.out ? w.lkOut : w.lkFull}` : "")}><b>{u.code}</b></button>
               );
             })}

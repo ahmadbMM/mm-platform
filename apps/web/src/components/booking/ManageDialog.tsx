@@ -24,7 +24,8 @@ export function ManageDialog({ open, onClose, title, className = "", closeLabel,
     if (!open && d.open) d.close();
   }, [open]);
   return (
-    <dialog ref={ref} className={`tk-dlg mg-dlg ${className}`} aria-labelledby={`${id}-t`} onClose={onClose}
+    // a dialog inside this one (the locker terms) closing is not this one closing: React passes its close event up the tree
+    <dialog ref={ref} className={`tk-dlg mg-dlg ${className}`} aria-labelledby={`${id}-t`} onClose={(e) => { if (e.target === e.currentTarget) onClose(); }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       {open && (
         <div className="tk-dlg-in">
