@@ -2,8 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { createElement, type ReactElement } from "react";
+// The site has no @types/react-dom; this test needs one function of it (as blood.test.ts does).
+// @ts-expect-error -- react-dom/server ships without type declarations here
+import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import { serverLocalize } from "@/i18n/dicts";
@@ -13,6 +15,7 @@ import { ticketRow, ticketSession, type TicketRow } from "../tickets";
 // 2026-11-15: "make the number of the booking in jcc booking cards bigger"): a one- or two-digit number wears n3, which the
 // stylesheet sizes by the ticket head's width up to 120px, never under the old 72px (56px on a phone); the waitlist and past
 // tickets keep their sizes.
+const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 const SRC = fileURLToPath(new URL("../..", import.meta.url));
 const CSS = readFileSync(join(SRC, "components/booking/booking.css"), "utf8");
 const JCC = { id: "2099-11-20", session_date: "2099-11-20", day: "Friday", status: "open", title: null, ride_kind: null, event_kind: "regular",
