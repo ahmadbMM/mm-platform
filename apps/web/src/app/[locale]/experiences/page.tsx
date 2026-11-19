@@ -43,6 +43,11 @@ import { mfAt } from "@/lib/members-first";
 import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 import { remindable, remindAt, remindWhen } from "@/lib/open-remind";
 import { remindWords } from "@/components/site/Remind.words";
+import BookingFlow, { type FlowEvent } from "@/components/experiences/BookingFlow";
+import { priceMap, type BookSession } from "@/lib/booking";
+import { bookingAddonItems } from "@/lib/booking-server";
+import { EVENT_OF, bookingAt } from "@/lib/event-info";
+import { fmtDayDate } from "@/lib/tickets";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -153,8 +158,26 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return pageMeta({ path: "/experiences", locale, title: `${serverL(locale)("Experiences", "التجارب")} · Micromobility`, description: S(c.hero.text), closed });
 }
 
-export default async function ExperiencesPage({ params }: { params: Promise<{ locale: string }> }) {
+// The kinds booked on this site (the user, 2026-11-19: "make sure all customers can do everything they want in the booking
+// app to do it on the main website"): their last step opens the booking steps here (?ev=&session=, BookingFlow). Every
+// other kind keeps its hand-over to the booking app, which has its own steps: a run's runner details, a race's athlete
+// step (Victory Lap, Arena Heros), the Blood Donation event's donor step, and the Petromin nights (micromobility.sa/petromin
+// and the booking app's Petromin Days).
+const HERE = new Set<RideKind>(["jcc", "saturday", "swim", "workshop", "snd96", "event", "yoga", "farm"]);
+// Each detail staff may ask for before a booking (customer_fix_fields, the database's FIX_FIRST), by the page of My Account
+// that holds it (lib/account-menu.ts): the booking steps' pop-up sends the rider there instead of to the booking app.
+const FIX_PAGES: Record<string, string> = {
+  name: "/account/personal", birth_date: "/account/personal", nationality: "/account/personal", gender: "/account/personal", photo: "/account/personal",
+  email: "/account/contact", phone: "/account/contact", whatsapp: "/account/contact",
+  country: "/account/residence", city: "/account/residence",
+  emergency: "/account/emergency", emergency_name: "/account/emergency", emergency_phone: "/account/emergency", emergency_relation: "/account/emergency",
+  height: "/account/riding", type_preference: "/account/riding", password: "/account/password",
+};
+const ID = (v: string | string[] | undefined) => (typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : null);
+
+export default async function ExperiencesPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const { locale } = await params;
+  const q = (await searchParams) ?? {};
   const L = asLocale(locale);
   const tx = serverL(locale);
   const [{ content, previewing, hidden }, rides, member, petromin, gv, mine] = await Promise.all([pageState("experiences"), loadRides(), communityMember(), petrominMember(), genderViewer(), heldDates()]);
@@ -294,6 +317,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const routeOf = (s: RideSession) => (s.kind === "saturday"
     ? { beg: fillAt(kmWord, kmText(s.groupKm?.beg ?? 20)), int: fillAt(kmWord, kmText(s.groupKm?.int ?? 40)), start: venueWords.meetingPoint, begPlace: venueWords.venueJyc, intPlace: kw.intPlace }
     : null);
+  // the booking steps on a date (BookingFlow): this page again, on that event's card and that date
+  const flowHref = (s: RideSession) => localHref(`/experiences?ev=${EVENT_OF[s.kind]}&session=${encodeURIComponent(s.id)}`, locale);
   const toStep = (s: RideSession): StepSession => {
     const seatPrice = s.kind === "event" && s.price != null ? sar(s.price) : null;
     const sr = sunrise(s), route = routeOf(s);
@@ -330,6 +355,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       members: s.members, free: s.free && s.kind !== "blood", full: s.full, paid: !s.free && rentsBikes(s.kind), noCarbon: s.noCarbon, closedTypes: s.closedTypes ?? [],
       // a Saturday ride booked with a ride code: anyone with a code, member or not, books it on its own page
       ...(satLink && s.kind === "saturday" ? { members: false, satLink: `/saturday?lang=${locale}` } : {}),
+      // a kind booked on this site: its booking steps on this date (BookingFlow), in place of the booking app
+      ...(HERE.has(s.kind) && !(satLink && s.kind === "saturday") ? { here: flowHref(s) } : {}),
       // the DEFE 5KM Run's own card (the booking app's _defeSessCard): the logo, its name, when, how far and
       // where, and the cause along the foot
       ...(s.kind === "defe5k" ? { defe: { meta: [s.times ? clock(s.times[0]) : "", fillAt(kmWord, 5), place.name].filter(Boolean), cause: defeWords.cause } } : {}),
@@ -485,6 +512,39 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     remind: remindWords(locale),
   };
 
+  // ── The booking steps (BookingFlow), when the address names an event card and a date booked on this site ──
+  // (?ev=&session=; Experiences' last step and the sign-in come back here). The card's dates as the steps read them: each
+  // one that is booked here, or still handed to the booking app on its card and date.
+  const flowEv = ID(q.ev), flowSess = ID(q.session);
+  const flowCard = flowEv ? cards.find((x) => x.card.key === flowEv) : undefined;
+  const toBook = (s: RideSession): BookSession => {
+    const step = toStep(s);
+    const community = s.kind !== "jcc" && s.kind !== "snd96";
+    const places = (s.approval ? s.spots || s.capacity : s.capacity) || 12;
+    const mfMs = s.fbk ? 0 : mfAt(s, drawn.getTime());
+    return {
+      id: s.id, date: s.date, kind: s.kind, name: s.kind === "jcc" ? "" : step.name, full: s.full, community, members: s.members, free: s.free, approval: !!s.approval,
+      seat: s.kind === "event" ? s.price ?? 0 : null, capacity: places, left: s.left ?? null, wlCap: s.wlCap ?? null,
+      km: s.groupKm ?? { beg: 20, int: 40 }, addons: s.addons ?? [], meetUrl: s.meetUrl ?? null, location: s.location ?? null, routeSlug: s.routeSlug,
+      day: fmtDayDate(s.date, locale), near: step.near,
+      time: s.times ? timesText(s.times, s.gather, clock, s.kind === "farm" ? { gather: fw.arrive, start: fw.dinner } : { gather: S(d.gather), start: S(d.start) }) : "",
+      collect: s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), clock(s.collect)) : null,
+      ...(step.satLink ? { members: false, satLink: step.satLink } : {}),
+      opens: step.opens ?? (mfMs && !member ? step.mf?.everyone ?? null : null),
+      ...(mfMs ? { mf: { held: !member && !step.opens, label: member ? mfW.mark : mfW.status, everyone: step.mf?.everyone ?? "" } } : {}),
+      ...(s.few ? { few: true as const } : {}),
+      description: s.kind === "event" ? s.description ?? null : null,
+      gender: s.gender ?? null, closedTypes: s.closedTypes ?? [], fbk: !!s.fbk,
+      ...(HERE.has(s.kind) ? {} : { handoff: bookingAt(book, EVENT_OF[s.kind], s.id) }),
+    };
+  };
+  const flowEvents: FlowEvent[] = flowCard && (!flowSess || flowCard.onBooks.some((x) => x.id === flowSess)) ? [{
+    key: flowCard.card.key, title: S(ev[`${flowCard.card.p}Title`]) || (flowCard.card.key === "blood" ? bloodName(tx) : ""), meta: S(ev[`${flowCard.card.p}Meta`]),
+    logo: S(ev[`${flowCard.card.p}Logo`]), note: fill(S(ev[`${flowCard.card.p}Note`]), caps), sessions: flowCard.onBooks.map(toBook),
+  }] : [];
+  const flowOn = flowEvents.length > 0;
+  const flowItems = flowOn ? await bookingAddonItems(flowCard!.onBooks.filter((x) => !x.free && HERE.has(x.kind)).flatMap((x) => x.addons ?? [])) : [];
+
   const good = list(c.good.items).filter((g) => S(g.title));
   const learn = learnTeaser(c.learn); // Learn to ride: the lessons sign-up, while staff offer lessons
   const whatsapp = S(site.social.whatsapp);
@@ -492,6 +552,24 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="xp">
+        {flowOn ? (
+          // the booking steps on the date picked (BookingFlow), in place of the hero and the steps
+          <div className="xp-wrap xq-flow">
+            <section className="xp-sec" id="book">
+              <BookingFlow locale={locale} events={flowEvents} prices={priceMap(rides?.prices ?? [])} maxPrices={fares.max} jccCap={biz.jccAccountCap} seatMax={biz.eventSeatMax}
+                items={flowItems} start={{ ev: flowEv, session: flowSess }}
+                text={{ eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), noDates: S(st.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
+                links={{
+                  apply: localHref("/community/registration", locale), account: localHref("/bookings", locale), club: hidden.includes("club") ? "" : localHref("/club", locale),
+                  signup: localHref(`/signup?next=${encodeURIComponent(flowHref(flowCard!.onBooks.find((x) => x.id === flowSess) ?? flowCard!.onBooks[0]))}`, locale),
+                  place: directions || null, fix: FIX_PAGES,
+                }}
+                today={now.slice(0, 10)} now={drawn.getTime()}
+                typeNames={Object.fromEntries(Object.entries(TYPE_NAME).map(([k, v]) => [k, tx(v.en, v.ar)]))}
+                routes={{}} exit={localHref("/experiences", locale)} />
+            </section>
+          </div>
+        ) : (<>
         <section className="xp-hero" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.25) 46%,rgba(0,0,0,.12) 70%),url('${bg(S(c.hero.image))}')` }}>
           <p className="xp-eyebrow">{S(c.hero.eyebrow)}</p>
           <h1>{S(c.hero.title)}</h1>
@@ -506,7 +584,10 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
             <ExperienceSteps locale={locale} events={events} featured={featuredDates(cards)} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} petromin={petromin} signedIn={signedIn} text={text}
               prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? sarRange(p.type, p.price) : S(d.free) }))} />
           </section>
+        </div>
+        </>)}
 
+        <div className="xp-wrap">
           {learn && <LearnTeaser locale={locale} t={learn} place="experiences" />}
 
           {good.length > 0 && (

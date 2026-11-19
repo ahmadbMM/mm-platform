@@ -109,6 +109,9 @@ export type StepSession = {
   members: boolean; free: boolean; full: boolean; paid: boolean;
   /** A Saturday ride while it is booked at micromobility.sa/saturday with a ride code (rentals 20261108120000): where its button goes. */
   satLink?: string | null;
+  /** Booked on this site (the user, 2026-11-19): the booking steps on this date (/experiences?ev=&session=, BookingFlow),
+   *  where the last step's button goes in place of the booking app. Absent on a kind still booked there. */
+  here?: string | null;
   noCarbon: boolean; // the ride offers no Road Carbon bike, so its price is not shown
   closedTypes?: string[]; // nor the price of a type staff closed on this session (typeOffered)
   /** A ticketed event: seats instead of bikes, so no bike prices - its own blurb, the seat price
@@ -604,7 +607,8 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   };
   // Petromin Days hands over ev=petromin, which the booking app opens under its own Petromin Days. A Saturday ride
   // booked with a ride code goes to its own page (micromobility.sa/saturday) instead.
-  const link = ev && sess ? sess.satLink || bookingAt(bookHref, ev.key, sess.id) : bookHref;
+  // A kind booked on this site opens its booking steps here (sess.here, the user, 2026-11-19).
+  const link = ev && sess ? sess.satLink || sess.here || bookingAt(bookHref, ev.key, sess.id) : bookHref;
 
   // The List / Calendar switch: the view picked is kept on this device.
   const pickView = (v: CalView) => { setView(v); calViewSave(v); };
@@ -1028,7 +1032,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
               <a className={`xs-go${ev.blood ? " ev-blood" : sess.yoga ? " ev-yoga" : sess.farm ? " ev-farm" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
               {/* one place per account, so never "add the participants" on the Blood Donation event, nor on yoga (the booking
                   app's _noGroupAdd); the Farm House Night says it, as the member adds their family there */}
-              {!ev.blood && !sess.yoga && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
+              {!ev.blood && !sess.yoga && !sess.here && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
             </>
           )}
         </section>
