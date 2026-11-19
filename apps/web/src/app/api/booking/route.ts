@@ -2,7 +2,10 @@ import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
 import { makeBooking, readInput, rpcCall } from "@/lib/booking-server";
 import { cookieValue } from "@/lib/live";
 import { loadTicketSessions } from "@/lib/tickets-data";
-import { bfFor, ticketRow, type TicketRow } from "@/lib/tickets";
+import { bfFor, ticketRoute, ticketRow, type TicketRow } from "@/lib/tickets";
+import { loadSiteContent } from "@/lib/site";
+import { routeItems } from "@/lib/route-names";
+import { asLocale } from "@/lib/content";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // POST /api/booking: a rider books a ride on the website (the owner, 2026-10-03: full booking on
@@ -45,10 +48,15 @@ export async function POST(req: Request) {
   // for such a ride; a failed check reads as no.
   const read = sessions.get(input.sessionId) ?? null;
   const session = read?.bfMembers ? bfFor(read, (await rpcCall<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data === true) : read;
+  // the ride's route on the confirmation's ticket, as My Bookings draws it (a Routes page item, or the circuit drawn), in the
+  // page's language
+  const lang = typeof (body as Record<string, unknown> | null)?.lang === "string" ? String((body as Record<string, unknown>).lang) : "en";
+  const route = session ? ticketRoute(session, routeItems(await loadSiteContent(), asLocale(lang))) : null;
   return json({
     ok: true,
     tickets,
     session,
+    route,
     // the rows as the database stored them, for a ticket my_bookings did not return in time
     booked: r.booked,
     addonsSaved: r.addonsSaved,

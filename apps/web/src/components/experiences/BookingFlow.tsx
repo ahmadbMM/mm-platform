@@ -88,7 +88,7 @@ type Modal =
   | { kind: "profile"; community: boolean; ask: PgField[]; next: string | null }
   | { kind: "bike"; type: BikeType; slot: number } | { kind: "group"; g: RideGroup } | { kind: "waiver" } | null;
 /** `booked`: the rows the database stored (the route's), so a ticket my_bookings did not return in time is still counted. */
-type Done = { tickets: TicketRow[]; booked: { id: string; status: string }[]; session: TicketSession | null; addonsSaved: boolean };
+type Done = { tickets: TicketRow[]; booked: { id: string; status: string }[]; session: TicketSession | null; addonsSaved: boolean; route: TicketRoute | null };
 
 /** An amount as the booking app writes it (_sar): the riyal sign left of the number, isolated left to right, two decimals
  *  only when it has a fraction (57.50); a range "lo – hi" when a type's fare may rise. The sign is drawn for the eye alone
@@ -435,17 +435,18 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           promo: promo ? { code: promo.code, appliesTo: promo.appliesTo } : null,
           waiver: needsWaiver(sel) ? waiverOk === sel.id : false,
           seatOnly: !waitlist && !isFull(sel),
+          lang: locale,
         }),
       });
       const b = (await res.json().catch(() => ({}))) as {
-        ok?: boolean; error?: string; detail?: string; tickets?: TicketRow[]; booked?: { id: string; status: string }[]; session?: TicketSession | null; addonsSaved?: boolean;
+        ok?: boolean; error?: string; detail?: string; tickets?: TicketRow[]; booked?: { id: string; status: string }[]; session?: TicketSession | null; addonsSaved?: boolean; route?: TicketRoute | null;
       };
       if (b.ok && Array.isArray(b.tickets)) {
         const bookedRows = Array.isArray(b.booked) ? b.booked.filter((x) => x && typeof x.id === "string") : [];
         const n = bookedRows.length || b.tickets.length;
         const rowsNow: { status: string }[] = b.tickets.length ? b.tickets : bookedRows;
         funnel(rowsNow.length > 0 && rowsNow.every((r) => r.status === "waitlist") ? "waitlisted" : "booked", fk()); funnelDone();
-        setDone({ tickets: b.tickets, booked: bookedRows, session: b.session ?? null, addonsSaved: b.addonsSaved !== false });
+        setDone({ tickets: b.tickets, booked: bookedRows, session: b.session ?? null, addonsSaved: b.addonsSaved !== false, route: b.route ?? null });
         setAcctNow((a) => {
           if (!a) return a;
           // the next booking asks what this one made due (_pgDue counts the rows)
@@ -636,7 +637,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
             <TicketCard key={r.id} locale={locale} today={today} rows={[r]} session={ds ?? undefined} name={name}
               cue={ticketCue([r], ds ?? undefined, null)} t={tk} gather={text.gather} start={text.start} typeName={typeName}
               links={{ edit: null, manage: links.account, place: ds?.approval ? ds.meetUrl : links.place }}
-              route={routes[r.sessionId] ?? null} now={now} wallet={{ bookingId: r.id, groupIds: [r.id] }} addonItems={ticketItems} />
+              route={done.route ?? routes[r.sessionId] ?? null} now={now} wallet={{ bookingId: r.id, groupIds: [r.id] }} addonItems={ticketItems} />
           ))}
         </div>
         <div className="bk-foot">
