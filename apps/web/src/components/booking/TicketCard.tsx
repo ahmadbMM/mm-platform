@@ -30,6 +30,7 @@ import TicketComing from "./TicketComing";
 import TicketBikeReport from "./TicketBikeReport";
 import TicketHelp from "./TicketHelp";
 import { comingWords } from "./Coming.words";
+import { deskNoteWord } from "./DeskNote.words";
 import { bikeReportWords } from "./BikeReport.words";
 import { rideHelpWords } from "./RideHelp.words";
 import { comingCancelLink, stillComing } from "@/lib/still-coming";
@@ -297,6 +298,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const shareText = [name, day, when, held && meetHeld(s, now) ? "" : venueText(venue, t)].filter(Boolean).join(" · ");
   // each rider's add-ons under their name: the ones looked up behind Details, a locker in view (its period and number)
   const looked = extras.filter((x) => !x.locker), lockerLines = extras.filter((x) => x.locker);
+  // the rider's note for the desk (the booking app's _dntTkHtml, 2026-11-19): the booking's, read-only, behind Details
+  const deskNote = rows.map((r) => r.riderNote).find(Boolean) ?? null;
   const addonRows = (list: typeof extras, head: string) => list.length > 0 && rows.map((r) => {
     const mine = list.filter((x) => x.rowId === r.id);
     return mine.length > 0 && (
@@ -462,9 +465,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             )}
           </div>
         ))}
-        {/* the route and the add-ons: things a rider looks up, behind one Details row, closed until opened (the booking
-            app's _tkMore, 2026-11-10); the total stays in view */}
-        {(route || looked.length > 0) && (
+        {/* the route, the note for the desk and the add-ons: things a rider looks up, behind one Details row, closed until
+            opened (the booking app's _tkMore, 2026-11-10); the total stays in view */}
+        {(route || deskNote || looked.length > 0) && (
           <TicketMore label={t.details}>
             {route && (
               <div className={`tk-rt${route.track ? " has-map" : ""}`}>
@@ -494,6 +497,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
                 {route.track && <svg className="tk-rt-map" viewBox="0 0 40 158" aria-hidden="true" focusable="false"><path d={JCC_TRACK} /><circle cx="12.9" cy="71.4" r="3.2" /></svg>}
               </div>
             )}
+            {/* what the rider wrote for our team with the booking (2026-11-19): read here, changed in the booking app's Edit */}
+            {deskNote && <div className="tk-dnt"><p className="tk-rt-k">{deskNoteWord(locale)}</p><p className="tk-dnt-n"><bdi>{deskNote}</bdi></p></div>}
             {addonRows(looked, t.addons)}
           </TicketMore>
         )}

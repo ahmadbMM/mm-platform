@@ -63,6 +63,11 @@ export type TicketRow = {
   /** "Running late" (rentals 20261119600100; lib/still-coming.ts): the minutes the rider said they will be late (10, 20 or
    *  30) and when they said it, null before; absent when the read has no such columns (nothing is offered). */
   lateMin?: number | null; lateAt?: string | null;
+  /** "Note for the desk" (rentals 20261119600300, the customer features round of 2026-11-19, item 9): what the rider wrote
+   *  for our team with the booking (queue_entries.rider_note, 200 characters at most, on the booking's first row), null
+   *  without one; absent when the read has no such column. Shown read-only in the ticket's Details; it is changed in the
+   *  booking app (its review step and the ticket's Edit). */
+  riderNote?: string | null;
   /** "Report a bike problem" (rentals 20261114081500; lib/bike-report.ts): the rider's last report on the booking, null
    *  before; absent when the read has no such column (no button). */
   bikeReportAt?: string | null;
@@ -186,6 +191,8 @@ export function ticketRow(r: Row): TicketRow | null {
     ...("coming_at" in r ? { comingAt: S(r.coming_at) || null } : {}),
     // "Running late" (2026-11-19): 10, 20 or 30 minutes and when, only from a read that carries the columns
     ...("late_min" in r ? { lateMin: lateMinOf(r.late_min), lateAt: S(r.late_at) || null } : {}),
+    // the rider's note for the desk (2026-11-19), only from a read that carries the column
+    ...("rider_note" in r ? { riderNote: S(r.rider_note).trim().slice(0, 200) || null } : {}),
     ...("bike_report_at" in r ? { bikeReportAt: S(r.bike_report_at) || null } : {}),
     ...(bikes.length > 1 && bikes[0] === bike ? { bikeIds: bikes } : {}),
   };

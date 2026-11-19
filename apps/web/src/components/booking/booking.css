@@ -192,6 +192,11 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-rt-txt { min-width: 0; display: grid; gap: 2px; }
 .tk-rt-k { font-size: 12px; color: #6e6b63; }
 .tk-rt-n { font-size: 15px; font-weight: 700; color: #1a1919; }
+/* the rider's note for the desk (2026-11-19; the booking app's .tk-dnt): its label as the route's, then the note as written,
+   in the ticket's own ink, wrapping anywhere */
+.tk-dnt { display: flex; flex-direction: column; gap: 2px; margin: 12px 0; overflow-wrap: anywhere; }
+.tk-dnt > p { margin: 0; }
+.tk-dnt-n { font-size: 14px; font-weight: 500; line-height: 1.45; }
 .tk-rt-m { font-size: 13px; color: #4a4843; font-variant-numeric: tabular-nums; }
 .tk-rt-done { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: #077a4b; }
 .tk-rt-a { font-size: 13px; font-weight: 600; color: #077a4b; }
