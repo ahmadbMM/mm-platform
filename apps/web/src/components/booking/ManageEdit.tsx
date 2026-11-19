@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import { Link } from "@/i18n/navigation";
 import { checkEdit, cleanRiderName, KIDS_MAX_CM, nameLocked, type EditError, type EditRider } from "@/lib/booking-manage";
 import type { ManageCtx } from "@/lib/booking-manage-server";
 import type { ManageWords } from "./Manage.words";

@@ -123,10 +123,12 @@ describe("the ticket's Details, buttons and words", () => {
     expect(html).not.toMatch(/\p{Extended_Pictographic}/u);
   });
   it("says Leave waitlist on a waitlist's ticket, Cancel on a booking", () => {
-    expect(card([row({ status: "waitlist" })])).toContain('<a class="tk-btn red" href="https://book.example.test/?tab=bookings">Leave waitlist</a>');
-    expect(card([row({ status: "waitlist" })], { t: TICKET.ar, locale: "ar" })).toContain(">مغادرة قائمة الانتظار</a>");
-    expect(card([row({ status: "waitlist" }), row({ id: "q2abcdef", queueNum: 5 })])).toContain(">Cancel</a>"); // a place is held
-    expect(card([row({})])).toContain(">Cancel</a>");
+    // on the website itself since 2026-11-19 (TicketManage): a button that opens the reasons, never a link to the booking app
+    expect(card([row({ status: "waitlist" })])).toContain('<button type="button" class="tk-btn red" aria-haspopup="dialog">Leave waitlist</button>');
+    expect(card([row({ status: "waitlist" })], { t: TICKET.ar, locale: "ar" })).toContain(">مغادرة قائمة الانتظار</button>");
+    expect(card([row({ status: "waitlist" }), row({ id: "q2abcdef", queueNum: 5 })])).toContain(">Cancel</button>"); // a place is held
+    expect(card([row({})])).toContain(">Cancel</button>");
+    expect(card([row({})])).not.toContain("?tab=bookings");
   });
   it("makes the countdown a timer", () => {
     const html = renderToStaticMarkup(createElement(Countdown, { moments: [[Date.parse("2099-03-01T17:15:00Z"), "collect"]], now: Date.parse("2099-03-01T09:00:00Z"), t: { collect: "Bike collection in {0}", gather: "Gathering in {0}", start: "Starts in {0}", h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));

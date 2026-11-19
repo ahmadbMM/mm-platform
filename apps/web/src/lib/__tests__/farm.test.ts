@@ -356,10 +356,10 @@ describe("a Farm House Night ticket (My Account)", () => {
     expect(html).toContain("Reserved - the participant list is being finalised");
     expect(html).toMatch(/class="tk-total"><span>Total<\/span><strong>Free<\/strong>/);
     expect(html).not.toContain("tk-rider-pay"); // a ride staff approve: no price for each place
-    // the member adds or drops family members in the booking app (its Edit), as there; Reschedule and Cancel too
-    expect(html).toContain('<a class="tk-btn solid" href="https://book.example.test/?ev=community&amp;session=2099-11-19-fh">Edit</a>');
-    expect(html).toContain(" Reschedule</a>");
-    expect(html).toContain(">Cancel</a>");
+    // the member takes family members off by name on the website (its Edit, the booking app's _fhDropOpen, 2026-11-19), and
+    // cancels; never Reschedule: a ride staff approve is never moved (the database refuses a move off one)
+    expect(html).toContain('<div class="tk-manage"><button type="button" class="tk-btn solid" aria-haspopup="dialog">Edit</button><button type="button" class="tk-btn red" aria-haspopup="dialog">Cancel</button></div>');
+    expect(html).not.toContain("Reschedule");
     expect(html).toContain(`href="${MAP}"`);
     expect(html.replace(/<[^>]*>/g, " ")).not.toMatch(BIKE_WORDS);
     expect(decodeURIComponent(/href="data:text\/calendar;charset=utf-8,([^"]*)"/.exec(html)?.[1] ?? "")).not.toMatch(BIKE_WORDS);

@@ -886,7 +886,7 @@ describe("a circuit night's waitlist", () => {
   it("leaves another ride's waitlist as it was", () => {
     const html = card([row("w", "waitlist", 12, 3)], { ...jccS, kind: "petromin" });
     expect(html).toContain("tk-label wl");
-    expect(html).not.toContain("solid");
+    expect(html).not.toContain("tk-label wl solid");
     expect(html).not.toContain("tk-wl-collect");
   });
   // The owner, 2026-11-10: staff set the waitlist's time on the session (bike_slots._wlCollect).
