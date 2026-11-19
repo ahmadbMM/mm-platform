@@ -1,14 +1,14 @@
 // The booking steps' words that staging's Booking.text.ts does not have, in every language the site speaks: the Farm House
 // Night's family and its waiver, and the refusals the booking app has added since (a bike type closed or full since the page
-// was read, members book first, our bikes taken, a waiver changed), with Loading and Try again for the account's read. The
+// was read and a type's Full pill, members book first, our bikes taken, a waiver changed), with Loading and Try again for the account's read. The
 // ten languages the booking app speaks take its own words word for word (fhPeople, fhYou, fhFam, fhWaiverTitle,
-// fhWaiverBody, fhWaiverAgree, errTypeClosed, errTypeFull, mfRefused, mbFullMsg, waiverOutdatedMsg, loadingLabel, retryBtn:
+// fhWaiverBody, fhWaiverAgree, errTypeClosed, errTypeFull, typeFullPill, mfRefused, mbFullMsg, waiverOutdatedMsg, loadingLabel, retryBtn:
 // English and Arabic in app.src.html, the others in its i18n/<code>.json). Indonesian, Malay, German, Russian, Chinese and
 // Japanese, which it does not speak, follow src/i18n/TRANSLATING.md. Change a text here in every language at once.
 // Generated with the lead's scratch tool from the booking app's dictionaries; edit by hand from now on.
 import type { Locale } from "@/i18n/locales";
 
-export type BookMoreWords = Record<"people" | "you" | "fam" | "farmWaiverTitle" | "farmWaiverBody" | "farmWaiverAgree" | "typeClosed" | "typeFull" | "mfRefused" | "mbFull" | "waiverOutdated" | "loading" | "retry", string>;
+export type BookMoreWords = Record<"people" | "you" | "fam" | "farmWaiverTitle" | "farmWaiverBody" | "farmWaiverAgree" | "typeClosed" | "typeFull" | "mfRefused" | "mbFull" | "waiverOutdated" | "typeFullPill" | "loading" | "retry", string>;
 
 export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
   en: {
@@ -23,6 +23,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "Members book first on this date. Everyone can book from {0}.",
     mbFull: "Our bikes are taken for this ride. You can still join with your own bike.",
     waiverOutdated: "This page is out of date and the waiver has changed. It reloads now: read the new waiver, agree to it and book again.",
+    typeFullPill: "Full",
     loading: "Loading",
     retry: "Try again",
   },
@@ -38,6 +39,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "الحجز في هذا الموعد للأعضاء أولًا. يمكن للجميع الحجز من {0}.",
     mbFull: "دراجاتنا محجوزة بالكامل لهذه الجولة. يمكنك الانضمام بدراجتك الخاصة.",
     waiverOutdated: "هذه الصفحة قديمة وقد تغيّر الإقرار. ستُعاد تحميلها الآن: اقرأ الإقرار الجديد ووافق عليه ثم احجز مجدداً.",
+    typeFullPill: "ممتلئ",
     loading: "جارٍ التحميل",
     retry: "إعادة المحاولة",
   },
@@ -53,6 +55,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "Anggota memesan lebih dulu pada tanggal ini. Semua orang dapat memesan mulai {0}.",
     mbFull: "Sepeda kami sudah terpakai untuk perjalanan ini. Anda tetap bisa ikut dengan sepeda sendiri.",
     waiverOutdated: "Halaman ini sudah usang dan pernyataannya telah berubah. Halaman dimuat ulang sekarang: baca pernyataan yang baru, setujui, lalu pesan lagi.",
+    typeFullPill: "Penuh",
     loading: "Memuat",
     retry: "Coba lagi",
   },
@@ -68,6 +71,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "Ahli menempah dahulu pada tarikh ini. Semua orang boleh menempah mulai {0}.",
     mbFull: "Basikal kami sudah habis untuk tunggangan ini. Anda masih boleh menyertai dengan basikal sendiri.",
     waiverOutdated: "Halaman ini sudah lapuk dan penepian telah berubah. Ia dimuat semula sekarang: baca penepian baharu, bersetuju dan tempah semula.",
+    typeFullPill: "Penuh",
     loading: "Memuatkan",
     retry: "Cuba lagi",
   },
@@ -83,6 +87,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "An diesem Termin buchen Mitglieder zuerst. Alle können ab {0} buchen.",
     mbFull: "Unsere Fahrräder sind für diese Ausfahrt vergeben. Du kannst mit deinem eigenen Fahrrad trotzdem mitfahren.",
     waiverOutdated: "Diese Seite ist veraltet und der Haftungsverzicht hat sich geändert. Sie wird jetzt neu geladen: Lies den neuen Haftungsverzicht, stimme zu und buche erneut.",
+    typeFullPill: "Ausgebucht",
     loading: "Wird geladen",
     retry: "Erneut versuchen",
   },
@@ -98,6 +103,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "En esta fecha los miembros reservan primero. Todos pueden reservar desde {0}.",
     mbFull: "Nuestras bicicletas están reservadas para esta salida. Puedes unirte con tu propia bicicleta.",
     waiverOutdated: "Esta página está desactualizada y la exención ha cambiado. Se recarga ahora: lee la nueva exención, acéptala y vuelve a reservar.",
+    typeFullPill: "Completo",
     loading: "Cargando",
     retry: "Reintentar",
   },
@@ -113,6 +119,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "À cette date, les membres réservent en premier. Tout le monde peut réserver dès {0}.",
     mbFull: "Nos vélos sont tous réservés pour cette sortie. Vous pouvez venir avec votre propre vélo.",
     waiverOutdated: "Cette page n’est plus à jour et la décharge a changé. Elle se recharge maintenant : lisez la nouvelle décharge, acceptez-la et réservez à nouveau.",
+    typeFullPill: "Complet",
     loading: "Chargement",
     retry: "Réessayer",
   },
@@ -128,6 +135,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "Nesta data, os membros reservam primeiro. Todos podem reservar a partir de {0}.",
     mbFull: "As nossas bicicletas estão todas reservadas para este passeio. Pode participar com a sua própria bicicleta.",
     waiverOutdated: "Esta página está desatualizada e o termo mudou. Ela é recarregada agora: leia o novo termo, aceite-o e reserve novamente.",
+    typeFullPill: "Esgotado",
     loading: "Carregando",
     retry: "Tentar novamente",
   },
@@ -143,6 +151,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "Sa petsang ito, mga miyembro muna ang nagbu-book. Puwedeng mag-book ang lahat mula {0}.",
     mbFull: "Nakuha na ang aming mga bisikleta para sa ride na ito. Maaari ka pa ring sumali gamit ang sarili mong bisikleta.",
     waiverOutdated: "Luma na ang page na ito at nagbago ang waiver. Magre-reload ito ngayon: basahin ang bagong waiver, tanggapin ito, at mag-book muli.",
+    typeFullPill: "Puno na",
     loading: "Naglo-load",
     retry: "Subukan ulit",
   },
@@ -158,6 +167,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "На эту дату сначала бронируют участники сообщества. Все могут бронировать с {0}.",
     mbFull: "Наши велосипеды на эту поездку разобраны. Вы можете присоединиться на своём велосипеде.",
     waiverOutdated: "Эта страница устарела, и отказ от претензий изменился. Сейчас она перезагрузится: прочитайте новый отказ, согласитесь с ним и забронируйте снова.",
+    typeFullPill: "Занято",
     loading: "Загрузка",
     retry: "Повторить",
   },
@@ -173,6 +183,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "اس تاریخ پر پہلے اراکین بک کرتے ہیں۔ {0} سے سب بک کر سکتے ہیں۔",
     mbFull: "اس رائیڈ کے لیے ہماری سائیکلیں بک ہو چکی ہیں۔ آپ اپنی سائیکل کے ساتھ شامل ہو سکتے ہیں۔",
     waiverOutdated: "یہ صفحہ پرانا ہو چکا ہے اور ویور بدل گیا ہے۔ صفحہ ابھی دوبارہ لوڈ ہوگا: نیا ویور پڑھیں، قبول کریں اور دوبارہ بک کریں۔",
+    typeFullPill: "بھرا ہوا",
     loading: "لوڈ ہو رہا ہے",
     retry: "دوبارہ کوشش کریں",
   },
@@ -188,6 +199,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "इस तारीख पर पहले सदस्य बुक करते हैं। {0} से सभी बुक कर सकते हैं।",
     mbFull: "इस राइड के लिए हमारी साइकिलें बुक हो चुकी हैं। आप अपनी साइकिल के साथ शामिल हो सकते हैं।",
     waiverOutdated: "यह पेज पुराना हो गया है और छूट-पत्र बदल गया है। पेज अभी फिर से लोड होगा: नया छूट-पत्र पढ़ें, स्वीकार करें और दोबारा बुक करें।",
+    typeFullPill: "भरा हुआ",
     loading: "लोड हो रहा है",
     retry: "फिर कोशिश करें",
   },
@@ -203,6 +215,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "यो मितिमा पहिले सदस्यले बुक गर्छन्। {0} देखि सबैले बुक गर्न सक्छन्।",
     mbFull: "यो राइडका लागि हाम्रा साइकलहरू बुक भइसके। तपाईं आफ्नै साइकलसहित सामेल हुन सक्नुहुन्छ।",
     waiverOutdated: "यो पृष्ठ पुरानो भयो र छुट-पत्र परिवर्तन भएको छ। पृष्ठ अहिले फेरि लोड हुन्छ: नयाँ छुट-पत्र पढ्नुहोस्, स्वीकार गर्नुहोस् र फेरि बुक गर्नुहोस्।",
+    typeFullPill: "भरिएको",
     loading: "लोड हुँदैछ",
     retry: "फेरि प्रयास गर्नुहोस्",
   },
@@ -218,6 +231,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "এই তারিখে আগে সদস্যরা বুক করেন। {0} থেকে সবাই বুক করতে পারবেন।",
     mbFull: "এই রাইডের জন্য আমাদের সাইকেল সব বুক হয়ে গেছে। আপনি নিজের সাইকেল নিয়ে যোগ দিতে পারেন।",
     waiverOutdated: "এই পাতাটি পুরোনো হয়ে গেছে এবং দায়মুক্তিপত্র বদলেছে। পাতাটি এখনই আবার লোড হবে: নতুন দায়মুক্তিপত্র পড়ুন, সম্মতি দিন এবং আবার বুক করুন।",
+    typeFullPill: "পূর্ণ",
     loading: "লোড হচ্ছে",
     retry: "আবার চেষ্টা করুন",
   },
@@ -233,6 +247,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "此日期会员优先预订。所有人可从{0}起预订。",
     mbFull: "本次骑行的自行车已被订完。您仍可骑自己的自行车参加。",
     waiverOutdated: "此页面已过期，免责声明已更新。页面即将重新加载：请阅读新的免责声明，同意后重新预订。",
+    typeFullPill: "已满",
     loading: "加载中",
     retry: "重试",
   },
@@ -248,6 +263,7 @@ export const BOOK_MORE_WORDS: Record<Locale, BookMoreWords> = {
     mfRefused: "この日はメンバーが先に予約できます。{0}から誰でも予約できます。",
     mbFull: "このライドの自転車はすべて予約済みです。ご自身の自転車でなら参加できます。",
     waiverOutdated: "このページは古く、同意書が変更されました。今から再読み込みします。新しい同意書を読み、同意してからもう一度予約してください。",
+    typeFullPill: "満席",
     loading: "読み込み中",
     retry: "もう一度試す",
   },

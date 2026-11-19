@@ -75,6 +75,8 @@ export type BookSession = {
   /** Members book first (lib/members-first.ts, 2026-11-18) while it lasts: `held` for a visitor who is not a member, whose
    *  `opens` then says when everyone may (`everyone`); `label` is "Members book first" held, else a member's "Members first". */
   mf?: { held: boolean; label: string; everyone: string };
+  /** The bike types whose own places are taken (lib/booking-server.ts typesFull): said Full on their pills, never picked. */
+  typesFull?: string[];
 };
 
 /** The signed-in account, as the wizard needs it (lib/booking-server.ts bookingAccount). */

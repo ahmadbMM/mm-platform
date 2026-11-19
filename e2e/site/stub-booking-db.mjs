@@ -3,7 +3,7 @@
 // yoga, a Farm House Night, a ticketed event), the bike prices, two add-ons, and one signed-in rider, "Sara Khalid" (id
 // c-test, any token), with no booking yet. customer_create_booking keeps what it is given and answers as the database does:
 // a place on an open session, the waitlist on a full one, or the refusal the scene asks for (POST /__scene {refuse:
-// "TYPE_FULL"}). The browser's own calls (promo_lookup, reserve_funnel_add) are answered too, with CORS. Test-only routes
+// "TYPE_FULL"}), and a bike type's own places all taken (POST /__scene {fullTypes: ["Road"]}). The browser's own calls (promo_lookup, reserve_funnel_add) are answered too, with CORS. Test-only routes
 // (POST /__reset, POST /__scene, GET /__state) set and read the scene; they are not part of any real API. Nothing here
 // reaches a real database.
 import { createServer } from "node:http";
@@ -18,7 +18,7 @@ const wd = (s) => ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frid
 const base = { title: null, meet_url: null, location: null, breakfast_name: null, breakfast_name_ar: null, reveal_at: null, vl: null, gender_only: null, closed_types: [], title_ar: null,
   out_bikes: null, hide_queue: true, cancelled_at: null, draft: false, opens_at: null, spots: null, public_at: null, description: null, price: null, route_slug: null, addons: "[]" };
 const SESSIONS = () => [
-  { ...base, id: "t-jcc", session_date: day(3), day: wd(day(3)), status: "open", ride_kind: null, event_kind: "regular", bike_slots: JSON.stringify({ _time: "20:00-22:00" }), open_to_all: true, paid_ride: true, capacity: 40, needs_approval: false, addons: JSON.stringify(["inv-gel", "inv-water"]) },
+  { ...base, id: "t-jcc", session_date: day(3), day: wd(day(3)), status: "open", ride_kind: null, event_kind: "regular", bike_slots: JSON.stringify({ _time: "20:00-22:00", Road: 10, Hybrid: 12, Mountain: 8, Kids: 4, "Road Carbon": 2 }), open_to_all: true, paid_ride: true, capacity: 40, needs_approval: false, addons: JSON.stringify(["inv-gel", "inv-water"]) },
   { ...base, id: "t-sat", session_date: day(2), day: wd(day(2)), status: "open", ride_kind: "saturday", event_kind: "community", bike_slots: JSON.stringify({ _time: "06:00-06:30" }), open_to_all: false, paid_ride: false, capacity: 200, needs_approval: true, hide_queue: false },
   { ...base, id: "t-swim", session_date: day(4), day: wd(day(4)), status: "open", ride_kind: "swim", event_kind: "community", bike_slots: JSON.stringify({ _time: "19:00-20:00" }), open_to_all: true, paid_ride: false, capacity: 20, needs_approval: true, gender_only: "male" },
   { ...base, id: "t-yg", session_date: day(5), day: wd(day(5)), status: "open", ride_kind: "yoga", event_kind: "community", bike_slots: JSON.stringify({ _time: "17:00-18:00" }), open_to_all: true, paid_ride: false, capacity: 15, needs_approval: false },
@@ -34,7 +34,7 @@ function fresh() {
   return {
     profile: { id: "c-test", name: "Sara Khalid", email: "sara@example.com", phone: "+966500000001", height: 168, type_preference: "Hybrid", birth_date: "1994-03-02",
       country: "Saudi Arabia", city: "Jeddah", nationality: "Saudi Arabia", gender: "female", hidden_types: null, default_pay: null },
-    member: true, fix: [], refuse: null, full: [],
+    member: true, fix: [], refuse: null, full: [], fullTypes: [],
     bookings: [],
     writes: [],
     seq: 1,
@@ -128,8 +128,11 @@ createServer((req, res) => {
       const ids = /id=in\.\(([^)]*)\)/.exec(decodeURIComponent(url.search))?.[1]?.split(",") ?? [];
       return send(res, 200, INVENTORY.filter((x) => ids.includes(x.id)));
     }
-    // a count (queue_public, Prefer: count=exact): nobody holds a place yet
-    if (req.method === "HEAD") return send(res, 200, undefined, { "Content-Range": "*/0" });
+    // a count (queue_public, Prefer: count=exact): nobody holds a place yet, but for a type the scene says is full
+    if (req.method === "HEAD") {
+      const ty = /type_preference=eq\.([^&]+)/.exec(url.search)?.[1];
+      return send(res, 200, undefined, { "Content-Range": `*/${ty && st.fullTypes.includes(decodeURIComponent(ty)) ? 99 : 0}` });
+    }
     if (url.pathname.startsWith("/rest/v1/")) return send(res, 200, []);
     return send(res, 404, { message: "not here" });
   });

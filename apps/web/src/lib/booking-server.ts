@@ -391,3 +391,25 @@ export async function bookingAddonItems(ids: string[], fetchImpl: typeof fetch =
     return [];
   }
 }
+
+/** The bike types whose own places are all taken on a session that caps them by type (the booking app's _capLeft and
+ *  _regTyFull; the database's _type_full_guard): each type's places, less its bikes out of service, less every booking of it
+ *  that holds a place (the waitlist too: the desk's figure), counted on queue_public. None on a session staff marked full
+ *  (its waitlist takes any type), and none when every type is full (the ride is then its waitlist for all of them). A count
+ *  that could not be read leaves that type open: the database still refuses it (TYPE_FULL). */
+export async function typesFull(s: { id: string; typePlaces?: Record<string, number>; outBy?: Record<string, number>; full?: boolean; fbk?: boolean }, fetchImpl: typeof fetch = fetch): Promise<string[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key || !s.typePlaces || s.full || s.fbk || !ID.test(s.id)) return [];
+  const types = Object.keys(s.typePlaces);
+  const held = await Promise.all(types.map(async (ty) => {
+    try {
+      const res = await fetchImpl(`${url}/rest/v1/queue_public?select=id&session_id=eq.${s.id}&type_preference=eq.${encodeURIComponent(ty)}&status=not.in.(cancelled,removed,noshow)`, {
+        method: "HEAD", headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: "count=exact" }, cache: "no-store", signal: AbortSignal.timeout(2500),
+      });
+      const m = /\/(\d+)$/.exec(res.headers.get("content-range") ?? "");
+      return res.ok && m ? Number(m[1]) : null;
+    } catch { return null; }
+  }));
+  const full = types.filter((ty, i) => held[i] != null && (s.typePlaces![ty] ?? 0) - (s.outBy?.[ty] ?? 0) - (held[i] as number) <= 0);
+  return full.length && full.length < types.length ? full : [];
+}

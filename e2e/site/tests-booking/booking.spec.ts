@@ -143,6 +143,18 @@ test("a refusal the database gives is said in the booking app's words: a bike ty
   expect((await state(page)).bookings).toEqual([]);
 });
 
+test("a bike type whose own places are taken says Full on its pill and cannot be picked", async ({ page }) => {
+  await scene(page, { fullTypes: ["Road"] });
+  await page.goto("/experiences?ev=jcc&session=t-jcc&lang=en");
+  const road = page.locator('.bk-pill[data-ty="Road"]');
+  await expect(road).toHaveAttribute("aria-disabled", "true");
+  await expect(road.locator(".bk-pill-p")).toHaveText("Full");
+  await road.click({ force: true });
+  await expect(road).toHaveAttribute("aria-checked", "false");
+  await expect(page.locator('.bk-pill[data-ty="Hybrid"] .bk-pill-p')).toContainText("57.50");
+  await shot(page, "type-full");
+});
+
 test("members book first: the database's MEMBERS_FIRST says when everyone may book", async ({ page }) => {
   await scene(page, { refuse: "MEMBERS_FIRST" });
   await page.goto("/experiences?ev=jcc&session=t-jcc&lang=en");

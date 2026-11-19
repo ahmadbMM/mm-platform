@@ -45,7 +45,7 @@ import { remindable, remindAt, remindWhen } from "@/lib/open-remind";
 import { remindWords } from "@/components/site/Remind.words";
 import BookingFlow, { type FlowEvent } from "@/components/experiences/BookingFlow";
 import { priceMap, type BookSession } from "@/lib/booking";
-import { bookingAddonItems } from "@/lib/booking-server";
+import { bookingAddonItems, typesFull } from "@/lib/booking-server";
 import { EVENT_OF, bookingAt } from "@/lib/event-info";
 import { fmtDayDate } from "@/lib/tickets";
 
@@ -544,6 +544,15 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   }] : [];
   const flowOn = flowEvents.length > 0;
   const flowItems = flowOn ? await bookingAddonItems(flowCard!.onBooks.filter((x) => !x.free && HERE.has(x.kind)).flatMap((x) => x.addons ?? [])) : [];
+  // the bike types whose own places are taken, on the date asked for and the next few that cap types (the booking app's
+  // type Full; the database's TYPE_FULL refuses the rest)
+  if (flowOn) {
+    const capped = flowCard!.onBooks.filter((x) => x.typePlaces && HERE.has(x.kind));
+    const ask = [...capped.filter((x) => x.id === flowSess), ...capped.filter((x) => x.id !== flowSess)].slice(0, 4);
+    const full = await Promise.all(ask.map((x) => typesFull(x)));
+    const byId = new Map(ask.map((x, i) => [x.id, full[i]]));
+    flowEvents[0].sessions = flowEvents[0].sessions.map((x) => (byId.get(x.id)?.length ? { ...x, typesFull: byId.get(x.id) } : x));
+  }
 
   const good = list(c.good.items).filter((g) => S(g.title));
   const learn = learnTeaser(c.learn); // Learn to ride: the lessons sign-up, while staff offer lessons

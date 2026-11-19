@@ -346,3 +346,7 @@ html[dir="rtl"] .sx6-kit a { padding: 6px 6px 6px 12px; }
 /* Each step's title takes the focus as the step opens (a screen reader reads where it is): a heading is not a control, so
    no ring is drawn around it. */
 .bk [data-step-title]:focus { outline: none; }
+
+/* A bike type whose own places are taken: Full where its price would be, dimmed, never picked (the booking app's tp-shut). */
+.bk-pill.shut { opacity: .55; cursor: not-allowed; }
+.bk-pill.shut .bk-pill-p { color: #a33b2e; font-weight: 700; }

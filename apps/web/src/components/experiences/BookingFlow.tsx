@@ -195,7 +195,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const rs = (riders.length > cap ? riders.slice(0, cap) : riders).map((r, i) => ({
       ...r,
       // "my own bike" and carbon are not on every ride; a pick carried over is made again
-      type: r.type && typeOptions(s, a.hidden).includes(r.type as BikeType) ? r.type : ("" as const),
+      type: r.type && typeOptions(s, a.hidden).includes(r.type as BikeType) && !s.typesFull?.includes(r.type) ? r.type : ("" as const),
       height: r.height || (i === 0 && a.height ? String(a.height) : ""),
     }));
     setRiders(rs);
@@ -295,7 +295,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   // ride offers it (the owner, 2026-11-10).
   const setHeight = (i: number, raw: string) => {
     const v = asciiDigits(raw).replace(/\D/g, "").slice(0, 3);
-    const kids = !!sel && kidsHeight(v) && typeOptions(sel, acctNow?.hidden ?? []).includes("Kids");
+    const kids = !!sel && kidsHeight(v) && typeOptions(sel, acctNow?.hidden ?? []).includes("Kids") && !sel.typesFull?.includes("Kids");
     setRider(i, kids ? { height: v, type: "Kids" } : { height: v });
   };
   // One message per mistake: at its field, nowhere else, and the field brought into view.
@@ -776,13 +776,16 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
                   <div className="bk-field" id={`bk-type-${i}`}>
                     <span className="bk-label" id={`bk-type-l-${i}`}>{t.typePref}</span>
                     <div className="bk-types" role="radiogroup" aria-labelledby={`bk-type-l-${i}`}
-                      onKeyDown={(e) => { const ty = radioKey(e, rtl)?.dataset.ty; if (ty) setType(i, ty as BikeType); }}>
+                      onKeyDown={(e) => { const ty = radioKey(e, rtl)?.dataset.ty; if (ty && !sel.typesFull?.includes(ty)) setType(i, ty as BikeType); }}>
                       {opts.map((ty, n) => {
                         const on = r.type === ty;
+                        // a type whose own places are taken says Full where its price would be, and is not picked (the
+                        // booking app's typeFullPill)
+                        const shut = !on && !!sel.typesFull?.includes(ty);
                         const showPrice = !free && sel.seat == null && ty !== "Own";
                         const pill = (
-                          <button type="button" className={`bk-pill${on ? " on" : ""}`} role="radio" aria-checked={on} tabIndex={n === tstop ? 0 : -1} data-ty={ty} onClick={() => setType(i, ty)}>
-                            <span className="bk-pill-n">{pillName(ty)}</span>{showPrice && <span className="bk-pill-p"><Money n={prices[ty] ?? 0} word={word} /></span>}
+                          <button type="button" className={`bk-pill${on ? " on" : ""}${shut ? " shut" : ""}`} role="radio" aria-checked={on} aria-disabled={shut || undefined} tabIndex={n === tstop ? 0 : -1} data-ty={ty} onClick={() => { if (!shut) setType(i, ty); }}>
+                            <span className="bk-pill-n">{pillName(ty)}</span>{shut ? <span className="bk-pill-p">{m.typeFullPill}</span> : showPrice && <span className="bk-pill-p"><Money n={prices[ty] ?? 0} word={word} /></span>}
                           </button>
                         );
                         return BIKE_IMG[ty] ? (

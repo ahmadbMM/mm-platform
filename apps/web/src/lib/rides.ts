@@ -93,6 +93,11 @@ export type RideSession = {
   addons?: string[];
   /** The waitlist's cap in riders (bike_slots._wl, the booking app's waitlistCap), null for none. */
   wlCap?: number | null;
+  /** Each bike type's own places where staff cap them (bike_slots by type, the booking app's _n6rTypePlaces; the database's
+   *  _type_full_guard), and the bikes of each type out of service (out_bikes by type): the booking steps say a type Full
+   *  once its places are taken. Absent where nothing is capped by type. */
+  typePlaces?: Record<string, number>;
+  outBy?: Record<string, number>;
   /** Members book first (sessions.public_at, rentals 20261118210800; lib/members-first.ts): until this time (ISO) only
    *  Community members may book it. Only a read that asks for it has it (SESSION_COLS_PUBLIC_AT), and only when set; a
    *  copy kept at the edge from before has none, and reads as open to everyone. */
@@ -395,6 +400,27 @@ function revealOf(r: Row): Pick<RideSession, "revealAt"> {
 
 /** The bikes out of service a row says (sessions.out_bikes, {type: count}; the booking app's _n6rOut/_n6rOutN): the
  *  whole positive counts summed, anything else none. Only when the read asked for it (SESSION_COLS_OUT). */
+/** Each bike type's own places in a session's settings (the booking app's _n6rTypePlaces): a count, or a count per size
+ *  summed. A fleet picked bike by bike (_bikes) is not counted here (the database still caps it). */
+export function typePlacesOf(slots: unknown): Record<string, number> | null {
+  const sl = slotsOf(slots);
+  if (Array.isArray(sl._bikes)) return null;
+  const out: Record<string, number> = {};
+  for (const ty of ["Road", "Hybrid", "Mountain", "Kids", "Road Carbon", "Gravel"]) {
+    const v = sl[ty];
+    const n = typeof v === "number" ? v : v && typeof v === "object" ? Object.values(v as Record<string, unknown>).reduce<number>((a, x) => a + (Number(x) || 0), 0) : null;
+    if (n != null && Number.isFinite(n)) out[ty] = n;
+  }
+  return Object.keys(out).length ? out : null;
+}
+/** The bikes out of service by type (out_bikes), whole positive counts only. */
+function outByOf(r: Row): Record<string, number> {
+  let o = r.out_bikes;
+  if (typeof o === "string") { try { o = JSON.parse(o); } catch { o = null; } }
+  if (!o || typeof o !== "object" || Array.isArray(o)) return {};
+  return Object.fromEntries(Object.entries(o as Record<string, unknown>).map(([k, v]) => [k, Math.floor(Number(v))] as const).filter(([, n]) => n > 0));
+}
+
 function outOf(r: Row): Pick<RideSession, "out"> {
   if (!("out_bikes" in r)) return {};
   let o = r.out_bikes;
@@ -455,6 +481,8 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...(fewOf(r) ? { few: true as const } : r.status === "open" && fewAtOf(r.bike_slots) ? { fewAt: fewAtOf(r.bike_slots) } : {}),
     ...("spots" in r ? { spots: num(r.spots) } : {}),
     ...("addons" in r ? { addons: addonIds(r.addons) } : {}),
+    // each type's own places, where staff cap them, and its bikes out of service (the booking steps' Full on a type)
+    ...((tp) => (tp && !(community && r.needs_approval !== false) ? { typePlaces: tp, ...("out_bikes" in r ? { outBy: outByOf(r) } : {}) } : {}))(typePlacesOf(r.bike_slots)),
     // a capped waitlist (bike_slots._wl), counted on the places as the booking app counts them; absent for none
     ...((c) => (c != null ? { wlCap: c } : {}))(waitlistCap(r.bike_slots, (community && r.needs_approval !== false ? num(r.spots) || seats || 0 : seats || 0) || 12)),
     ...((h) => (h ? { ig: h } : {}))(igOf(r.bike_slots)),
