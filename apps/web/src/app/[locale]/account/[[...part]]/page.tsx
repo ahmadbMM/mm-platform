@@ -86,6 +86,10 @@ import { handoffNotice, signedOutView, unreadView } from "@/components/account/g
 // phone the menu, or one page with Back. The bookings are their own page, /bookings (a ticket in the header). Stats at
 // /account/stats and Badges at /account/badges are the record, as before (2026-11-09). After the booking app hands a rider
 // back (api/account/handoff), the page says whom they are signed in as, or asks which account this browser keeps.
+// Mirrored from the booking app on 2026-11-19: Settings > Notifications (Ride news and the way to Updates, the list of every
+// message the app sent; lib/account-notify.ts), Activity > Learn to ride for a learner (lib/learn-ladder.ts), the
+// new-badge pop-up on every view (BadgeCelebrate, lib/badge-cheer.ts) and a company challenge's join link kept through
+// the sign-in (CompanyLink, lib/company-link.ts).
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const TYPE_NAME: Record<string, { en: string; ar: string }> = {
   Road: phrase("Road", "طريق"), Hybrid: phrase("Hybrid", "هجين"), Mountain: phrase("Mountain", "جبلي"), "Road Carbon": phrase("Road Carbon", "طريق كربون"),
