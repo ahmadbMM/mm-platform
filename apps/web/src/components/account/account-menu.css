@@ -191,6 +191,66 @@
 .acm-co-badge { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; font-weight: 600; color: var(--acm-go-2); }
 .acm-host .bt-card, .acm-host .sp-card { margin: 0; }
 
+/* Notifications (2026-11-19, the booking app's): the way to Updates with its count, then Ride news */
+.acm-notify-list { max-width: 40rem; margin: 0 0 16px; }
+.acm .acm-row-v.acm-count { flex: none; min-width: 22px; padding: 1px 8px; border-radius: 999px; background: var(--acm-go); color: #fff; font-size: 13px; font-weight: 700; text-align: center; }
+.acm-rn-h { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: var(--acm-ink); }
+.acm-rn-state { margin: 0 0 14px; font-size: 15px; font-weight: 600; color: var(--acm-ink-3); }
+.acm-rn-state.is-on { color: var(--acm-go-2); }
+.acm-rn-foot { margin: 14px 0 0; font-size: 13px; }
+.acm-rn-foot a { color: var(--acm-ink-2); text-underline-offset: 3px; }
+/* Updates: newest first, a dot on a row that was unread */
+.acm-upd { list-style: none; padding: 4px 0; }
+.acm-upd > li + li { border-top: 1px solid var(--acm-line); }
+.acm :is(a, div).acm-upd-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; color: var(--acm-ink); text-decoration: none; }
+.acm a.acm-upd-row:hover { background: var(--acm-card-2); }
+.acm a.acm-upd-row:focus-visible { outline-offset: -2px; }
+.acm-upd-ic { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 12px; background: var(--acm-card-2); color: var(--acm-ink-2); }
+.acm-upd-row.is-unread .acm-upd-ic { background: var(--acm-go-wash); color: var(--acm-go); }
+.acm-upd-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.acm-upd-t { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.acm-upd-new { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--acm-go); }
+.acm-upd-b { font-size: 14px; line-height: 1.5; color: var(--acm-ink-2); overflow-wrap: anywhere; white-space: pre-line; }
+.acm-upd-m { font-size: 12.5px; color: var(--acm-ink-3); }
+.acm-upd-row .acm-row-go { margin-top: 10px; }
+.acm-upd-none { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding-block: 28px; }
+.acm-upd-none .acm-ic { color: var(--acm-ink-3); }
+.acm-upd-none strong { color: var(--acm-ink); font-weight: 600; }
+/* Learn to ride: the learner's own ladder */
+.acm-ll { max-width: 40rem; }
+.acm-ll .acm-card { margin-bottom: 12px; }
+.acm-ll-who { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; }
+.acm .acm-ll-who-b { min-height: 40px; padding: 0 16px; border: 1px solid var(--acm-line-2); border-radius: 999px; background: #fff; color: var(--acm-ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.acm .acm-ll-who-b.on { border-color: var(--acm-ink); background: var(--acm-ink); color: #fff; }
+.acm-ll-fb .acm-k { display: block; margin-bottom: 6px; }
+.acm-ll-fb-t { margin: 0; font-size: 15px; line-height: 1.55; overflow-wrap: anywhere; }
+.acm-ll-lvs { list-style: none; margin: 0; padding: 0; }
+.acm-ll-lv { padding: 18px; }
+.acm-ll-lv-h { display: flex; align-items: center; gap: 12px; }
+.acm-ll-lv-n { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--acm-card-2); color: var(--acm-ink-2); font-size: 14px; font-weight: 700; }
+.acm-ll-lv.done .acm-ll-lv-n { background: var(--acm-go); color: #fff; }
+.acm .acm-ll-lv-t { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 16px; font-weight: 700; }
+.acm-ll-lv-c { flex: none; font-size: 14px; font-weight: 600; color: var(--acm-ink-2); font-variant-numeric: tabular-nums; }
+.acm-ll-sks { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.acm-ll-sk { display: flex; align-items: center; gap: 10px; font-size: 14.5px; }
+.acm-ll-sk-i { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--acm-line-2); }
+.acm-ll-sk.on .acm-ll-sk-i { border-color: var(--acm-go); background: var(--acm-go); color: #fff; }
+.acm-ll-sk-n { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.acm-ll-prac { flex: none; padding: 2px 9px; border-radius: 999px; background: var(--acm-card-2); color: var(--acm-ink-3); font-size: 12px; font-weight: 600; }
+.acm .acm-ll-cert-b { margin-top: 14px; }
+.acm-ll-inv { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.acm-ll-inv-t { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.4; }
+.acm-ll-cert { display: flex; flex-direction: column; gap: 12px; max-width: 26rem; }
+.acm-ll-img { display: block; width: 100%; height: auto; border-radius: 14px; }
+.acm-ll-ph { width: 100%; aspect-ratio: 1080 / 1350; border-radius: 14px; background: var(--acm-card-2); }
+.acm-ll-cert .acm-btn { flex: 1 1 140px; }
+.acm .acm-ll-back { align-self: stretch; }
+/* The new-badge pop-up (BadgeCelebrate): the badge pop-up's own box, "New badge!" over it */
+.badge-pop-new { margin: 0 0 12px !important; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #077a4b; }
+:is(html[lang="ar"], html[lang="ur"]) .badge-pop-new { letter-spacing: 0; text-transform: none; }
+.bdg-new-acts { display: flex; flex-direction: column; }
+.bdg-new-acts a.bdg-new-go { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+
 /* The pop-ups: centred (the owner's rule), native <dialog> */
 .acm-dlg { box-sizing: border-box; width: min(420px, calc(100vw - 32px)); margin: auto; padding: 24px; border: 0; border-radius: var(--acm-r); background: #fff; color: var(--acm-ink); box-shadow: 0 30px 80px rgba(0, 0, 0, .25); }
 .acm-dlg::backdrop { background: rgba(20, 20, 18, .45); }

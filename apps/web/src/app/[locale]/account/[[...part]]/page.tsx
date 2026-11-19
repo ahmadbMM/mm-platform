@@ -51,7 +51,10 @@ import { firstNameOf } from "@/lib/share-picture";
 import { riyadhClock } from "@/lib/workshop-days";
 import { purchasesOf } from "@/lib/account-profile";
 import { pastJobs, upcomingJobs, workshopJobsOf } from "@/lib/workshop-mine";
-import { ACC_DEFAULT_PAGE, accHref, accountRoute, detailValues, initialsOf, lcLabel, pageTitle, shortDay, type AccPage, type RowValue } from "@/lib/account-menu";
+import { ACC_DEFAULT_PAGE, accHref, accountRoute, detailValues, initialsOf, lcLabel, pageTitle, parentOf, shortDay, type AccPage, type PageTitles, type RowValue } from "@/lib/account-menu";
+import { rideNewsOf, unreadOf, updLang, updateWhere, updatesOf } from "@/lib/account-notify";
+import { ladderOf } from "@/lib/learn-ladder";
+import { profilePct } from "@/lib/ride-record";
 import { fmtDayDate } from "@/lib/tickets";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
@@ -66,6 +69,13 @@ import { AccFocus, AccGuard } from "@/components/account/AccForm";
 import { AccAbout, AccContact, AccPersonal, AccResidence, AccRiding, type WaState } from "@/components/account/AccDetails";
 import { AccAmbassador, AccCompany, AccDelete, AccEmergency, AccPassword, type AmbMine, type CompanyRow, type EmRow } from "@/components/account/AccPages";
 import { AccPurchases, AccWorkshop } from "@/components/account/AccLists";
+import { AccUpdates, RideNews, UpdatesRow, type UpdView } from "@/components/account/AccNotify";
+import AccLearn from "@/components/account/AccLearn";
+import BadgeCelebrate from "@/components/account/BadgeCelebrate";
+import CompanyLink from "@/components/account/CompanyLink";
+import { notifyWords } from "@/components/account/Notify.words";
+import { learnWords } from "@/components/account/LearnLadder.words";
+import { bookingsWord } from "@/components/site/Bookings.words";
 import { handoffNotice, signedOutView, unreadView } from "@/components/account/gate";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in, the booking app's own
@@ -82,6 +92,11 @@ const TYPE_NAME: Record<string, { en: string; ar: string }> = {
   Kids: phrase("Kids", "أطفال"), Gravel: phrase("Gravel", "حصى"), Any: phrase("Any bike", "أي دراجة"), Own: phrase("Own bike", "دراجتي الخاصة"),
 };
 const TECH_WA = "966579543997";
+/** The titles of the pages whose words are not the menu's own. */
+const titlesOf = (locale: string): PageTitles => {
+  const n = notifyWords(locale);
+  return { calendar: calendarWords(locale).row, notifications: n.notifications, updates: n.updates, learn: learnWords(locale).title };
+};
 const TECH_SHOWN = "+(966) 57 954 3997";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; part?: string[] }> }): Promise<Metadata> {
@@ -89,7 +104,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const route = accountRoute(part);
   const w = accWords(locale);
   const view = route?.view ?? "account", page = route?.page ?? null;
-  const name = page ? pageTitle(page, w, { calendar: calendarWords(locale).row }) : view === "account" ? w.account : view === "stats" ? w.stats : w.badges;
+  const name = page ? pageTitle(page, w, titlesOf(locale)) : view === "account" ? w.account : view === "stats" ? w.stats : w.badges;
   return pageMeta({ path: page ? accHref(page) : accHref(view), locale, title: `${name}${name === w.account ? "" : ` · ${w.account}`} · Micromobility`, noindex: true });
 }
 
@@ -113,7 +128,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const shell = (body: React.ReactNode) => <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>{body}</PageShell>;
 
   if (read === "unread") return shell(unreadView(tx, again));
-  if (!acct) return shell(await signedOutView({ tx, locale, expired: handoffState === "expired", signin: c.signin, handoff }));
+  // signed out: a company challenge's join link keeps its code on this device for the way back in (CompanyLink)
+  if (!acct) return shell(<>{await signedOutView({ tx, locale, expired: handoffState === "expired", signin: c.signin, handoff })}<CompanyLink signedIn={false} onPage={page === "company"} /></>);
 
   const notice = await handoffNotice({ tx, acct, state: handoffState });
   const a = { p_id: acct.id, p_token: acct.token };
@@ -140,7 +156,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const cal = calendarWords(locale);
     // Everything the rows say, read at once with the account's own session; each read that fails, or a database without
     // the function, leaves its row out (or says nothing on it), as the booking app hides what the server cannot answer for.
-    const [aboutR, emR, spR, walletR, referralRaw, ambR, volR, purR, wsR, cochR, calOn, delR] = await Promise.all([
+    const [aboutR, emR, spR, walletR, referralRaw, ambR, volR, purR, wsR, cochR, calOn, delR, rnR, unR, llR, updR] = await Promise.all([
       rpcServer<Record<string, unknown>[]>("customer_about", a),
       rpcServer<unknown[]>("customer_emergency", a),
       rpcServer<unknown>("customer_sport", a),
@@ -153,6 +169,14 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       rpcServer<{ ok?: boolean; rows?: unknown[]; open?: boolean }>("company_challenge_mine", a),
       rpcServer<unknown>("calendar_link", { ...a, p_op: "peek" }).then(calfPeekOn),
       rpcServer<{ requested_at?: string | null }>("customer_deletion_request", { ...a, p_request: null }),
+      // Notifications (the booking app's, 2026-11-13): ride news as on file (customer_consents, read with nothing to
+      // record), how many updates are unread, and on Updates the list itself, in the page's language - reading it marks
+      // every row read, so the menu's count then says none
+      rpcServer<unknown>("customer_consents", { ...a, p_privacy: null, p_ride_news: null }),
+      rpcServer<unknown>("customer_updates_unread", a),
+      // the learn-to-ride ladder (learn_ladder): its row only for an account whose sign-up has a lesson
+      rpcServer<unknown>("learn_ladder", a),
+      page === "updates" ? rpcServer<unknown>("customer_updates", { ...a, p_lang: updLang(locale) }) : Promise.resolve(null),
     ]);
     const about = aboutR.status === 200 && Array.isArray(aboutR.data) ? (aboutR.data[0] ?? null) : null;
     const aboutOn = !!about; // gender, profession, company and how they heard: once customer_about answers (the app's 'workplace' in cust)
@@ -181,6 +205,12 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     });
     const cochOn = !!coch && (cochRows.length > 0 || coch.open === true);
     const del = delR.data && typeof delR.data === "object" && "requested_at" in delR.data ? { at: delR.data.requested_at ?? null } : null;
+    const nw = notifyWords(locale), lw = learnWords(locale);
+    const rideNews = rnR.status === 200 ? rideNewsOf(rnR.data) : null;
+    const updList = updR && updR.status === 200 ? updatesOf(updR.data) : null;
+    const unread = updList ? 0 : unR.status === 200 ? unreadOf(unR.data) : null;
+    const ladder = llR.status === 200 ? ladderOf(llR.data) : null;
+    const learnOn = !!ladder && ladder.learners.length > 0;
 
     // ── the menu ──
     const go = (p: AccPage) => localHref(accHref(p), locale);
@@ -189,7 +219,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const spAdded = spR.status === 200 && sp?.competes ? await rpcServer<unknown>("sport_option_list", {}).then((o) => (o.status === 200 ? spOptionsOf(o.data) : [])) : [];
     const spValue: RowValue | null = !sp ? null : sp.competes === null ? { text: w.addX.replace("{0}", lcLabel(w.sport, locale)), add: true }
       : sp.competes ? { text: sp.feds.map((k) => (k === "other" && sp.other ? sp.other : spName(k, locale, spAdded))).join(" · "), add: false } : { text: w.no, add: false };
-    const row = (p: AccPage, icon: MenuRow["icon"], value?: MenuRow["value"]): MenuRow => ({ id: p, label: pageTitle(p, w, { calendar: cal.row }), icon, href: go(p), value: value ?? null });
+    const titles = titlesOf(locale);
+    const row = (p: AccPage, icon: MenuRow["icon"], value?: MenuRow["value"]): MenuRow => ({ id: p, label: pageTitle(p, w, titles), icon, href: go(p), value: value ?? null });
     const cityVal = !dv.residence.add && S(prof.city)
       ? { ...dv.residence, node: <CityLabel city={S(prof.city)} country={S(prof.country)} locale={locale} /> } : dv.residence;
     const groups: MenuGroup[] = [
@@ -209,8 +240,12 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         ...(cochOn ? [row("company", "briefcase", cochRows.length ? { text: cochRows.map((r) => r.company).join(" · "), add: false } : null)] : []),
         ...(!hidden.includes("club") ? [{ id: "club", label: w.clubCard, icon: "card" as const, href: localHref("/club#card", locale), out: true }] : []),
         ...(!hidden.includes("testimonials") ? [{ id: "testimonial", label: w.testimonial, icon: "star" as const, href: localHref("/testimonials/write", locale), out: true }] : []),
+        ...(learnOn ? [row("learn", "bike")] : []),
       ] },
       { id: "settings", title: w.grpSettings, rows: [
+        // Notifications: the unread updates' count, else ride news On or Off; shown once either has answered
+        ...(rideNews !== null || unread !== null
+          ? [row("notifications", "bell", unread ? { text: String(unread), add: false } : rideNews !== null ? { text: rideNews ? nw.on : nw.off, add: false } : null)] : []),
         ...(calOn ? [row("calendar", "cal")] : []),
         row("language", "globe", { text: localeInfo(locale).name, add: false }),
         row("password", "lock", { text: w.change, add: false }),
@@ -274,7 +309,33 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         }
         case "company": {
           const when = Object.fromEntries(cochRows.map((r) => [r.id, [r.starts, r.ends].filter((d) => /^\d{4}-\d{2}-\d{2}/.test(d)).map((d) => fmtDayDate(d.slice(0, 10), locale)).join(" – ")]));
-          return cochOn ? <AccCompany w={w} rows={cochRows} open={coch?.open === true} when={when} /> : empty;
+          // with nothing to show the page says so, unless a join link's code is being joined with (AccCompany)
+          return <AccCompany w={w} rows={cochOn ? cochRows : []} open={cochOn && coch?.open === true} when={when} empty={walletWords(locale).empty} />;
+        }
+        case "learn":
+          return ladder && learnOn
+            ? <AccLearn ladder={ladder} own={acct.name} w={lw} locale={locale} saturday={bookingLink(`${app.replace(/[?#].*$/, "")}?ev=community`, locale)} />
+            : empty;
+        case "notifications":
+          return (
+            <>
+              {unread !== null && <UpdatesRow w={nw} unread={unread} />}
+              {rideNews !== null && <RideNews w={nw} initial={rideNews} errConn={w.errConn} />}
+              {unread === null && rideNews === null && empty}
+            </>
+          );
+        case "updates": {
+          if (updR && updR.status !== 200 && !emAbsent(updR)) return failed;
+          if (updR && updR.status === 200 && !updList) return failed;
+          const club = !hidden.includes("club");
+          const label = { claim: nw.claim, bookings: bookingsWord(locale), account: w.account, community: nw.toCommunity, reserve: nw.toReserve, vol: w.volunteer };
+          const rows: UpdView[] = (updList ?? []).map((m) => {
+            const to = updateWhere(m.url, { club });
+            const d = m.at && Number.isFinite(Date.parse(m.at)) ? riyadhClock(new Date(m.at)).slice(0, 10) : "";
+            return { id: m.id, kind: m.kind, title: m.title, body: m.body, unread: m.unread, day: !d ? "" : d === today ? nw.today : shortDay(d, intlOf(locale)),
+              to: to ? { href: to.to === "vol" ? to.href : localHref(to.href, locale), label: label[to.to], out: to.to === "vol" } : null };
+          });
+          return <AccUpdates rows={rows} w={nw} />;
         }
         case "calendar":
           return calOn ? <div className="acm-card acm-host"><CalendarFeed host={calfHost(app)} lang={calfLang(locale)} words={cal} /></div> : empty;
@@ -296,13 +357,14 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           return del ? <AccDelete w={w} locale={locale} requestedAt={del.at} /> : empty;
       }
     };
-    const title = pageTitle(shown, w, { calendar: cal.row });
+    const title = pageTitle(shown, w, titles);
+    const up = parentOf(shown);
     const H = page ? "h1" : "h2";
     return (
       <div className={`acm-split${page ? " acm-has-pg" : ""}`}>
-        <AccMenu label={w.account} tiles={tiles} groups={groups} current={page} logOut={w.logOut} del={delRow} />
+        <AccMenu label={w.account} tiles={tiles} groups={groups} current={page && (parentOf(page) ?? page)} logOut={w.logOut} del={delRow} />
         <section className="acm-pane" aria-labelledby="acm-pg-h">
-          {page && <Link href={accHref("account")} className="acm-back"><AccIcon name="back" size={18} />{w.back}</Link>}
+          {page && <Link href={accHref(up ?? "account")} className={`acm-back${up ? " acm-back-up" : ""}`}><AccIcon name="back" size={18} />{up ? pageTitle(up, w, titles) : w.back}</Link>}
           <H className="acm-pg-h" id="acm-pg-h" tabIndex={-1}>{title}</H>
           <AccFocus key={`focus-${shown}`} target="acm-pg-h" />
           {await pane()}
@@ -384,6 +446,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       </Link>
       <AccountParts part={view} locale={locale} t={{ account: w.account, stats: w.stats, badges: w.badges }} />
       {main}
+      {/* a badge just given or earned pops up once, as the booking app's account page pops it (BadgeCelebrate) */}
+      <BadgeCelebrate locale={locale} short={profilePct({ ...prof, name: acct.name, email: acct.email, phone: acct.phone }) < 100} />
+      <CompanyLink signedIn onPage={page === "company"} />
     </div>,
   );
 }

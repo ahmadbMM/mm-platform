@@ -29,6 +29,8 @@ const P: Record<string, string> = {
   go: "M9.4 5.4L16 12l-6.4 6.6",
   back: "M14.6 5.4L8 12l6.6 6.6",
   tick: "M5 12.5l4.5 4.5L19 7.5",
+  bell: "M6.2 16.8v-5.6a5.8 5.8 0 0 1 11.6 0v5.6l1.6 1.8H4.6zM9.9 20.6a2.3 2.3 0 0 0 4.2 0",
+  again: "M19.6 12a7.6 7.6 0 1 1-2.3-5.4M19.6 4.4v4.2h-4.2",
 };
 export type AccIconName = keyof typeof P;
 

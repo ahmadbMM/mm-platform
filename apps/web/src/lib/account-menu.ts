@@ -9,9 +9,10 @@ import type { AccWords } from "@/components/account/AccountMenu.words";
 
 export type AccView = "account" | "stats" | "badges";
 /** The pages, by the booking app's ids (ACC_PAGES), and the website's own: workshop (its appointments), calendar (the
- *  calendar address, the app's Settings row), password and language (the app's two Settings pop-ups). */
+ *  calendar address, the app's Settings row), password and language (the app's two Settings pop-ups), learn (the app's
+ *  Learn to ride, a pop-up from its menu row there). Notifications holds Ride news and the way to Updates (2026-11-19). */
 export const ACC_PAGES = ["personal", "contact", "residence", "emergency", "riding", "sport", "about", "wallet", "invite", "ambassador",
-  "volunteer", "purchases", "workshop", "company", "calendar", "language", "password", "delete"] as const;
+  "volunteer", "purchases", "workshop", "company", "learn", "notifications", "updates", "calendar", "language", "password", "delete"] as const;
 export type AccPage = (typeof ACC_PAGES)[number];
 /** The page a wide screen shows beside the menu when none is picked (the app's _accDefPg). */
 export const ACC_DEFAULT_PAGE: AccPage = "personal";
@@ -26,14 +27,19 @@ export function accountRoute(seg: string[] | undefined): { view: AccView; page: 
 }
 export const accHref = (to: AccView | AccPage): string => (to === "account" ? "/account" : `/account/${to}`);
 
+/** The titles of the pages whose words are not the menu's own (Calendar.words, Notify.words, LearnLadder.words). */
+export type PageTitles = { calendar: string; notifications: string; updates: string; learn: string };
 /** A page's title, as its row and its heading say it. */
-export function pageTitle(p: AccPage, w: AccWords, extra: { calendar: string }): string {
+export function pageTitle(p: AccPage, w: AccWords, extra: PageTitles): string {
   switch (p) {
     case "delete": return w.del;
-    case "calendar": return extra.calendar;
+    case "calendar": case "notifications": case "updates": case "learn": return extra[p];
     default: return w[p];
   }
 }
+/** The page a page's Back leads to: Updates opens from Notifications (the app's Back returns there); every other page's
+ *  is the menu. */
+export const parentOf = (p: AccPage): AccPage | null => (p === "updates" ? "notifications" : null);
 
 // ── What a page lacks (the app's _accMiss: the fields of Race Ready) ─────────────────────────────────────────────────
 export type ProfileLike = Record<string, unknown> | null | undefined;

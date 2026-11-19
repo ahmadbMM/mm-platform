@@ -3,8 +3,9 @@
 // My Account's other small pages with something to press (the user, 2026-11-19, as the booking app's): Emergency contacts
 // (the check-up's own boxes, EmergencyFields, with a Save), Password (current and new, the app's _accPwdOpen), Delete my
 // account (a request, asked again in a centred pop-up, withdrawable: the app's _delSet), the ambassador card's code
-// (copy and share), the company challenge (its cards and the code box: company-challenge.js), and Log out.
-import { useMemo, useRef, useState } from "react";
+// (copy and share), the company challenge (its cards and the code box: company-challenge.js; a join link's code joined
+// at once), and Log out.
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DIAL_CODES } from "@/content/dial-codes";
 import { EM_EMPTY, EM_RELS, emReadBoth, type EmFields, type EmRel } from "@/lib/emergency";
@@ -18,6 +19,7 @@ import PasswordBox from "./PasswordBox";
 import { signOut } from "./quiet";
 import AccIcon from "./AccIcon";
 import { SaveRow, postAcc, useDirty, useSave } from "./AccForm";
+import { takeParkedCode } from "./CompanyLink";
 
 const reload = () => { window.location.reload(); return null; };
 
@@ -181,21 +183,41 @@ export function AccAmbassador({ w, a, locale }: { w: AccWords; a: AmbMine; local
 
 // ── The company challenge ───────────────────────────────────────────────────────────────────────────────────────────
 export type CompanyRow = { id: number; company: string; starts: string; ends: string; state: "soon" | "on" | "ended"; team: number | null; sessions: number | null; mine: number; badge: boolean };
-export function AccCompany({ w, rows, open, when }: { w: AccWords; rows: CompanyRow[]; open: boolean; when: Record<number, string> }) {
+export function AccCompany({ w, rows, open, when, empty }: { w: AccWords; rows: CompanyRow[]; open: boolean; when: Record<number, string>; empty: string }) {
   const [code, setCode] = useState("");
+  // a join link's code kept on this device until now (CompanyLink.tsx): joined at once, and off the device whatever the
+  // answer (the app's _cochRender); its refusal shows under the box, which then shows even with no challenge open
+  const [linked, setLinked] = useState(false);
   const s = useSave();
-  useDirty(!!code);
-  async function join(e: React.FormEvent) {
-    e.preventDefault();
-    if (s.state === "busy" || !code.trim()) return;
+  useDirty(!!code && !linked);
+  async function send(k: string) {
+    if (s.state === "busy" || !k.trim()) return;
     const ok = await s.run(async () => {
-      const b = await postAcc("/api/account/company", { code });
+      const b = await postAcc("/api/account/company", { code: k });
       if (b.ok) return null;
       if (b.error === "signin") return reload();
       return b.error === "code" ? w.coErrCode : b.error === "ended" ? w.coErrEnded : b.error === "busy" ? w.coErrBusy : w.coErr;
     });
     if (ok) setCode("");
   }
+  useEffect(() => {
+    // once, as the page opens (after the first paint, so a development double mount takes the code once)
+    const t = window.setTimeout(() => {
+      const k = takeParkedCode();
+      if (!k) return;
+      setLinked(true);
+      setCode(k);
+      void send(k);
+    }, 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  function join(e: React.FormEvent) {
+    e.preventDefault();
+    setLinked(false);
+    void send(code);
+  }
+  if (!rows.length && !open && !linked) return <p className="acm-card acm-empty">{empty}</p>;
   return (
     <>
       {rows.map((r) => (
@@ -213,12 +235,12 @@ export function AccCompany({ w, rows, open, when }: { w: AccWords; rows: Company
           {r.badge && <p className="acm-co-badge"><AccIcon name="star" size={18} /> {w.coBadge}</p>}
         </section>
       ))}
-      {open && (
+      {(open || linked) && (
         <form className="acm-card" onSubmit={join} noValidate>
           <div className="acm-f">
             <label htmlFor="acm-co-code">{w.coCode}</label>
             <input id="acm-co-code" className="acm-in acm-in-code" value={code} maxLength={12} autoCapitalize="characters" autoComplete="off" spellCheck={false} dir="ltr"
-              onChange={(e) => { setCode(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase()); s.edited(); }} />
+              onChange={(e) => { setCode(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase()); setLinked(false); s.edited(); }} />
           </div>
           <SaveRow state={s.state} err={s.err} w={w} label={w.coJoin} />
         </form>
