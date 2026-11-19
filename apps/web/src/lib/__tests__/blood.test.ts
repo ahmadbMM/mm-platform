@@ -189,7 +189,9 @@ describe("with no session of the kind, nothing names the event", () => {
     expect(seen.size).toBeGreaterThan(50);
     expect(seen.has(join(SRC, "content/blood-words.ts"))).toBe(false);
     expect(seen.has(join(SRC, "content/blood-info.json"))).toBe(false);
-    expect(seen.has(join(SRC, "components/booking/TicketCard.tsx"))).toBe(false);
+    // the ticket is drawn in the browser too, on the booking steps' confirmation (BookingFlow): its plate comes from
+    // content/blood-plate.ts, which holds none of the words
+    expect(seen.has(join(SRC, "components/booking/TicketCard.tsx"))).toBe(true);
   });
   it("and no page of its own", () => {
     expect(readdirSync(join(SRC, "app/[locale]")).filter((x) => /blood|donat/i.test(x))).toEqual([]);

@@ -89,7 +89,7 @@ describe("the window (lib/members-first.ts)", () => {
     expect("publicAt" in toSession({ ...POOL, public_at: null })!).toBe(false);
     expect("publicAt" in toSession({ ...POOL, public_at: undefined })!).toBe(false);
     const { f } = await experiences([POOL]);
-    expect(f.mock.calls.map((c) => String(c[0])).find((u) => u.includes("/rpc/list_sessions"))).toContain(",public_at&");
+    expect(f.mock.calls.map((c) => String(c[0])).find((u) => u.includes("/rpc/list_sessions"))).toContain(",public_at,addons&");
   });
   it("is left out on a database without the column, which holds nobody", async () => {
     resetRides();

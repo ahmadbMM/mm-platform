@@ -1,4 +1,3 @@
-import { isRtl } from "@/i18n/locales";
 import type { L } from "@/i18n/tx";
 
 // The Blood Donation event's words (lib/blood.ts), in English and Arabic exactly as the booking app writes them (its
@@ -14,10 +13,7 @@ export const BLOOD_NAME = "Micromobility Blood Donation";
 /** The kind's name in the page's language (evBloodName), for lib/rides.ts kindNames' readers. */
 export const bloodName = (tx: L): string => tx("Micromobility Blood Donation", "مايكروموبيليتي التبرع بالدم");
 
-/** All five marks on their white plate, one image: MicroMobility above a hairline, the four partners in one row (the booking app's _bldLogosImg). */
-export const bloodPlate = (locale: string): string => (isRtl(locale) ? "/site/blood-partners-rtl.webp?v=3" : "/site/blood-partners.webp?v=3");
-/** The plate's own size, so a page keeps its room before it loads. */
-export const BLOOD_PLATE_SIZE = { width: 1503, height: 433 };
+export { BLOOD_PLATE_SIZE, bloodPlate } from "./blood-plate";
 /** The owner's picture of a donor's arm that fills the card (2026-11-04; the booking app's .bld-card-img). */
 export const BLOOD_CARD = { src: "/site/blood-card.webp", width: 1200, height: 862 };
 

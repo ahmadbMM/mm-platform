@@ -282,15 +282,16 @@ describe("the Farm House Night on Experiences, to a signed-in community member",
     // drawn, never an emoji
     expect(html).not.toMatch(/\p{Extended_Pictographic}/u);
   });
-  it("hands over on its summary in the booking app's rust plate, saying the family is added there", async () => {
+  it("opens the booking steps on this site from its summary in the booking app's rust plate (the user, 2026-11-19)", async () => {
     const p = await experiences([FH]);
     const html = draw(p, 3, comm(p), farmOf(p));
     expect(html).toContain('<div class="xs-sum-head xs-fh-head"><span class="xs-logo small xs-farm-logo"><img src="/site/farm-logo.jpg" alt="" width="150" height="150"/></span>');
     expect(html).toContain('<strong class="xs-fh-name">Nawar Farm House Night</strong>');
     expect(html).toContain("Arrival <bdi>4:30 PM</bdi> · Dinner <bdi>8:30 PM</bdi>");
     expect(html).toContain('<span class="xs-fh-sub">Members and their families</span>');
-    expect(html).toMatch(/<a class="xs-go ev-farm" href="https:\/\/experiences\.micromobility\.sa\/\?lang=en&amp;ev=community&amp;session=2099-11-19-fh">/);
-    expect(html).toContain('<p class="xs-handoff">The booking app opens on this date: sign in, add the participants and confirm.</p>');
+    // booked on this site now: the steps on this date (BookingFlow), where the member adds their family by name; no hand-over line
+    expect(html).toMatch(/<a class="xs-go ev-farm" href="\/experiences\?ev=community&amp;session=2099-11-19-fh">/);
+    expect(html).not.toContain('class="xs-handoff"');
     expect(text(/<section aria-labelledby="xs-h3">.*<\/section>/.exec(html)?.[0])).not.toMatch(BIKE_WORDS);
   });
 });
