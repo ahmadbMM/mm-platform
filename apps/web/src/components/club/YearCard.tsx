@@ -8,7 +8,7 @@ import { fmtNum } from "@/lib/fill";
 import { hubDay, type HubYear } from "@/lib/hub-feed";
 import { monthName } from "@/lib/member-hub";
 import { ltrNum, plainText, SHARE_INK, SHARE_SITE } from "@/lib/share-picture";
-import { HubProgress, STAR } from "./HubCards";
+import { STAR } from "./HubCards";
 import type { CommunityWords } from "./Community.words";
 
 // Your year in a member's area on /club, in December and January only (lib/hub-feed.ts HubYear; the booking app's
@@ -103,7 +103,7 @@ export default function YearCard({ y, locale, w, kinds, from }: { y: HubYear; lo
   return (
     <section className="club-hub club-hub-yr club-yr-slides" aria-label={y.full ? fill(w.yrTitle, String(y.year)) : w.yrSoFar}>
       <div ref={slide} className="club-yr-slide" aria-live="polite" tabIndex={-1}>{slides[i]}</div>
-      {slides.length > 1 && <div aria-hidden="true"><HubProgress n={i + 1} tg={slides.length} label="" /></div>}
+      {slides.length > 1 && <div className="club-hub-dots" aria-hidden="true">{slides.map((_, k) => <span key={k} className={k === i ? "on" : undefined} />)}</div>}
       <div className="club-yr-nav">
         {i > 0 ? <button type="button" className="club-hub-btn" onClick={() => go(i - 1)}>{w.prev}</button> : <button type="button" className="club-hub-btn" onClick={() => go(null)}>{w.close}</button>}
         {last ? <button type="button" className="club-hub-btn club-hub-primary" onClick={() => void share()}>{w.yrShare}</button>
