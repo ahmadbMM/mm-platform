@@ -28,6 +28,20 @@
 .tk-num.big { font-size: 72px; letter-spacing: -3px; }
 .tk-num.mid { font-size: 40px; letter-spacing: -1px; }
 .tk-num.small { font-size: 24px; letter-spacing: -1px; line-height: 1.1; }
+/* The circuit's booking number as large as the room beside the code allows (the booking app's 168abcc5; the user,
+   2026-11-15: "make the number of the booking in jcc booking cards bigger"). The ticket's head is the size container:
+   --tk-qr is the code's column and the gap (132 + 24, on a phone 116 + 14), and each size divides what is left by its
+   number's width in ems, so "#7" or "#45" fills it, "#128" fits it and a party's range or list wraps at its spaces. On the
+   ride day the corner code is gone (the large one sits under the head) and the number has the whole width, up to the caps.
+   Never smaller than before (the clamps' floors); the waitlist and past tickets keep their quieter sizes. In both looks
+   (paper and the night's dark) and either direction: the number itself always reads left to right. A browser without
+   container units keeps the old sizes. */
+.tk-card.ev-jcc:not(.tk-wl, .tk-past) .tk-head { container-type: inline-size; --tk-qr: 156px; --tk-floor: 72px; }
+.tk-card.ev-jcc:not(.tk-wl, .tk-past) .tk-head:not(:has(> .tk-right)) { --tk-qr: 0px; }
+.tk-card.ev-jcc:not(.tk-wl, .tk-past) .tk-num.big { font-size: clamp(var(--tk-floor), calc((100cqw - var(--tk-qr)) / 2.4), 120px); }
+.tk-card.ev-jcc:not(.tk-wl, .tk-past) .tk-num.big.n3 { font-size: clamp(var(--tk-floor), calc((100cqw - var(--tk-qr)) / 1.95), 120px); }
+.tk-card.ev-jcc:not(.tk-wl, .tk-past) .tk-num.mid { font-size: clamp(40px, calc((100cqw - var(--tk-qr)) / 2.9), 72px); }
+.tk-card.ev-jcc:not(.tk-wl, .tk-past) .tk-num.small { font-size: clamp(24px, calc((100cqw - var(--tk-qr)) / 4.9), 48px); }
 .tk-wl-note { max-width: 40ch; font-size: 13px; font-weight: 500; line-height: 1.45; color: #8a5c14; }
 /* A circuit night's waitlist says so in a solid band, its own collection time under it (the booking app, 2026-11-03). */
 .tk-label.wl.solid { width: fit-content; padding: 7px 12px; border-radius: 999px; background: #f2c66d; color: #1a1919; font-weight: 800; }
@@ -645,6 +659,8 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
   .tk-when { padding: 0 14px 12px; }
   .tk-qr-big { padding: 0 14px 14px; }
   .tk-num.big { font-size: 56px; letter-spacing: -2px; }
+  .tk-card.ev-jcc:not(.tk-wl, .tk-past) .tk-head { --tk-qr: 130px; --tk-floor: 56px; }
+  .tk-card.ev-jcc:not(.tk-wl, .tk-past) .tk-head:not(:has(> .tk-right)) { --tk-qr: 0px; }
   .tk-qr svg { width: 116px; height: 116px; } /* 104 of code + the 6px tile each side; the canvas takes the svg's box */
   .tk-qr-big .tk-qr > svg:not(.tk-qr-live) { width: 224px; height: 224px; } /* today's code keeps its size */
   .tk-qr-hold { width: 116px; height: 116px; }

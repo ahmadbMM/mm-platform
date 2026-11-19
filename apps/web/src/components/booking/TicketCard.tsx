@@ -213,7 +213,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   // meeting point's link, it still meets at a point, never the circuit (meetHeld); Run for Her at the Jeddah Yacht Club
   const held = !past && spotHeld(s, now);
   const venue = held && meetHeld(s, now) ? ({ kind: "meet" } as const) : venueOf(s);
-  const big = num.length <= 4 ? "big" : num.length <= 9 ? "mid" : "small";
+  // n3: a one- or two-digit number ("#7", "#45"), which the circuit's ticket draws larger still (the booking app's cu-num-3,
+  // 2026-11-15; components/booking/booking.css)
+  const big = num.length <= 4 ? (num.length <= 3 ? "big n3" : "big") : num.length <= 9 ? "mid" : "small";
   // a session that did not load reads by its id: a kind without a bike never shows bike words (2026-10-18)
   const bikes = s ? s.bikes : !isNonBike(null, primary.sessionId);
   const run = s?.kind === "runher" || s?.kind === "defe5k"; // Run for Her, the DEFE 5KM Run: a runner's number, a distance, cancel only
