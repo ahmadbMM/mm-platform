@@ -1,0 +1,655 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  addonCap, addonCatRank, addonsCost, asciiDigits, birthOk, codeOne, eventSteps, fromPrice, genderRefused, heightToSize, maxRiders, nextStep, pgDue, prevStep, priceMap, promoDiscount, promoRows, refusalOf,
+  needsWaiver, regSteps, rentalTotal, riderPrices, sessionAddons, typeOptions, validateRiders, waiverKind, type AddonItem, type BookSession, type Rider,
+} from "../booking";
+import { accountFrom, asksOf, bookingEntries, checkBooking, liveSession, readInput, waitlistRefused, waiverVersionFor } from "../booking-server";
+import { waitlistCap, addonIds, type RideKind } from "../rides";
+import { rideGroupKm as groupKm } from "../kind-theme";
+import { POST as book } from "../../app/api/booking/route";
+import { POST as promoRoute } from "../../app/api/booking/promo/route";
+import { POST as profileRoute } from "../../app/api/booking/profile/route";
+
+// Booking on the website: the booking app's steps, caps, types, prices and checks (lib/booking.ts),
+// and the route that books through customer_create_booking with the cookie's id and token.
+const base: BookSession = {
+  id: "2026-10-06", date: "2026-10-06", kind: "jcc", name: "", full: false, community: false, members: false, free: false, approval: false, seat: null,
+  capacity: 40, left: null, wlCap: null, km: { beg: 20, int: 40 }, addons: [], meetUrl: null, location: "JCC", routeSlug: null,
+  day: "Tuesday · 6 Oct 2026", near: null, time: "9 PM – 11 PM", collect: null, opens: null, description: null,
+};
+const sat: BookSession = { ...base, id: "2026-10-04", kind: "saturday", community: true, members: true, free: true, approval: true };
+const prices = priceMap([{ type: "Road", price: 75 }, { type: "Road Carbon", price: 250 }, { type: "Mountain", price: 57.5 }, { type: "Hybrid", price: 57.5 }, { type: "Any", price: 57.5 }, { type: "Kids", price: 57.5 }]);
+const r = (type: Rider["type"], height = "175", name = ""): Rider => ({ name, height, type });
+
+describe("the steps", () => {
+  it("walks Ride, Riders (a bike), Review, the waiver ticked on the review itself (2026-11-18, EM07-B)", () => {
+    expect(regSteps(base)).toEqual([1, 2, 3]);
+    expect(regSteps({ kind: "swim" })).toEqual([1, 3]);
+    expect(regSteps({ kind: "workshop" })).toEqual([1, 3]);
+    // an event's seats, the Farm House Night's family, a run, a race and the donor have a step of their own (_regSteps);
+    // yoga, like the pool, goes straight to the review
+    expect(regSteps({ kind: "event" })).toEqual([1, 2, 3]);
+    expect(regSteps({ kind: "farm" })).toEqual([1, 2, 3]);
+    expect(regSteps({ kind: "yoga" })).toEqual([1, 3]);
+    expect(nextStep({ kind: "workshop" }, 1)).toBe(3);
+    expect(prevStep({ kind: "workshop" }, 3)).toBe(1);
+    expect(prevStep({ kind: "swim" }, 3)).toBe(1);
+    expect(nextStep(base, 2)).toBe(3);
+    expect(prevStep(base, 3)).toBe(2);
+  });
+});
+
+describe("caps and types", () => {
+  it("three riders an account on the circuit, drawn from what it holds there; one on a community ride", () => {
+    expect(maxRiders(base, 0)).toBe(3);
+    expect(maxRiders(base, 2)).toBe(1);
+    expect(maxRiders(base, 5)).toBe(1);
+    expect(maxRiders(sat, 0)).toBe(1);
+    // the riders per account admins set in the booking app (Settings > Business, jcc_account_cap)
+    expect(maxRiders(base, 0, 5)).toBe(5);
+    expect(maxRiders(base, 1, 5)).toBe(4);
+    expect(maxRiders(sat, 0, 5)).toBe(1);
+    // a ticketed event's seats (EVENT_SEAT_MAX, event_seat_max), as the booking app's _maxRiders
+    const ev = { ...base, kind: "event" as const, community: true };
+    expect(maxRiders(ev, 0)).toBe(5);
+    expect(maxRiders(ev, 0, 3, 4)).toBe(4);
+  });
+  it("offers the app's types: never Any or Gravel, own bike only on community and National Day, no carbon on community", () => {
+    expect(typeOptions(base)).toEqual(["Road", "Hybrid", "Mountain", "Kids", "Road Carbon"]);
+    expect(typeOptions(sat)).toEqual(["Road", "Hybrid", "Mountain", "Kids", "Own"]);
+    expect(typeOptions({ community: false, kind: "snd96" })).toContain("Own");
+    expect(typeOptions({ community: false, kind: "snd96" })).toContain("Road Carbon");
+    // what staff hid drops out, unless that would leave nothing
+    expect(typeOptions(base, ["Road Carbon"])).not.toContain("Road Carbon");
+    expect(typeOptions(base, ["Road", "Hybrid", "Mountain", "Kids", "Road Carbon"])).toHaveLength(5);
+    // a type staff closed on the session (2026-11-03) is not offered, whatever the account may see
+    expect(typeOptions({ ...base, closedTypes: ["Road", "Kids"] })).toEqual(["Hybrid", "Mountain", "Road Carbon"]);
+    expect(typeOptions({ ...sat, closedTypes: ["Own"] })).not.toContain("Own");
+    expect(typeOptions({ ...base, closedTypes: ["Hybrid"] }, ["Road", "Mountain", "Kids", "Road Carbon"])).not.toContain("Hybrid");
+  });
+});
+
+describe("prices", () => {
+  it("are the database's ride_prices, the app's figures where a row is missing, and own bikes free", () => {
+    expect(priceMap([])).toMatchObject({ Road: 75, Hybrid: 57.5, "Road Carbon": 250, Own: 0 });
+    expect(priceMap([{ type: "Road", price: 80 }, { type: "Own", price: 9 }])).toMatchObject({ Road: 80, Own: 0 });
+  });
+  it("says the from-price on a card as _sessFromPrice", () => {
+    expect(fromPrice(base, prices)).toEqual({ kind: "from", n: 57.5 });
+    // a type staff closed is not its cheapest (2026-11-03)
+    expect(fromPrice({ ...base, closedTypes: ["Hybrid", "Mountain", "Kids"] }, prices)).toEqual({ kind: "from", n: 75 });
+    expect(fromPrice(sat, prices)).toEqual({ kind: "free" });
+    expect(fromPrice({ ...base, kind: "event", community: true, seat: 40 }, prices)).toEqual({ kind: "seat", n: 40 });
+    expect(fromPrice({ ...base, kind: "event", community: true, seat: 0 }, prices)).toEqual({ kind: "free" });
+    expect(fromPrice({ ...base, kind: "workshop", community: true }, prices)).toBeNull();
+  });
+  it("totals the riders, a type not picked yet as a range, the account holder on the house", () => {
+    expect(rentalTotal(base, [r("Road"), r("Hybrid")], prices, null)).toEqual([132.5, 132.5]);
+    expect(rentalTotal(base, [r("Road"), r("")], prices, null)).toEqual([132.5, 150]);
+    expect(rentalTotal(base, [r("Own")], prices, null)).toEqual([0, 0]);
+    expect(rentalTotal(sat, [r("Road")], prices, null)).toEqual([0, 0]);
+    const house = { name: "Sara Ali", house: "all" as const };
+    expect(riderPrices(base, [r("Road"), r("Road")], prices, house).map((l) => l.kind)).toEqual(["house", "sar"]);
+    // a friend's name on rider 1 is not the holder: the perk does not land
+    expect(riderPrices(base, [r("Road", "175", "Omar")], prices, house)[0].kind).toBe("sar");
+    expect(riderPrices(base, [r("Hybrid")], prices, { name: "Sara", house: ["Road"] })[0].kind).toBe("sar");
+    expect(rentalTotal({ ...base, seat: 40 }, [r("")], prices, null)).toEqual([40, 40]);
+  });
+  it("quotes a type's highest fare as a range when an admin set one (ride_prices max_price, priceDisplay)", () => {
+    const max = { ...prices, Road: 90, Any: 80 };
+    expect(riderPrices(base, [r("Road")], prices, null, max)[0]).toEqual({ kind: "range", lo: 75, hi: 90 });
+    expect(riderPrices(base, [r("Hybrid")], prices, null, max)[0]).toEqual({ kind: "sar", n: 57.5 });
+    expect(riderPrices(base, [r("")], prices, null, max)[0]).toEqual({ kind: "range", lo: 57.5, hi: 80 });
+    expect(rentalTotal(base, [r("Road"), r("Hybrid")], prices, null, max)).toEqual([132.5, 147.5]);
+  });
+  it("takes a code off as _promoDiscount, and tags only the riders it discounts", () => {
+    const pct = { code: "SARA10", kind: "pct", value: 10, appliesTo: null };
+    expect(promoDiscount(pct, base, [r("Road"), r("Hybrid")], prices, null)).toBe(13.25);
+    expect(promoDiscount({ ...pct, kind: "flat", value: 500 }, base, [r("Road")], prices, null)).toBe(75);
+    expect(promoDiscount({ code: "C", kind: "flat", value: 100, appliesTo: "Road Carbon" }, base, [r("Road Carbon"), r("Road")], prices, null)).toBe(100);
+    expect(promoDiscount(pct, sat, [r("Road")], prices, null)).toBe(0);
+    expect(promoRows(pct, base, [r("Road"), r("Own"), r("Hybrid")], null)).toEqual([true, false, true]);
+    expect(promoRows({ appliesTo: "Road" }, base, [r("Road"), r("Hybrid")], null)).toEqual([true, false]);
+    expect(promoRows(pct, base, [r("Road")], { name: "Sara", house: "all" })).toEqual([false]);
+    expect(promoRows(pct, sat, [r("Road")], null)).toEqual([false]);
+    // a seat on a paid event carries the code it is discounted by; a free seat never spends one
+    const ev = { ...base, kind: "event" as const, community: true, seat: 100 };
+    expect(promoDiscount(pct, ev, [r("")], prices, null)).toBe(10);
+    expect(promoRows(pct, ev, [r("")], null)).toEqual([true]);
+    expect(promoRows(pct, { ...ev, seat: 0 }, [r("")], null)).toEqual([false]);
+  });
+  it("gives a personal one-use code rider 1's own bike alone, never Carbon, Own or a bike on the house (_codeOne)", () => {
+    expect(["RW-AB12", "rf-x", "RB-1", "BD-9", "VL-3"].every(codeOne)).toBe(true);
+    expect(codeOne("SARA10")).toBe(false);
+    const free = { code: "RF-AB12", kind: "pct", value: 100, appliesTo: null, one: true };
+    expect(promoDiscount(free, base, [r("Road"), r("Hybrid")], prices, null)).toBe(75);
+    expect(promoDiscount({ ...free, code: "RW-1", value: 50 }, base, [r("Hybrid"), r("Road")], prices, null)).toBe(28.75);
+    expect(promoDiscount(free, base, [r("Road Carbon"), r("Road")], prices, null)).toBe(0);
+    expect(promoDiscount(free, base, [r("Own"), r("Road")], prices, null)).toBe(0);
+    expect(promoDiscount(free, base, [r("Road")], prices, { name: "Sara", house: "all" })).toBe(0);
+    expect(promoRows(free, base, [r("Road"), r("Hybrid"), r("Road")], null)).toEqual([true, false, false]);
+    expect(promoRows(free, base, [r("Road Carbon"), r("Road")], null)).toEqual([false, false]);
+  });
+  it("lets a gift ride's or a lesson pack's code pay for one rider's place, the first it fits (the database counts one use per row)", () => {
+    const gift = { code: "GF-AB12CD34", kind: "flat", value: 75, appliesTo: "Road" };
+    expect(promoDiscount(gift, base, [r("Hybrid"), r("Road"), r("Road")], prices, null)).toBe(75);
+    expect(promoRows(gift, base, [r("Hybrid"), r("Road"), r("Road")], null)).toEqual([false, true, false]);
+    const pack = { code: "PK-AB12CD34", kind: "pct", value: 100, appliesTo: null };
+    expect(promoDiscount(pack, base, [r("Road"), r("Hybrid")], prices, null)).toBe(75);
+    expect(promoRows(pack, base, [r("Road"), r("Hybrid")], null)).toEqual([true, false]);
+    expect(promoDiscount({ ...gift, code: "GF-AB12CD3" }, base, [r("Road"), r("Road")], prices, null)).toBe(150);
+  });
+});
+
+describe("add-ons", () => {
+  const items: AddonItem[] = [
+    { id: "h1", name: "Helmet", brand: "", photo: "", price: 30, qty: 0, category: "Helmet", nutrition: false },
+    { id: "g1", name: "Gel", brand: "", photo: "", price: 12.5, qty: 4, category: "EnergyGels", nutrition: true },
+    { id: "w1", name: "Water", brand: "", photo: "", price: 3, qty: 50, category: "Drinks", nutrition: false },
+  ];
+  it("caps a pick at the stock, ten when sold out, never past twenty", () => {
+    expect(addonCap(items[1])).toBe(4);
+    expect(addonCap(items[0])).toBe(10);
+    expect(addonCap(items[2])).toBe(20);
+    expect(addonsCost([{ id: "g1", qty: 2 }, { id: "w1", qty: 3 }], items)).toBe(34);
+  });
+  it("groups Equipment, Supplements, Beverages and sells none on a free ride", () => {
+    expect(addonCatRank("Helmet", items)).toBe(0);
+    expect(addonCatRank("EnergyGels", items)).toBe(1);
+    expect(addonCatRank("Drinks", items)).toBe(2);
+    expect(sessionAddons({ ...base, addons: ["h1", "g1", "zz"] }, items).map((x) => x.id)).toEqual(["g1", "h1"]);
+    expect(sessionAddons({ ...sat, addons: ["g1"] }, items)).toEqual([]);
+  });
+});
+
+describe("validation", () => {
+  it("checks the group, each height, each type, each name in a party, in the app's order", () => {
+    expect(validateRiders(base, [r("Road")], null, "Sara")).toBeNull();
+    expect(validateRiders(base, [r("Road", "99")], null, "Sara")).toEqual({ i: 0, field: "height" });
+    expect(validateRiders(base, [r("Road"), r("", "160", "Omar")], null, "Sara")).toEqual({ i: 1, field: "type" });
+    expect(validateRiders(base, [r("Road", "170", "Sara"), r("Road", "160")], null, "Sara")).toEqual({ i: 1, field: "name" });
+    expect(validateRiders(sat, [r("Road")], null, "Sara")).toEqual({ i: -1, field: "group" });
+    expect(validateRiders(sat, [r("Road")], "beg", "Sara")).toBeNull();
+    expect(validateRiders({ ...base, kind: "workshop" }, [r("")], null, "Sara")).toBeNull();
+  });
+  it("keeps the Kids bike to riders of 144 cm and under (the owner, 2026-11-10)", () => {
+    expect(validateRiders(base, [r("Kids", "144")], null, "Sara")).toBeNull();
+    expect(validateRiders(base, [r("Kids", "145")], null, "Sara")).toEqual({ i: 0, field: "kids" });
+    expect(validateRiders(base, [r("Road", "170", "Sara"), r("Kids", "150", "Omar")], null, "Sara")).toEqual({ i: 1, field: "kids" });
+    expect(asciiDigits("١٤٠")).toBe("140");
+    expect(asciiDigits("۱۶۵ cm")).toBe("165 cm");
+  });
+  it("counts an event's steps before a date is picked, so picking one never changes the count", () => {
+    expect(eventSteps([{ kind: "workshop" }, { kind: "workshop" }])).toEqual([1, 3]);
+    expect(eventSteps([{ kind: "jcc" }])).toEqual([1, 2, 3]);
+    expect(eventSteps([{ kind: "saturday" }, { kind: "swim" }])).toBeNull();
+    expect(eventSteps([])).toBeNull();
+  });
+  it("sizes a frame as the owner's chart", () => {
+    expect(heightToSize(140, "Road")).toBe("");
+    expect(heightToSize(172, "Road")).toBe("S");
+    expect(heightToSize(172, "Hybrid")).toBe("M");
+    expect(heightToSize(195, "Mountain")).toBe("L");
+    expect(heightToSize(195, "Road Carbon")).toBe("XL");
+  });
+  it("takes a birth date five to a hundred years back", () => {
+    expect(birthOk("2000-02-29", "2026-10-03")).toBe(true);
+    expect(birthOk("2001-02-29", "2026-10-03")).toBe(false);
+    expect(birthOk("2022-01-01", "2026-10-03")).toBe(false);
+    expect(birthOk("1900-01-01", "2026-10-03")).toBe(false);
+  });
+  it("reads a refusal as the app does: the code, the detail, the sentence", () => {
+    expect(refusalOf({ message: "STALE_SESSION" })).toBe("signin");
+    expect(refusalOf({ code: "P0001", message: "Saturday Social Ride places are booked at micromobility.sa/saturday.", details: "SATURDAY_LINK" })).toBe("saturday_link");
+    expect(refusalOf({ code: "P0001", message: "WAIVER_OUTDATED" })).toBe("waiver_outdated");
+    expect(refusalOf({ code: "P0001", message: "SESSION_CLOSED" })).toBe("closed");
+    expect(refusalOf({ message: "FIX_FIRST" })).toBe("fix_first");
+    expect(refusalOf({ code: "22023", message: "PICK_TYPE" })).toBe("pick_type");
+    expect(refusalOf({ code: "P0001", message: "TYPE_CLOSED", details: "Road" })).toBe("type_closed");
+    expect(refusalOf({ code: "P0001", message: "TYPE_FULL: Road", details: "Road" })).toBe("type_full");
+    expect(refusalOf({ code: "P0001", message: "MEMBERS_FIRST", details: "2099-01-01T00:00:00Z" })).toBe("members_first");
+    expect(refusalOf({ code: "P0001", message: "WAITLIST_FULL" })).toBe("waitlist_full");
+    expect(refusalOf({ code: "P0001", message: "MEMBER_BIKES_FULL" })).toBe("member_bikes_full");
+    expect(refusalOf({ code: "P0001", message: "VL_TEAM_FULL" })).toBe("vl_team_full");
+    expect(refusalOf({ code: "P0001", message: "VL_SOMETHING_NEW" })).toBe("vl_details");
+    expect(refusalOf({ message: "x", details: "MEMBERS_ONLY" })).toBe("members");
+    expect(refusalOf({ message: "One place per person on this session." })).toBe("one_per_session");
+    expect(refusalOf({ message: "Up to 2 riders per booking on this ride.", details: "GROUP_CAP" })).toBe("group_cap");
+    expect(refusalOf({ message: "NOT_OPEN_YET: booking for 2026-10-20 opens on 2026-10-13" })).toBe("not_open");
+    expect(refusalOf({ code: "P0001", message: "WAIVER_REQUIRED" })).toBe("waiver");
+    expect(refusalOf({ code: "22023", message: "WAIVER_REQUIRED" })).toBe("waiver");
+    expect(refusalOf({ message: "boom" })).toBe("generic");
+    // a personal code where it does not pay: the guards' details
+    expect(refusalOf({ code: "P0001", message: "A referral code is not valid on a Carbon bike.", details: "REF_CODE_CARBON" })).toBe("ref_code_carbon");
+    expect(refusalOf({ code: "P0001", message: "A referral code works on a JCC ride or a Petromin night only.", details: "REF_CODE_SESSION" })).toBe("ref_code_session");
+    expect(refusalOf({ code: "P0001", message: "This free ride is not valid on a Carbon bike.", details: "BLOOD_CODE_CARBON" })).toBe("blood_code_carbon");
+    expect(refusalOf({ code: "P0001", message: "This free ride is not valid on this session.", details: "BLOOD_CODE_SESSION" })).toBe("blood_code_session");
+  });
+});
+
+describe("the session's settings", () => {
+  it("reads the waitlist cap, the groups' distances and the add-ons", () => {
+    expect(waitlistCap('{"_wl":{"m":"count","v":5}}', 40)).toBe(5);
+    expect(waitlistCap({ _wl: { m: "pct", v: 10 } }, 40)).toBe(4);
+    expect(waitlistCap({ _wl: { m: "pct", v: 1 } }, 12)).toBe(1);
+    expect(waitlistCap("{}", 40)).toBeNull();
+    expect(groupKm('{"_km":{"beg":18}}')).toEqual({ beg: 18, int: 40 });
+    expect(addonIds('["a","b","a","x y"]')).toEqual(["a", "b"]);
+  });
+});
+
+describe("the server's checks", () => {
+  const row = { id: "2026-10-06", session_date: "2026-10-06", day: "Tuesday", status: "open", capacity: 40, bike_slots: '{"_time":"21:00 - 23:00"}' };
+  const live = liveSession(row, "2026-10-03")!;
+  const acct = { name: "Sara Ali", live: {}, rejected: [] as string[], house: null };
+  it("reads the session fresh: past, closed and Petromin nights are not open", () => {
+    expect(live).toMatchObject({ kind: "jcc", open: true, capacity: 40, approval: false, free: false });
+    expect(liveSession(row, "2026-10-07")!.open).toBe(false);
+    expect(liveSession({ ...row, status: "closed" }, "2026-10-03")!.open).toBe(false);
+    expect(liveSession({ ...row, event_kind: "community", ride_kind: "petromin" }, "2026-10-03")!.open).toBe(false);
+    expect(liveSession({ ...row, event_kind: "community", ride_kind: "saturday", spots: 25 }, "2026-10-03")).toMatchObject({ approval: true, members: true, free: true, capacity: 25 });
+    expect(liveSession({ ...row, event_kind: "community", ride_kind: "event", paid_ride: true, price: "40", open_to_all: true }, "2026-10-03")).toMatchObject({ seat: 40, members: false });
+  });
+  it("cleans the body: names, types, add-ons and the code; never a price", () => {
+    expect(readInput({ sessionId: "a;b", riders: [r("Road")] })).toBeNull();
+    expect(readInput({ sessionId: "s1", riders: [{ name: "x", height: "170", type: "Gravel" }] })).toBeNull();
+    expect(readInput({ sessionId: "s1", riders: [{ name: "Al-Amin", height: 170, type: "Road", price: 0 }], addons: [{ id: "a", qty: 2 }, { id: "a", qty: 1 }, { id: "b", qty: 99 }], promo: { code: "X 1" }, waiver: true }))
+      .toEqual({ sessionId: "s1", riders: [{ name: "Al Amin", height: "170", type: "Road" }], group: null, addons: [{ id: "a", qty: 2 }], promo: null, waiver: true, payNow: false, wallet: false, seatOnly: false });
+  });
+  it("refuses what the app refuses: a closed ride, one turned down, one already held, a party past the cap, no type, no waiver", () => {
+    const input = (riders: Rider[], waiver = true) => ({ sessionId: live.id, riders, group: null, addons: [], promo: null, waiver, payNow: false, wallet: false, seatOnly: false });
+    expect(checkBooking(input([r("Road")]), live, acct)).toEqual({ ok: true, riders: [r("Road")] });
+    expect(checkBooking(input([r("Road")]), { ...live, open: false }, acct)).toEqual({ ok: false, error: "closed" });
+    expect(checkBooking(input([r("Road")]), live, { ...acct, rejected: [live.id] })).toEqual({ ok: false, error: "rejected" });
+    expect(checkBooking(input([r("Road")]), live, { ...acct, live: { [live.id]: 1 } })).toEqual({ ok: false, error: "already" });
+    expect(checkBooking(input([r("Road", "170", "A"), r("Road", "170", "B"), r("Road", "170", "C"), r("Road", "170", "D")]), live, acct)).toEqual({ ok: false, error: "cap" });
+    expect(checkBooking(input([r("Road", "170", "A"), r("Road", "170", "B"), r("Road", "170", "C"), r("Road", "170", "D")]), live, acct, 4)).toMatchObject({ ok: true });
+    expect(checkBooking(input([r("Road", "170", "A"), r("Road", "170", "B")]), live, acct, 1)).toEqual({ ok: false, error: "cap" });
+    expect(checkBooking(input([r("")]), live, acct)).toEqual({ ok: false, error: "pick_type" });
+    expect(checkBooking(input([r("Own")]), live, acct)).toEqual({ ok: false, error: "pick_type" });
+    expect(checkBooking(input([r("Road")], false), live, acct)).toEqual({ ok: false, error: "waiver" });
+    expect(checkBooking(input([r("")], false), { ...live, kind: "workshop" }, acct)).toEqual({ ok: false, error: "waiver" });
+    expect(checkBooking(input([r("")], false), { ...live, kind: "event" }, acct)).toEqual({ ok: false, error: "waiver" });
+    const satLive = liveSession({ ...row, event_kind: "community", ride_kind: "saturday" }, "2026-10-03")!;
+    // a community ride is one rider; carbon there becomes Road; the group is required
+    expect(checkBooking({ ...input([r("Road Carbon"), r("Road")]), group: "int" }, satLive, acct)).toEqual({ ok: true, riders: [r("Road")] });
+    expect(checkBooking(input([r("Road")]), satLive, acct)).toEqual({ ok: false, error: "invalid" });
+    // a ticketed event sells its seats as a party, up to event_seat_max, each seat named (rider 1 may take the account's)
+    const evLive = liveSession({ ...row, event_kind: "community", ride_kind: "event", paid_ride: true, price: "40", open_to_all: true }, "2026-10-03")!;
+    expect(checkBooking(input([r("", "", ""), r("", "", "B"), r("", "", "C")]), evLive, acct)).toMatchObject({ ok: true, riders: [r("", "", ""), r("", "", "B"), r("", "", "C")] });
+    expect(checkBooking(input([r("", "", "A"), r("", "", "B"), r("", "", "C")]), evLive, acct, 3, 2)).toEqual({ ok: false, error: "cap" });
+    expect(checkBooking(input([r("", "", "A"), r("", "", "")]), evLive, acct)).toEqual({ ok: false, error: "invalid" });
+  });
+  it("builds the rows customer_create_booking takes, with no price and the code only where it discounts", () => {
+    const input = { sessionId: live.id, riders: [r("Road", "180"), r("Own", "120", "Kid")], group: null, addons: [], promo: { code: "SARA10", appliesTo: null }, waiver: true, payNow: false, wallet: false, seatOnly: false };
+    const rows = bookingEntries(input, input.riders, live, acct, waiverVersionFor(live));
+    expect(rows[0]).toMatchObject({ name: "Sara Ali", size: "L", height: 180, type_preference: "Road", status: "waiting", promo_code: "SARA10", waiver_version: "2026-11-v4", session_day: "Tuesday" });
+    expect(rows[1]).toMatchObject({ name: "Kid", size: "", type_preference: "Own", promo_code: null });
+    expect(rows[0]).not.toHaveProperty("price");
+    expect(rows[0]).not.toHaveProperty("approval");
+    expect(rows[0]).not.toHaveProperty("seat_only");
+    // a place asked for carries seat_only (rentals 20261111030000); a full session's waitlist place never does
+    expect(bookingEntries({ ...input, seatOnly: true }, input.riders, live, acct, null)[0]).toMatchObject({ seat_only: true, status: "waiting" });
+    expect(bookingEntries({ ...input, seatOnly: true }, input.riders, { ...live, full: true }, acct, null)[0]).not.toHaveProperty("seat_only");
+    const ws = liveSession({ ...row, event_kind: "community", ride_kind: "workshop", open_to_all: true }, "2026-10-03")!;
+    expect(bookingEntries({ ...input, promo: null }, [r("")], ws, acct, waiverVersionFor(ws))[0]).toMatchObject({ type_preference: "None", height: null, approval: "pending" });
+    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-11-v4");
+  });
+  it("refuses a capped waitlist that is full, and only then", () => {
+    const s = { full: false, approval: false, capacity: 10, wlCap: 2 };
+    expect(waitlistRefused(s, 1, 9, 2)).toBe(false); // a place left
+    expect(waitlistRefused(s, 2, 9, 1)).toBe(true); // two need a bike, one place, one waitlist spot
+    expect(waitlistRefused({ ...s, full: true }, 1, 0, 1)).toBe(false);
+    expect(waitlistRefused({ ...s, wlCap: null }, 1, 10, 50)).toBe(false);
+    // only the riders who need a place go on the waitlist; riders on their own bikes need none (app12-1)
+    expect(waitlistRefused({ ...s, full: true }, 1, 0, 1)).toBe(false); // three riders, two on their own bikes, one spot
+    expect(waitlistRefused({ ...s, full: true }, 0, 0, 2)).toBe(false); // all on their own bikes: seated, not waitlisted
+  });
+  it("reads the account: live rows, a ride turned down, the house, the profile page", () => {
+    const rows = [
+      { session_id: "a", status: "waiting" }, { session_id: "a", status: "waitlist" }, { session_id: "b", status: "cancelled", approval: "rejected" },
+      ...Array.from({ length: 7 }, (_, i) => ({ session_id: `d${i}`, status: "done" })),
+    ];
+    const a = accountFrom("Sara", { height: 172, hidden_types: "Road Carbon, Kids", default_pay: "house:Road,Hybrid" }, rows, true, null);
+    expect(a).toMatchObject({ height: 172, hidden: ["Road Carbon", "Kids"], house: ["Road", "Hybrid"], member: true, rejected: ["b"], live: { a: 2 }, asks: [], profileGate: "profile" });
+    expect(accountFrom("Sara", { birth_date: "1990-01-01", nationality: "Saudi Arabia", default_pay: "house" }, rows, false, []).profileGate).toBe("none");
+    expect(asksOf(["birth_date", "nationality"], {})).toEqual({ asks: [], communityOnly: true });
+    expect(asksOf(["email", "birth_date"], {})).toEqual({ asks: ["email", "birth_date"], communityOnly: false });
+    expect(accountFrom("Sara", {}, [], false, ["nationality"]).profileGate).toBe("community");
+    expect(accountFrom("Sara", {}, [], false, ["nationality"]).pgAsk).toEqual(["nat"]);
+  });
+  it("asks the nationality from the first booking and the birth date from the fourth, each only while not on file (_pgDue)", () => {
+    const n = (k: number) => Array.from({ length: k }, (_, i) => ({ session_id: `s${i}`, status: "done" }));
+    expect(accountFrom("Sara", {}, [], false, [])).toMatchObject({ profileGate: "none", pgAsk: [], count: 0 });
+    expect(accountFrom("Sara", {}, n(1), false, [])).toMatchObject({ profileGate: "profile", pgAsk: ["nat"], count: 1 });
+    expect(accountFrom("Sara", {}, n(3), false, [])).toMatchObject({ profileGate: "profile", pgAsk: ["nat"] });
+    expect(accountFrom("Sara", { nationality: "Egypt" }, n(3), false, [])).toMatchObject({ profileGate: "none", pgAsk: [] });
+    expect(accountFrom("Sara", { nationality: "Egypt" }, n(4), false, [])).toMatchObject({ profileGate: "profile", pgAsk: ["birth"] });
+    expect(accountFrom("Sara", {}, [...n(4), { session_id: "x", status: "cancelled" }], false, [])).toMatchObject({ pgAsk: ["birth", "nat"], count: 4 });
+    expect(pgDue({ birth: "1990-01-01", nationality: "" }, 8)).toEqual(["nat"]);
+  });
+});
+
+// ── The routes ─────────────────────────────────────────────────────────────────────────────
+const TOKEN = "a1b2c3d4e5f6a7b8c9d0";
+const HEADERS = { origin: "https://micromobility.sa", cookie: `mm_acct=c1~${TOKEN}`, "content-type": "application/json" };
+const post = (fn: (r: Request) => Promise<Response>, path: string, body: unknown, headers: Record<string, string> = HEADERS) =>
+  fn(new Request(`https://micromobility.sa${path}`, { method: "POST", headers, body: JSON.stringify(body) }));
+const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
+const future = (() => { const d = new Date(Date.now() + 5 * 864e5); return d.toISOString().slice(0, 10); })();
+const SESSION = { id: future, session_date: future, day: "Tuesday", status: "open", capacity: 40, bike_slots: '{"_time":"21:00 - 23:00"}', event_kind: null, ride_kind: null, needs_approval: false, addons: '["g1"]' };
+
+type Call = { fn: string; body: Record<string, unknown> };
+function db(over: Record<string, (body: Record<string, unknown>) => Response> = {}, session: Record<string, unknown> = SESSION) {
+  const calls: Call[] = [];
+  const f = vi.fn(async (url: string, init?: RequestInit) => {
+    const u = String(url);
+    // the session is read through list_sessions (lib/rides.ts readSessions, 2026-10-06), the table only without it
+    if (u.includes("/rest/v1/sessions") || u.includes("/rpc/list_sessions")) return json([session]);
+    if (u.includes("/rest/v1/queue_public")) return new Response(null, { status: 200, headers: { "content-range": "0-0/3" } });
+    if (u.includes("booking-confirm")) return json({ ok: false });
+    const fn = /\/rpc\/([a-z_]+)/.exec(u)?.[1] ?? "";
+    const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {};
+    calls.push({ fn, body });
+    if (over[fn]) return over[fn](body);
+    if (fn === "customer_profile") return json([{ id: "c1", name: "Sara Ali", height: null }]);
+    if (fn === "my_bookings") return json(calls.some((c) => c.fn === "customer_create_booking")
+      ? [{ id: "q1", session_id: future, session_date: future, status: "waiting", queue_num: 7, price: 75, paid: false, name: "Sara Ali", type_preference: "Road" }] : []);
+    if (fn === "customer_create_booking") return json([{ id: "q1", queue_num: 7, status: "waiting", waitlist_num: null, price: 75 }]);
+    if (fn === "community_member") return json(true);
+    return json(true);
+  });
+  vi.stubGlobal("fetch", f);
+  return calls;
+}
+
+describe("api/booking", () => {
+  beforeEach(() => { vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+  const body = { sessionId: future, riders: [{ name: "", height: "180", type: "Road" }], group: null, addons: [{ id: "g1", qty: 2 }], promo: null, waiver: true, payNow: false, wallet: false, seatOnly: false };
+
+  it("only takes this site's pages, signed in", async () => {
+    db();
+    expect((await post(book, "/api/booking", body, { ...HEADERS, origin: "https://evil.example" })).status).toBe(403);
+    expect((await post(book, "/api/booking", body, { origin: HEADERS.origin, "content-type": "application/json" })).status).toBe(401);
+    expect((await post(book, "/api/booking", { sessionId: "x;y" })).status).toBe(400);
+  });
+  it("books through customer_create_booking with the cookie's id and token, then the add-ons, the height and the tickets", async () => {
+    const calls = db();
+    const res = await post(book, "/api/booking", { ...body, p_id: "someone-else" });
+    const b = await res.json();
+    expect(res.status).toBe(200);
+    expect(b.ok).toBe(true);
+    expect(b.tickets).toHaveLength(1);
+    expect(b.tickets[0]).toMatchObject({ id: "q1", queueNum: 7, status: "waiting" });
+    const made = calls.find((c) => c.fn === "customer_create_booking")!;
+    expect(made.body).toMatchObject({ p_id: "c1", p_token: TOKEN });
+    const entries = made.body.p_entries as Record<string, unknown>[];
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ name: "Sara Ali", type_preference: "Road", size: "L", height: 180, waiver_version: "2026-11-v4" });
+    expect(entries[0]).not.toHaveProperty("price");
+    expect(calls.find((c) => c.fn === "customer_booking_update")!.body).toMatchObject({ p_entry_id: "q1", p_patch: { addons: '[{"id":"g1","qty":2}]' } });
+    expect(calls.find((c) => c.fn === "customer_addon_stock")!.body).toMatchObject({ p_items: [{ id: "g1", delta: -2 }] });
+    expect(calls.find((c) => c.fn === "customer_set_height")!.body).toMatchObject({ p_height: 180 });
+  });
+  it("says each refusal in the app's terms", async () => {
+    db({ customer_create_booking: () => json({ code: "P0001", message: "This ride is for community members only.", details: "MEMBERS_ONLY" }, 400) });
+    expect(await (await post(book, "/api/booking", body)).json()).toMatchObject({ ok: false, error: "members" });
+    db({ customer_create_booking: () => json({ code: "P0001", message: "FIX_FIRST" }, 400) });
+    expect((await (await post(book, "/api/booking", body)).json()).error).toBe("fix_first");
+    // the last place went to another device: the rider is asked, nothing was kept
+    const calls = db({ customer_create_booking: () => json({ code: "P0001", message: "PLACE_GONE" }, 400) });
+    expect((await (await post(book, "/api/booking", { ...body, seatOnly: true })).json()).error).toBe("place_gone");
+    expect(calls.find((c) => c.fn === "customer_create_booking")!.body.p_entries).toMatchObject([{ seat_only: true }]);
+    // a session staff marked full since the page was read: gone before anything is sent
+    const calls2 = db({}, { ...SESSION, status: "full" });
+    expect((await (await post(book, "/api/booking", { ...body, seatOnly: true })).json()).error).toBe("place_gone");
+    expect(calls2.some((c) => c.fn === "customer_create_booking")).toBe(false);
+    // a party all on their own bikes takes no place: booked on a full ride all the same (bug hunt 2026-11-18)
+    const SATFULL = { ...SESSION, status: "full", event_kind: "community", ride_kind: "saturday", needs_approval: false, open_to_all: true, addons: null };
+    const calls3 = db({}, SATFULL);
+    const own = await (await post(book, "/api/booking", { ...body, group: "beg", addons: [], seatOnly: true, riders: [{ name: "", height: "180", type: "Own" }] })).json();
+    expect(own.error).not.toBe("place_gone");
+    expect(calls3.some((c) => c.fn === "customer_create_booking")).toBe(true);
+    db({}, SATFULL);
+    expect((await (await post(book, "/api/booking", { ...body, group: "beg", addons: [], seatOnly: true })).json()).error).toBe("place_gone");
+    db({ customer_create_booking: () => json({ code: "P0001", message: "STALE_SESSION" }, 400) });
+    const stale = await post(book, "/api/booking", body);
+    expect(stale.status).toBe(401);
+    db({ customer_profile: () => json([]) });
+    expect((await (await post(book, "/api/booking", body)).json()).error).toBe("signin");
+    db({ my_bookings: () => json([{ id: "q0", session_id: future, status: "waiting" }]) });
+    expect((await (await post(book, "/api/booking", body)).json()).error).toBe("already");
+    db({}, { ...SESSION, status: "closed" });
+    expect((await (await post(book, "/api/booking", body)).json()).error).toBe("closed");
+    db({}, { ...SESSION, event_kind: "community", ride_kind: "saturday", needs_approval: true });
+    db({ community_member: () => json(false) }, { ...SESSION, event_kind: "community", ride_kind: "saturday", needs_approval: true });
+    expect((await (await post(book, "/api/booking", { ...body, group: "beg" })).json()).error).toBe("members");
+    db({}, { ...SESSION, status: "full", bike_slots: '{"_time":"21:00 - 23:00","_wl":{"m":"count","v":3}}' });
+    expect((await (await post(book, "/api/booking", body)).json()).error).toBe("waitlist_full");
+    // a my_bookings that failed is the database's, not a sign-in that ended (it answers no rows for a bad token)
+    db({ my_bookings: () => json({ message: "boom" }, 500) });
+    expect(await (await post(book, "/api/booking", body)).json()).toEqual({ ok: false, error: "generic" });
+    db({ customer_create_booking: () => json({ code: "P0001", message: "A referral code is not valid on a Carbon bike.", details: "REF_CODE_CARBON" }, 400) });
+    expect((await (await post(book, "/api/booking", body)).json()).error).toBe("ref_code_carbon");
+  });
+  it("puts no add-ons on a free ride and takes no stock for a waitlisted booking", async () => {
+    let calls = db({}, { ...SESSION, event_kind: "community", ride_kind: "saturday", needs_approval: true, open_to_all: true });
+    await post(book, "/api/booking", { ...body, group: "beg" });
+    expect(calls.some((c) => c.fn === "customer_booking_update")).toBe(false);
+    calls = db({ customer_create_booking: () => json([{ id: "q1", queue_num: 7, status: "waitlist", waitlist_num: 2, price: 75 }]) });
+    await post(book, "/api/booking", body);
+    expect(calls.some((c) => c.fn === "customer_booking_update")).toBe(true);
+    expect(calls.some((c) => c.fn === "customer_addon_stock")).toBe(false);
+  });
+  // staging: main's breakfast spot for members only (bike_slots._bfm, 2026-11-13), on this flow's confirmation ticket
+  it("tells a breakfast spot for members only on the confirmation's ticket to a member alone, asking only for such a ride", async () => {
+    const SAT = { ...SESSION, event_kind: "community", ride_kind: "saturday", needs_approval: false, open_to_all: true, breakfast_name: "Bean Box", addons: null };
+    const bfm = { ...SAT, bike_slots: '{"_time":"05:45 - 06:15","_bfm":1}' };
+    let calls = db({ community_member: () => json(false) }, bfm);
+    let b = await (await post(book, "/api/booking", { ...body, group: "beg", addons: [] })).json();
+    expect(b.ok).toBe(true);
+    expect(b.session).toMatchObject({ bfMembers: true, bfOff: true });
+    expect(calls.filter((c) => c.fn === "community_member")).toHaveLength(1);
+    db({}, bfm);
+    b = await (await post(book, "/api/booking", { ...body, group: "beg", addons: [] })).json();
+    expect(b.session.bfMembers).toBe(true);
+    expect(b.session).not.toHaveProperty("bfOff");
+    // a ride whose spot is for everyone asks nothing more
+    calls = db({ community_member: () => json(false) }, { ...SAT, bike_slots: '{"_time":"05:45 - 06:15"}' });
+    b = await (await post(book, "/api/booking", { ...body, group: "beg", addons: [] })).json();
+    expect(b.session).not.toHaveProperty("bfMembers");
+    expect(b.session).not.toHaveProperty("bfOff");
+    expect(calls.some((c) => c.fn === "community_member")).toBe(false);
+  });
+});
+
+describe("men only, women only or mixed (the owner, 2026-10-27)", () => {
+  beforeEach(() => { vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+  const pool: BookSession = { ...base, id: "2026-10-29-sw", kind: "swim", community: true, free: true, approval: true, gender: "female" };
+  const body = { sessionId: future, riders: [{ name: "", height: "180", type: "Road" }], group: null, addons: [], promo: null, waiver: true, payNow: false, wallet: false, seatOnly: false };
+
+  it("refuses a session for one gender to anyone else, and to an account with none on file", () => {
+    expect(genderRefused(pool, "female")).toBeNull();
+    expect(genderRefused(pool, "male")).toBe("women_only");
+    expect(genderRefused(pool, null)).toBe("women_only");
+    expect(genderRefused({ ...pool, gender: "male" }, "female")).toBe("men_only");
+    expect(genderRefused({ ...pool, gender: null }, "male")).toBeNull();
+    expect(genderRefused(base, undefined)).toBeNull(); // a session read from before the column: mixed
+  });
+  it("reads the database's GENDER_ONLY as the same refusal", () => {
+    expect(refusalOf({ code: "P0001", message: "GENDER_ONLY", details: "female" })).toBe("women_only");
+    expect(refusalOf({ code: "P0001", message: "GENDER_ONLY", details: "male" })).toBe("men_only");
+    expect(refusalOf({ code: "P0001", message: "SESSION_CLOSED", details: "male" })).toBe("closed");
+  });
+  it("checks it on the server before booking: the session read fresh, the account's gender from its profile", () => {
+    const row = { id: "2026-10-29-sw", session_date: "2026-10-29", day: "Thursday", status: "open", event_kind: "community", ride_kind: "swim", needs_approval: true, bike_slots: '{"_time":"18:00 - 19:30"}', gender_only: "female" };
+    const live = liveSession(row, "2026-10-27")!;
+    expect(live.gender).toBe("female");
+    expect(liveSession({ ...row, gender_only: null }, "2026-10-27")!.gender).toBeNull();
+    const input = { sessionId: live.id, riders: [r("")], group: null, addons: [], promo: null, waiver: true, payNow: false, wallet: false, seatOnly: false };
+    const her = accountFrom("Sara", { gender: "female" }, [], true, []);
+    expect(her.gender).toBe("female");
+    expect(checkBooking(input, live, her)).toMatchObject({ ok: true });
+    expect(checkBooking(input, live, accountFrom("Omar", { gender: "male" }, [], true, []))).toEqual({ ok: false, error: "women_only" });
+    expect(checkBooking(input, live, accountFrom("Sam", {}, [], true, []))).toEqual({ ok: false, error: "women_only" });
+  });
+  it("refuses an account of the other gender before anything is booked, the session read with the cookie's id and token", async () => {
+    const calls = db({ customer_profile: () => json([{ id: "c1", name: "Omar Ali", gender: "male" }]) }, { ...SESSION, gender_only: "female" });
+    expect(await (await post(book, "/api/booking", body)).json()).toEqual({ ok: false, error: "women_only" });
+    expect(calls.some((c) => c.fn === "customer_create_booking")).toBe(false);
+    const f = globalThis.fetch as unknown as { mock: { calls: [string, RequestInit | undefined][] } };
+    const read = f.mock.calls.find(([u]) => String(u).includes("/rpc/list_sessions"))!;
+    expect(String(read[0])).toContain(",gender_only,closed_types&id=eq.");
+    expect(JSON.parse(String(read[1]?.body))).toEqual({ p_id: "c1", p_token: TOKEN });
+  });
+  it("books a session for the account's own gender, and says the database's refusal in the same words", async () => {
+    let calls = db({ customer_profile: () => json([{ id: "c1", name: "Sara Ali", gender: "female" }]) }, { ...SESSION, gender_only: "female" });
+    expect((await (await post(book, "/api/booking", body)).json()).ok).toBe(true);
+    expect(calls.some((c) => c.fn === "customer_create_booking")).toBe(true);
+    calls = db({ customer_create_booking: () => json({ code: "P0001", message: "GENDER_ONLY", details: "male" }, 400) });
+    expect(await (await post(book, "/api/booking", body)).json()).toMatchObject({ ok: false, error: "men_only" });
+  });
+});
+
+describe("api/booking/promo and /profile", () => {
+  beforeEach(() => { vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+  it("looks a personal code up with the cookie's id and token", async () => {
+    const calls = db({ promo_lookup: () => json({ ok: true, code: "MINE", kind: "flat", value: 20, applies_to: null }) });
+    const b = await (await post(promoRoute, "/api/booking/promo", { code: "mine" })).json();
+    expect(b).toEqual({ ok: true, code: "MINE", kind: "flat", value: 20, applies_to: null, session_id: null, ride_kind: null });
+    expect(calls[0].body).toEqual({ p_code: "mine", p_id: "c1", p_token: TOKEN });
+    db({ promo_lookup: () => json({ ok: false, reason: "expired" }) });
+    expect(await (await post(promoRoute, "/api/booking/promo", { code: "old" })).json()).toEqual({ ok: false, reason: "expired" });
+    // the code's scope comes along; a lookup the server could not make is no verdict ("generic"), its meter full is "busy"
+    db({ promo_lookup: () => json({ ok: true, code: "S1", kind: "pct", value: 10, applies_to: null, session_id: "2026-11-12", ride_kind: "jcc" }) });
+    expect(await (await post(promoRoute, "/api/booking/promo", { code: "s1" })).json()).toMatchObject({ session_id: "2026-11-12", ride_kind: "jcc" });
+    db({ promo_lookup: () => json({ message: "boom" }, 500) });
+    const lost = await post(promoRoute, "/api/booking/promo", { code: "mine" });
+    expect(lost.status).toBe(502);
+    expect(await lost.json()).toEqual({ ok: false, reason: "generic" });
+    db({ promo_lookup: () => json({ ok: false, reason: "busy" }) });
+    const busy = await post(promoRoute, "/api/booking/promo", { code: "mine" });
+    expect(busy.status).toBe(429);
+    expect(await busy.json()).toEqual({ ok: false, reason: "busy" });
+  });
+  it("saves the two details through customer_set_birth_nat, a community member's through customer_fix_save", async () => {
+    let calls = db();
+    expect((await post(profileRoute, "/api/booking/profile", { birth: "1990-05-01", nationality: "Saudi Arabia" })).status).toBe(200);
+    expect(calls[0]).toEqual({ fn: "customer_set_birth_nat", body: { p_id: "c1", p_token: TOKEN, p_birth_date: "1990-05-01", p_nationality: "Saudi Arabia" } });
+    calls = db({ customer_fix_save: () => json([]) });
+    expect((await post(profileRoute, "/api/booking/profile", { birth: "1990-05-01", nationality: "Egypt", community: true })).status).toBe(200);
+    expect(calls[0].fn).toBe("customer_fix_save");
+    expect((await post(profileRoute, "/api/booking/profile", { birth: "2024-05-01", nationality: "Egypt" })).status).toBe(400);
+  });
+  it("checks only what the page asked, and keeps the other as the account holds it", async () => {
+    let calls = db({ customer_profile: () => json([{ id: "c1", name: "Sara Ali", birth_date: "1991-03-04", nationality: null }]) });
+    expect((await post(profileRoute, "/api/booking/profile", { birth: "", nationality: "Egypt", ask: ["nat"] })).status).toBe(200);
+    expect(calls.find((c) => c.fn === "customer_set_birth_nat")!.body).toMatchObject({ p_birth_date: "1991-03-04", p_nationality: "Egypt" });
+    calls = db({ customer_profile: () => json([{ id: "c1", name: "Sara Ali", birth_date: null, nationality: "Egypt" }]) });
+    expect((await post(profileRoute, "/api/booking/profile", { birth: "1990-05-01", nationality: "", ask: ["birth"] })).status).toBe(200);
+    expect(calls.find((c) => c.fn === "customer_set_birth_nat")!.body).toMatchObject({ p_birth_date: "1990-05-01", p_nationality: "Egypt" });
+    // the birth date is not checked when only the nationality is asked; it still is when it is
+    expect((await post(profileRoute, "/api/booking/profile", { birth: "2024-05-01", nationality: "", ask: ["birth"] })).status).toBe(400);
+    calls = db({ customer_profile: () => json({ message: "boom" }, 500) });
+    expect((await post(profileRoute, "/api/booking/profile", { nationality: "Egypt", ask: ["nat"] })).status).toBe(502);
+    expect(calls.some((c) => c.fn === "customer_set_birth_nat")).toBe(false);
+  });
+});
+
+describe("the waiver wording (the booking app's 2026-11-v4)", () => {
+  it("keeps every clause in English and Arabic, for the ride and the swim", async () => {
+    const { T } = await import("../../components/experiences/Booking.text");
+    expect(waiverVersionFor(base)).toBe("2026-11-v4");
+    for (const kind of ["bike", "swim"] as const) {
+      const en = T.en.waiver[kind].body;
+      for (const clause of [
+        "You cannot book any", "until you have read and agreed to this waiver", "entirely at my own risk", "I alone am responsible for myself, my safety",
+        "personal belongings", "To the fullest extent permitted by law", "MicroMobility, its staff and its partners are not responsible",
+        "including any injury, fracture, illness, loss, theft or damage", "however it is caused", "during the activity or in connection with it",
+        "I am also responsible for any damage I cause to other people or their property",
+      ]) expect(en).toContain(clause);
+      const ar = T.ar.waiver[kind].body;
+      for (const clause of [
+        "لا يمكنك حجز أي", "إلا بعد قراءة هذا الإقرار والموافقة عليه", "على مسؤوليتي الشخصية بالكامل", "وأتحمل وحدي المسؤولية عن نفسي وسلامتي",
+        "ممتلكاتي الشخصية", "وإلى أقصى حد يسمح به النظام", "لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية",
+        "أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف", "أيًّا كان سببه", "أثناء النشاط أو بسببه",
+        "وأنا مسؤول عن أي أضرار ألحقها بالآخرين أو بممتلكاتهم",
+      ]) expect(ar).toContain(clause);
+    }
+    expect(T.en.waiver.bike.body).toContain("I agree to wear a helmet");
+    expect(T.en.waiver.bike.body).toContain("any damage to the rented bike caused by misuse");
+    expect(T.ar.waiver.bike.body).toContain("وأتعهد بارتداء الخوذة");
+    expect(T.en.waiver.swim.body).toContain("I can swim unaided");
+    expect(T.en.waiver.swim.body).toContain("any medical condition that affects my ability to swim");
+    expect(T.en.waiver.swim.body).toContain("stay within the supervised area");
+    expect(T.ar.waiver.swim.body).toContain("قدرتي على السباحة دون مساعدة");
+    expect(T.ar.waiver.swim.body).toContain("ضمن المنطقة الخاضعة للإشراف");
+  });
+
+  it("says the words main's content/waivers.ts says for the version it stamps, the sentence for other people's bookings with them", async () => {
+    const { T } = await import("../../components/experiences/Booking.text");
+    const { waiverCopy } = await import("../../content/waivers");
+    const { makeL } = await import("../../i18n/tx");
+    for (const [mine, theirs] of [["bike", "ride"], ["swim", "swim"], ["activity", "activity"]] as const) {
+      for (const l of ["en", "ar"] as const) {
+        const c = waiverCopy(theirs, makeL(l, null));
+        expect(T[l].waiver[mine].body, `${l} ${mine}`).toBe(c.body);
+        expect(T[l].waiver[mine].agree, `${l} ${mine}`).toBe(c.agree);
+      }
+      expect(T.en.waiver[mine].body).toContain("When I book for other people, I accept this waiver on behalf of each of them as well as myself");
+    }
+  });
+
+  it("gives every other kind the activity waiver (activity-2026-11-v4), every clause in English and Arabic", async () => {
+    const { T } = await import("../../components/experiences/Booking.text");
+    for (const kind of ["workshop", "event"] as const) {
+      expect(needsWaiver({ kind })).toBe(true);
+      expect(waiverKind({ kind })).toBe("activity");
+      expect(waiverVersionFor({ kind })).toBe("activity-2026-11-v4");
+    }
+    // a kind this list does not know reads as a ride (the booking app's _kindHas): the ride's waiver
+    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("2026-11-v4");
+    // the Farm House Night's own waiver, and the Blood Donation event's for a donor and a visitor (the booking app's versions)
+    expect(waiverVersionFor({ kind: "farm" })).toBe("farm-2026-11-v1");
+    expect(waiverVersionFor({ kind: "yoga" })).toBe("activity-2026-11-v4");
+    expect(waiverVersionFor({ kind: "blood" })).toBe("blood-2026-11-v1");
+    expect(waiverVersionFor({ kind: "blood" }, true)).toBe("blood-2026-11-v2");
+    expect(waiverKind({ kind: "swim" })).toBe("swim");
+    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-11-v4");
+    for (const kind of ["jcc", "saturday", "petromin", "snd96"] as const) expect(waiverVersionFor({ kind })).toBe("2026-11-v4");
+    const en = T.en.waiver.activity, ar = T.ar.waiver.activity;
+    expect(en.title).toBe("Activity waiver");
+    expect(ar.title).toBe("إقرار المشاركة");
+    expect(en.agree).toBe(T.en.waiver.swim.agree);
+    expect(ar.agree).toBe(T.ar.waiver.swim.agree);
+    for (const clause of [
+      "You cannot book any activity with MicroMobility until you have read and agreed to this waiver.", "Every activity we run carries some risk.",
+      "I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings.",
+      "To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings",
+      "including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it.",
+      "I agree to follow the team’s and the venue’s instructions.",
+    ]) expect(en.body).toContain(clause);
+    for (const clause of [
+      "لا يمكنك حجز أي نشاط لدى مايكروموبيليتي إلا بعد قراءة هذا الإقرار والموافقة عليه.", "كل نشاط ننظّمه ينطوي على قدر من المخاطر",
+      "وأشارك فيه على مسؤوليتي الشخصية بالكامل، وأتحمل وحدي المسؤولية عن نفسي وسلامتي وممتلكاتي الشخصية.",
+      "وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية عن أي شيء يحدث لي أو لممتلكاتي",
+      "بما في ذلك أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف، أيًّا كان سببه، أثناء النشاط أو بسببه.",
+      "وأتعهد بالالتزام بتعليمات الفريق وإدارة الموقع.",
+    ]) expect(ar.body).toContain(clause);
+    expect(en.body).not.toMatch(/helmet|swim|bike/i);
+  });
+
+  it("is word for word the waiver the forced pop-up shows (content/waivers.ts), and stamps the same versions", async () => {
+    const { T } = await import("../../components/experiences/Booking.text");
+    const { WAIVER_VERSIONS, waiverCopy } = await import("../../content/waivers");
+    const en = (a: string) => a, ar = (_: string, b: string) => b;
+    for (const [kind, w] of [["bike", "ride"], ["swim", "swim"], ["activity", "activity"]] as const) {
+      expect(T.en.waiver[kind]).toEqual(waiverCopy(w, en as never));
+      expect(T.ar.waiver[kind]).toEqual(waiverCopy(w, ar as never));
+    }
+    expect([waiverVersionFor(base), waiverVersionFor({ kind: "swim" }), waiverVersionFor({ kind: "event" })]).toEqual([WAIVER_VERSIONS.ride, WAIVER_VERSIONS.swim, WAIVER_VERSIONS.activity]);
+  });
+});
