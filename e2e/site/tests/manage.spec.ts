@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
-// NEEDS THE BOOKING FLOW (components/experiences/BookingFlow.tsx, merged separately): a ticket drawn by the flow's own
+// A ticket drawn by the booking flow's own
 // confirmation changes its booking on the website as My Bookings' does (TicketManage.tsx; the user, 2026-11-19: "make sure all
 // customers can do everything they want in the booking app to do it on the main website"). The flow's account and booking
 // routes and the ticket's change routes are stubbed here, so nothing is booked, cancelled or changed anywhere; a real
@@ -31,21 +31,22 @@ test("the confirmation's ticket cancels with a reason and edits its party, on th
     lockers: { kind: "", offer: null, rentals: [] }, reasons: ["plans", "work", "other"].map((code) => ({ code })), holder: null, acctCap: 3,
   };
   const sent: Record<string, unknown[]> = { cancel: [], update: [] };
-  await page.route("**/api/booking/account", (r) => json(r, { ok: true, acct: ACCT }));
+  // the browser's own calls to the database (the funnel's counts, a code's lookup) never reach it from a test
+  await page.route(/supabase\.co|cloudflareinsights\.com|challenges\.cloudflare\.com/, (r) => r.abort());
+  for (const p of ["emergency", "sport", "birthday"]) await page.route(`**/api/account/${p}`, (r) => json(r, { signedIn: true, need: false, on: false, two: true }));
+  for (const p of ["pending-waiver", "pending-share", "pending-race-reg", "pending-club", "pending-rating"]) await page.route(`**/api/account/${p}*`, (r) => json(r, { signedIn: true, pending: null }));
+  await page.route("**/api/booking/account", (r) => json(r, { ok: true, signedIn: true, acct: ACCT }));
   await page.route("**/api/booking", (r) => (r.request().method() === "POST" ? json(r, { ok: true, tickets, session, booked: tickets.map((t) => ({ id: t.id, status: "waiting" })), addonsSaved: true }) : r.continue()));
   await page.route("**/api/booking/manage", (r) => json(r, ctx));
   await page.route("**/api/booking/cancel", (r) => { sent.cancel.push(r.request().postDataJSON()); return json(r, { ok: true, cancelled: 2 }); });
   await page.route("**/api/booking/update", (r) => { sent.update.push(r.request().postDataJSON()); return json(r, { ok: true, added: 0, waitlisted: false }); });
   await page.goto(`/experiences?ev=jcc&session=${id}`);
-  // the flow to its confirmation: Continue through its steps, the waiver's tick, then its book button
-  for (let i = 0; i < 6 && !(await page.locator("article.tk-card").count()); i++) {
-    const tick = page.getByRole("checkbox").last();
-    if (await tick.isVisible().catch(() => false)) await tick.check().catch(() => {});
-    const go = page.getByRole("button", { name: /^(continue|next|book|confirm)/i }).last();
-    if (!(await go.isVisible().catch(() => false))) break;
-    await go.click().catch(() => {});
-    await page.waitForTimeout(400);
-  }
+  // the flow to its confirmation: the riders step (the account's height already there), a bike type, the review, the
+  // waiver's tick, Book
+  await page.locator('.bk-pill[data-ty="Hybrid"]').click();
+  await page.locator(".bk-foot .bk-btn").click();
+  await page.locator("#bk-wv-cb").check();
+  await page.locator(".bk-foot .bk-btn.grow").click();
   const card = page.locator("article.tk-card").first();
   test.skip(!(await card.isVisible().catch(() => false)), "the booking flow did not reach a confirmation here");
   // Edit: the party as it stands, names read-only, a height changed
