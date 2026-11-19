@@ -140,16 +140,13 @@ for (const lang of ["en", "ar"] as const) {
   });
 }
 
-test("the booking app's hand-overs open the site's own pages, coming back where they started", async ({ page }) => {
+test("the sign-in's own Create account and the forgot page come back where they started; no second list under the form", async ({ page }) => {
   await stub(page);
   await page.goto("/live?lang=en", { waitUntil: "networkidle" });
-  const links = page.locator(".ac-notes a");
-  await expect(links).toHaveCount(2);
-  await expect(links.nth(0)).toHaveAttribute("href", "/signup?next=%2Flive&lang=en");
-  await expect(links.nth(1)).toHaveAttribute("href", "/forgot-password?next=%2Flive&lang=en");
+  await expect(page.locator(".ac-notes")).toHaveCount(0);
   await expect(page.locator("form.ac-form .su-switch a")).toHaveAttribute("href", "/signup?next=%2Flive");
-  await links.nth(1).click();
-  await page.waitForURL(/\/forgot-password\?/);
+  // the booking app's hand-over for a forgotten password (HandoffLink, still on pages that pass one) lands here
+  await page.goto("/forgot-password?next=%2Flive&lang=en");
   await expect(page.locator("h1")).toHaveText("Reset your password");
   await expect(page.getByRole("link", { name: "Back to sign in" })).toHaveAttribute("href", "/live");
   expect(await axe(page)).toEqual([]);
