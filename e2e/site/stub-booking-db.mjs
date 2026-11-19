@@ -34,7 +34,7 @@ function fresh() {
   return {
     profile: { id: "c-test", name: "Sara Khalid", email: "sara@example.com", phone: "+966500000001", height: 168, type_preference: "Hybrid", birth_date: "1994-03-02",
       country: "Saudi Arabia", city: "Jeddah", nationality: "Saudi Arabia", gender: "female", hidden_types: null, default_pay: null },
-    member: true, fix: [], refuse: null, full: [], fullTypes: [],
+    member: true, fix: [], refuse: null, full: [], fullTypes: [], lockers: [],
     bookings: [],
     writes: [],
     seq: 1,
@@ -56,9 +56,17 @@ const READS = {
   customer_fix_fields: () => st.fix,
   customer_emergency: () => [{ emergency_name: "Ali Saleh", emergency_phone: "+966500000002", emergency_relation: "sibling" }],
   customer_sport: () => [{ competes: false, federations: [], other: null, asked: true }],
-  customer_lockers: () => [],
   customer_vl_teams: () => [],
   customer_blood_rewards: () => [],
+  // lockers on the circuit night (the review's picker, components/booking/LockerPick.tsx): 6-8 PM, 9-11 PM or both
+  customer_locker_offer: (a) => (a.p_session === "t-jcc"
+    ? { kind: "jcc", one: 10, both: 15, left: { early: 16, late: 15, both: 15, pm: 15 }, ended: { early: false, late: false, both: false, pm: false } } : { kind: "" }),
+  locker_board: () => ({
+    day: day(3), kind: "jcc", one: 10, both: 15,
+    units: Array.from({ length: 18 }, (_, i) => ({ code: String(i + 1), out: i === 8 })).filter((u) => u.code !== "14"),
+    taken: { e: ["3"], l: ["3"] },
+  }),
+  customer_lockers: () => st.lockers,
   promo_lookup: (a) => (String(a.p_code).toUpperCase() === "SAVE10" ? { ok: true, code: "SAVE10", kind: "pct", value: 10, applies_to: null } : { ok: false, reason: "invalid" }),
   reserve_funnel_add: () => null,
   list_sessions: (_a, q) => {
@@ -95,6 +103,15 @@ const WRITES = {
     return { status: 200, body: true };
   },
   customer_addon_stock: () => ({ status: 200, body: true }),
+  customer_locker_reserve: (a) => {
+    const codes = a.p_codes || a.p_booking_ids.map((_, i) => String(12 + i));
+    const lockers = a.p_booking_ids.map((id, i) => {
+      const b = st.bookings.find((x) => x.id === id);
+      st.lockers.push({ id: `lk-${st.seq++}`, booking_id: id, day: b ? b.session_date : day(3), period: a.p_period, code: codes[i], name: b ? b.name : "", status: "reserved", price: a.p_period === "both" ? 15 : 10, on_bill: true, pay: null, paid: false });
+      return { booking_id: id, code: codes[i] };
+    });
+    return { status: 200, body: { ok: true, lockers, rows: [] } };
+  },
   customer_set_height: (a) => { st.profile.height = a.p_height; return { status: 200, body: true }; },
   customer_set_birth_nat: (a) => { st.profile.birth_date = a.p_birth_date; st.profile.nationality = a.p_nationality; return { status: 200, body: true }; },
 };

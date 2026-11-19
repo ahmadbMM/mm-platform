@@ -76,6 +76,28 @@ for (const lang of ["en", "ar"] as const) {
   });
 }
 
+test("a locker for the evening on the review: a time, a door, its fee in the total, reserved on the booking", async ({ page }) => {
+  await scene(page);
+  await page.goto("/experiences?ev=jcc&session=t-jcc&lang=en");
+  await page.locator('.bk-pill[data-ty="Hybrid"]').click();
+  await page.locator(".bk-foot .bk-btn").click();
+  const lk = page.locator(".bk-card.bk-lk");
+  await expect(lk).toBeVisible();
+  await shot(page, "locker");
+  await lk.getByRole("radio").first().click();
+  await page.locator("#bk-wv-cb").check();
+  // a time with no door yet: Book waits
+  const book = page.locator(".bk-foot .bk-btn.grow");
+  if (await book.isDisabled()) await lk.locator("button:not([disabled])").filter({ hasText: /^\d+$/ }).first().click();
+  await expect(book).toBeEnabled();
+  await expect(page.locator(".bk-sum-tot")).not.toContainText("57.50");
+  await book.click();
+  await expect(page.locator("#bk-done-h")).toBeVisible();
+  const st = await state(page);
+  expect(st.writes.map((w) => w.fn)).toEqual(["customer_create_booking", "customer_locker_reserve"]);
+  expect(st.writes[1].a).toMatchObject({ p_booking_ids: [st.bookings[0].id] });
+});
+
 test("a party of two on the circuit: each rider named, and the account's cap on the party", async ({ page }) => {
   await scene(page);
   await page.goto("/experiences?ev=jcc&session=t-jcc&lang=en");
