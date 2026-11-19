@@ -4,12 +4,13 @@
 import type { Session } from "./account-core";
 import {
   EVENT_SEAT_MAX, JCC_ACCOUNT_CAP, addonCap, codeOne, genderRefused, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
-  pgDue, promoRows, refusalOf, rgOk, waiverKind, type BookAccount, type BookSession, type PgField, type Refusal, type Rider, type RideGroup,
+  partyRide, pgDue, promoRows, refusalOf, rgOk, unnamedPlace, waiverKind, type AddonItem, type BookAccount, type BookSession, type PgField, type Refusal, type Rider, type RideGroup,
 } from "./booking";
+import { typeOffered } from "./bike-kinds";
 import { cleanName } from "./rpc-client";
 import { bizOf } from "./biz";
 import { loadSiteContent } from "./site";
-import { addonIds, placesTaken, rideKind, SESSION_COLS_GENDER, sessionRows, waitlistCap } from "./rides";
+import { addonIds, placesTaken, rideKind, SESSION_COLS_CLOSED, SESSION_COLS_GENDER, sessionRows, waitlistCap } from "./rides";
 import { sessionGender } from "./session-gender";
 
 export type RpcAnswer<T> = { status: number; data: T | null; error: { code?: string; message?: string; details?: string } | null };
@@ -146,7 +147,7 @@ export function readInput(b: unknown): BookInput | null {
 }
 
 /** The session the booking is for, read fresh (never the page's cached copy). */
-export type LiveSession = Pick<BookSession, "id" | "date" | "kind" | "community" | "members" | "free" | "approval" | "seat" | "capacity" | "wlCap" | "addons" | "gender"> & { full: boolean; open: boolean; day: string };
+export type LiveSession = Pick<BookSession, "id" | "date" | "kind" | "community" | "members" | "free" | "approval" | "seat" | "capacity" | "wlCap" | "addons" | "gender" | "closedTypes"> & { full: boolean; open: boolean; day: string };
 export function liveSession(r: Row, today: string): LiveSession | null {
   if (!ID.test(S(r.id)) || !/^\d{4}-\d{2}-\d{2}$/.test(S(r.session_date))) return null;
   const kind = rideKind(r);
@@ -162,6 +163,8 @@ export function liveSession(r: Row, today: string): LiveSession | null {
     capacity: places, wlCap: waitlistCap(r.bike_slots, places), addons: addonIds(r.addons),
     full: r.status === "full", open: (r.status === "open" || r.status === "full") && S(r.session_date) >= today && kind !== "petromin", day: S(r.day),
     gender: sessionGender(r.gender_only), // men only, women only or mixed (null; the owner, 2026-10-27)
+    // the bike types staff closed on it (2026-11-03): read fresh, so a type closed since the page was drawn is refused here
+    closedTypes: Array.isArray(r.closed_types) ? r.closed_types.filter((x): x is string => typeof x === "string") : [],
   };
 }
 
@@ -178,9 +181,9 @@ export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAc
   if ((acct.live[s.id] ?? 0) > 0) return { ok: false, error: "already" };
   const booked = acct.live[s.id] ?? 0;
   let riders = input.riders;
-  // one place per member: never a party, but for a ticketed event's seats (bug hunt 2026-11-11: up to its seat cap, as the
-  // booking app and the database's _group_ride_cap allow)
-  if (s.community && s.kind !== "event") riders = riders.slice(0, 1);
+  // one place per member: never a party, but for a party ride (_partyRide: a ticketed event's seats, the Farm House Night's
+  // family, a Petromin night's guest), up to its cap, as the booking app and the database's _group_ride_cap allow
+  if (s.community && !partyRide(s)) riders = riders.slice(0, 1);
   if (riders.length > maxRiders(s, booked, cap, seatMax)) return { ok: false, error: "cap" };
   if (needsBike(s)) {
     if (hasRideGroups(s) && !rgOk(input.group)) return { ok: false, error: "invalid" };
@@ -188,13 +191,15 @@ export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAc
       if (!heightOk(r.height)) return { ok: false, error: "invalid" };
       if (!r.type) return { ok: false, error: "pick_type" };
       if (r.type === "Own" && !ownOffered(s)) return { ok: false, error: "pick_type" };
+      // a type staff closed on this date (sessions.closed_types), as _type_closed_guard refuses it
+      if (r.type !== "Own" && !typeOffered({ noCarbon: noCarbon(s), closedTypes: s.closedTypes }, r.type) && !(noCarbon(s) && r.type === "Road Carbon")) return { ok: false, error: "type_closed" };
       if (riders.length > 1 && !(r.name || (i === 0 ? acct.name : ""))) return { ok: false, error: "invalid" };
     }
     // carbon is off every community ride but Petromin (the app turns a carried-over pick into Road)
     if (noCarbon(s)) riders = riders.map((r) => (r.type === "Road Carbon" ? { ...r, type: "Road" } : r));
   }
   // a party's other places carry their own names, on a ride or at an event alike
-  if (!needsBike(s) && riders.length > 1 && riders.some((r, i) => !(r.name || (i === 0 ? acct.name : "")))) return { ok: false, error: "invalid" };
+  if (!needsBike(s) && unnamedPlace(riders, acct.name) >= 0) return { ok: false, error: "invalid" };
   if (needsWaiver(s) && !input.waiver) return { ok: false, error: "waiver" };
   return { ok: true, riders };
 }
@@ -298,7 +303,7 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
       // read for the account (list_sessions with its token): a session for men only or women only is the
       // database's to hand out, to that gender alone or an account holding a booking on it (2026-10-27)
       sessionRows(fetchImpl, url, key, `id=eq.${input.sessionId}`, "id,session_date,day,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons", Date.now(),
-        { optional: [SESSION_COLS_GENDER], account: acct }),
+        { optional: [SESSION_COLS_GENDER, SESSION_COLS_CLOSED], account: acct }),
     ]);
     if (!Array.isArray(rows.data)) {
       // my_bookings answers no rows (never an error) for a token it no longer takes, and the route checked the token
@@ -334,7 +339,7 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
   }
   const entries = bookingEntries(input, riders, s, a, waiverVersionFor(s));
   const made = await rpcCall<Booked[]>("customer_create_booking", { ...args, p_entries: entries }, fetchImpl);
-  if (made.error) return { ok: false, error: made.status === 0 ? "generic" : refusalOf(made.error) };
+  if (made.error) return { ok: false, error: made.status === 0 ? "generic" : refusalOf(made.error), ...(made.error.details ? { detail: String(made.error.details).slice(0, 80) } : {}) };
   const booked = Array.isArray(made.data) ? made.data : [];
   if (!booked.length) return { ok: false, error: "generic" };
 
@@ -365,3 +370,24 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
 /** Whether a booking on this ride is paid online (rentals 20261110150000 pay_booking_start): a paid ride that is
  *  not a race (the organiser's money, by transfer) nor a Petromin night (the company's bill or the desk). */
 export const payableOnline = (s: Pick<LiveSession, "free" | "kind">) => !s.free && !["vlap", "arena", "petromin"].includes(s.kind);
+
+/** The add-on items the listed sessions sell, read with the public key (the columns the booking app's customers read:
+ *  never what the shop pays). Staging's page reads them the same way. */
+export async function bookingAddonItems(ids: string[], fetchImpl: typeof fetch = fetch): Promise<AddonItem[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const clean = [...new Set(ids)].filter((x) => /^[A-Za-z0-9_-]{1,64}$/.test(x)).slice(0, 60);
+  if (!url || !key || !clean.length) return [];
+  try {
+    const res = await fetchImpl(`${url}/rest/v1/inventory?select=id,name,brand,photo,price,qty,category,nutrition,flavour,volume_ml&id=in.(${clean.join(",")})`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout(2500),
+    });
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Row[];
+    return rows.filter((r) => typeof r.id === "string").map((r) => ({
+      id: r.id as string, name: S(r.name) || (r.id as string), brand: S(r.brand), photo: /^https:\/\//.test(S(r.photo)) ? S(r.photo) : "",
+      price: Number(r.price) || 0, qty: Number(r.qty) || 0, category: S(r.category) || "Other", nutrition: !!(r.nutrition || r.flavour || r.volume_ml),
+    }));
+  } catch {
+    return [];
+  }
+}

@@ -480,3 +480,40 @@ export function refusalOf(err: { code?: string; message?: string; details?: stri
   if (/BAD_INPUT|22023/.test(m)) return "invalid";
   return "generic";
 }
+
+// ── The party (staging's lib/sx-b6.ts, the 2026-11-18 build's EF09, EM06-B, EM07-B) ───────────────────────────────────
+/** A rider of the party: a child (5 and over, the birth-date rule's floor) rides the Kids bike where the ride offers it. */
+export type PartyRider = Rider & { child?: boolean };
+export function partyOf(riders: PartyRider[]): { adults: number; kids: number } {
+  const kids = riders.filter((r) => r.child).length;
+  return { adults: Math.max(1, riders.length - kids), kids };
+}
+/** The party set from the stepper: adults first (rider 1 is the account holder), then the children, each one kept as it
+ *  was answered; never more than `cap` in all and never fewer than one adult. A new child starts on the Kids bike when
+ *  `kidsType` says the ride has one. */
+export function setParty(riders: PartyRider[], adults: number, kids: number, cap: number, kidsType: string | null): PartyRider[] {
+  const a = Math.max(1, Math.min(cap, Math.floor(adults)));
+  const k = Math.max(0, Math.min(cap - a, Math.floor(kids)));
+  const grown = riders.filter((r) => !r.child), small = riders.filter((r) => r.child);
+  const blank = (child: boolean): PartyRider => ({ name: "", height: "", type: child && kidsType ? (kidsType as Rider["type"]) : "", ...(child ? { child: true } : {}) });
+  const out: PartyRider[] = [];
+  for (let i = 0; i < a; i++) out.push(grown[i] ?? blank(false));
+  for (let i = 0; i < k; i++) out.push(small[i] ?? blank(true));
+  return out;
+}
+/** A rider row's summary while folded (EM07-B): which rider, adult or child, the bike picked. */
+export function riderDone(r: Rider, needsName: boolean): boolean {
+  return !!r.type && (!needsName || !!r.name.trim()) && (r.type === "Own" || /^\d{2,3}$/.test(r.height));
+}
+/** Whether a list of dates has one here that can be chosen (not one that opens later, goes to another page, or is fully
+ *  booked). */
+export function datesLive(sessions: { opens?: string | null; satLink?: string | null; handoff?: string | null; fbk?: boolean }[]): boolean {
+  return sessions.some((s) => !s.opens && !s.satLink && !s.handoff && !s.fbk);
+}
+/** A party whose places carry their own names (an event's seats, the Farm House Night's family; the booking app's
+ *  regRiderNames): the first place may stand for the account holder, every other needs a name. The first one missing, or
+ *  -1 when all are given. */
+export function unnamedPlace(riders: Pick<Rider, "name">[], acctName: string): number {
+  if (riders.length < 2) return -1;
+  return riders.findIndex((r, i) => !(r.name.trim() || (i === 0 ? acctName : "")).trim());
+}
