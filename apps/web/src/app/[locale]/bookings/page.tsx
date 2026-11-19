@@ -275,7 +275,7 @@ export default async function BookingsPage({ params, searchParams }: { params: P
       </header>
 
       <section className="ac-sec bk-sec" aria-labelledby="bk-up-h">
-        <div className="ac-sec-head"><h2 id="bk-up-h">{w.upcoming}</h2><a href={book}>{S(c.home.manage)} <ArrowIcon size={15} /></a></div>
+        <div className="ac-sec-head"><h2 id="bk-up-h">{w.upcoming}</h2></div>
         {/* today's code large on the page: the phone stays awake while it shows (the booking app's _wakeWant, 2026-11-10) */}
         {groups.some((g) => todayCode(g.rows, sessions.get(g.sessionId), today)) && <TicketWake />}
         {items.length === 0 && past.length === 0 ? (unread ? failed : (

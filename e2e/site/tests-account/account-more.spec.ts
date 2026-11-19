@@ -188,7 +188,7 @@ test("a company challenge's join link keeps its code through the sign-in, joins 
   await expect.poll(async () => page.evaluate(() => localStorage.getItem("mm_co_code")).catch(() => "reloading")).toBeNull();
 });
 
-test("details the account owes open as a pop-up it cannot skip, whose Add details opens the booking app signed in", async ({ page }) => {
+test("details the account owes open as a pop-up it cannot skip, whose Add details opens the owed detail's own page here, where it stays away", async ({ page }) => {
   await signIn(page, "en", { owes: true });
   await page.goto("/account/riding");
   const gate = page.locator(".fx-gate[role=dialog]");
@@ -200,12 +200,18 @@ test("details the account owes open as a pop-up it cannot skip, whose Add detail
   await expect(gate).toBeVisible();
   expect(await page.evaluate(() => !!document.querySelector("main")?.closest("[inert]"))).toBe(true);
   const go = gate.getByRole("link", { name: "Add details" });
-  await expect(go).toHaveAttribute("href", "/api/account/app-signin?lang=en");
-  // Add details: the booking app, signed in by a one-time code (followed here only as far as the address it sends to)
+  await expect(go).toHaveAttribute("href", "/account/personal"); // birth_date first: Personal details on this site
+  await expect(gate.getByRole("button", { name: "Log out" })).toBeVisible();
+  // on the owed detail's own page the rider puts it right: no pop-up there
+  await page.goto("/account/personal");
+  await page.waitForTimeout(2000);
+  await expect(page.locator(".fx-gate")).toHaveCount(0);
+  await expect(page.locator("main")).not.toHaveAttribute("inert", "");
+  // a password the account lacks, or a key this site does not know, still goes to the booking app, signed in by a one-time
+  // code (followed here only as far as the address it sends to)
   const r = await page.request.get("/api/account/app-signin?lang=en", { maxRedirects: 0 });
   expect(r.status()).toBe(303);
   expect(r.headers().location).toBe("https://experiences.micromobility.sa/?lang=en&signin=0123456789abcdef0123456789abcdef0123456789abcdef");
-  await expect(gate.getByRole("button", { name: "Log out" })).toBeVisible();
   // nothing owed: no pop-up
   await signIn(page);
   await page.evaluate(() => sessionStorage.clear());

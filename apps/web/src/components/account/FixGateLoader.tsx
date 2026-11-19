@@ -6,35 +6,39 @@ import { usePathname } from "next/navigation";
 import TestimonialAskLoader from "./TestimonialAskLoader";
 import { fixGateWords } from "./FixGate.words";
 import { BUSY, BUSY_RETRY_MS, FIX_QUIET, isQuiet, signOut } from "./quiet";
+import { fixPageFor, onFixPage } from "@/lib/fix-pages";
 
 // Details an account owes always open as a pop-up the rider cannot skip (the booking app's 3ebaf706, the user 2026-11-10:
 // "any details or info requested from an account show it as an unskippable pop up, and when showing an error add a button
 // that directs to the missing info"): what staff asked the rider to correct, and what the server asks for itself
 // (customer_fix_fields through /api/account/pending-fix). The booking app's check-up asks every one of them, so the
 // pop-up is the app's own for an ask a page has no box for (its _fixOldHtml): Account check-up, A few details for your
-// account, Add details - the booking app signed in (/api/account/app-signin), where the check-up opens at once - and Log
-// out, the only other way off. No close, no backdrop, no Escape; the rest of the page is inert while it is up.
+// account, Add details - the first owed detail's own page of My Account on this site (lib/fix-pages.ts), or, for a password
+// an account lacks or a key this site does not know, the booking app signed in (/api/account/app-signin), where the
+// check-up opens at once - and Log out, the only other way off. On an owed detail's own page it stays away, so the rider
+// can put it right there; the next page asks again. No close, no backdrop, no Escape; the rest of the page is inert while it is up.
 // It comes once no other pop-up waits (RatingGateLoader mounts it once no ride waits to be rated); nothing owed is kept
 // ten minutes in this tab (quiet.ts), and with nothing owed the one-time ask about an old comment may follow.
 const QUIET_MS = 10 * 60_000;
 
-async function check(): Promise<number | typeof BUSY | null> {
-  if (isQuiet(FIX_QUIET)) return 0;
+async function check(): Promise<string[] | typeof BUSY | null> {
+  if (isQuiet(FIX_QUIET)) return [];
   try {
     const r = await fetch("/api/account/pending-fix", { cache: "no-store", credentials: "same-origin" });
     if (r.status === 429) return BUSY;
     if (!r.ok) return null;
-    const b = (await r.json()) as { signedIn?: boolean; owed?: number };
-    if (!b.signedIn) return 0;
-    const n = Number(b.owed) || 0;
+    const b = (await r.json()) as { signedIn?: boolean; owed?: number; asks?: unknown };
+    if (!b.signedIn) return [];
+    const asks = Array.isArray(b.asks) ? b.asks.filter((k): k is string => typeof k === "string") : [];
+    const n = asks.length || Number(b.owed) || 0;
     try { if (!n) sessionStorage.setItem(FIX_QUIET, String(Date.now() + QUIET_MS)); else sessionStorage.removeItem(FIX_QUIET); } catch { /* storage off */ }
-    return n;
+    return n && !asks.length ? ["?"] : asks;
   } catch { return null; } // offline: the next page asks again
 }
 
 export default function FixGateLoader({ locale }: { locale: string }) {
   const path = usePathname();
-  const [owed, setOwed] = useState<number | null>(null);
+  const [owed, setOwed] = useState<string[] | null>(null);
   const [retry, setRetry] = useState(0);
   useEffect(() => {
     let live = true, wait: ReturnType<typeof setTimeout> | undefined;
@@ -46,10 +50,12 @@ export default function FixGateLoader({ locale }: { locale: string }) {
     return () => { live = false; clearTimeout(wait); };
   }, [path, retry]);
   if (owed === null) return null;
-  return owed > 0 ? <FixGate locale={locale} /> : <TestimonialAskLoader locale={locale} />;
+  if (!owed.length) return <TestimonialAskLoader locale={locale} />;
+  if (onFixPage(path ?? "", owed)) return null;
+  return <FixGate locale={locale} to={fixPageFor(owed)} />;
 }
 
-function FixGate({ locale }: { locale: string }) {
+function FixGate({ locale, to }: { locale: string; to: string | null }) {
   const w = fixGateWords(locale);
   const box = useRef<HTMLDivElement>(null);
   const [out, setOut] = useState(false);
@@ -76,7 +82,7 @@ function FixGate({ locale }: { locale: string }) {
           {w.kicker}
         </p>
         <h2 id="fx-gate-h" className="rg-title">{w.title}</h2>
-        <a className="rr-send fx-gate-go" href={`/api/account/app-signin?lang=${encodeURIComponent(locale)}`}>{w.add}</a>
+        <a className="rr-send fx-gate-go" href={to ?? `/api/account/app-signin?lang=${encodeURIComponent(locale)}`}>{w.add}</a>
         <button type="button" className="rg-out" onClick={() => { setOut(true); signOut(); }} disabled={out}>{w.logOut}</button>
       </div>
     </div>

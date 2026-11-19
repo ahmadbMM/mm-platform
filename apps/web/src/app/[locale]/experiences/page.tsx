@@ -40,6 +40,7 @@ import { ArrowIcon } from "@/components/site/Icons";
 import { kindThemeWords } from "@/components/experiences/KindTheme.words";
 import { kindMarks, sunriseHhmm } from "@/lib/kind-theme";
 import { mfAt } from "@/lib/members-first";
+import { FIX_PAGES } from "@/lib/fix-pages";
 import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 import { remindable, remindAt, remindWhen } from "@/lib/open-remind";
 import { remindWords } from "@/components/site/Remind.words";
@@ -164,15 +165,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 // step (Victory Lap, Arena Heros), the Blood Donation event's donor step, and the Petromin nights (micromobility.sa/petromin
 // and the booking app's Petromin Days).
 const HERE = new Set<RideKind>(["jcc", "saturday", "swim", "workshop", "snd96", "event", "yoga", "farm"]);
-// Each detail staff may ask for before a booking (customer_fix_fields, the database's FIX_FIRST), by the page of My Account
-// that holds it (lib/account-menu.ts): the booking steps' pop-up sends the rider there instead of to the booking app.
-const FIX_PAGES: Record<string, string> = {
-  name: "/account/personal", birth_date: "/account/personal", nationality: "/account/personal", gender: "/account/personal", photo: "/account/personal",
-  email: "/account/contact", phone: "/account/contact", whatsapp: "/account/contact",
-  country: "/account/residence", city: "/account/residence",
-  emergency: "/account/emergency", emergency_name: "/account/emergency", emergency_phone: "/account/emergency", emergency_relation: "/account/emergency",
-  height: "/account/riding", type_preference: "/account/riding", password: "/account/password",
-};
 const ID = (v: string | string[] | undefined) => (typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : null);
 
 export default async function ExperiencesPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams?: Promise<Record<string, string | string[] | undefined>> }) {

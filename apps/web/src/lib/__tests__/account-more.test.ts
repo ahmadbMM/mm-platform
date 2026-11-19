@@ -402,9 +402,9 @@ describe("details the account owes (the booking app's 3ebaf706)", () => {
   const req = (path: string, signedIn = true) => new Request(`https://micromobility.sa${path}`, { headers: signedIn ? { cookie: "mm_acct=c1~a1b2c3d4e5f6a7b8c9d0" } : {} });
   it("are counted by /api/account/pending-fix from customer_fix_fields; none for a database without it", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => json(["birth_date", "whatsapp", "birth_date", "bad key!"])));
-    expect(await (await pendingFixGet(req("/api/account/pending-fix"))).json()).toEqual({ signedIn: true, owed: 2 });
+    expect(await (await pendingFixGet(req("/api/account/pending-fix"))).json()).toEqual({ signedIn: true, owed: 2, asks: ["birth_date", "whatsapp"] });
     vi.stubGlobal("fetch", vi.fn(async () => ABSENT()));
-    expect(await (await pendingFixGet(req("/api/account/pending-fix"))).json()).toEqual({ signedIn: true, owed: 0 });
+    expect(await (await pendingFixGet(req("/api/account/pending-fix"))).json()).toEqual({ signedIn: true, owed: 0, asks: [] });
     expect(await (await pendingFixGet(req("/api/account/pending-fix", false))).json()).toEqual({ signedIn: false });
   });
   it("Add details opens the booking app staff set, signed in by a one-time code, in the visitor's language", async () => {
@@ -414,5 +414,22 @@ describe("details the account owes (the booking app's 3ebaf706)", () => {
     expect(r.headers.get("location")).toBe(`https://experiences.micromobility.sa/?lang=ar&signin=${"ab".repeat(24)}`);
     const out = await appSigninGet(req("/api/account/app-signin?lang=xx", false));
     expect(out.headers.get("location")).toBe("https://experiences.micromobility.sa/");
+  });
+});
+
+describe("where the check-up's Add details goes (lib/fix-pages.ts)", () => {
+  it("opens the first owed detail's own page here, and the booking app for a password or a key this site does not know", async () => {
+    const { fixPageFor, onFixPage } = await import("../fix-pages");
+    expect(fixPageFor(["nationality"])).toBe("/account/personal");
+    expect(fixPageFor(["whatsapp", "birth_date"])).toBe("/account/contact");
+    expect(fixPageFor(["instagram"])).toBe("/account/about");
+    expect(fixPageFor(["sport"])).toBe("/account/sport");
+    expect(fixPageFor(["nationality", "password"])).toBeNull();
+    expect(fixPageFor(["tag_saturday"])).toBeNull();
+    expect(fixPageFor([])).toBeNull();
+    expect(onFixPage("/account/personal", ["nationality"])).toBe(true);
+    expect(onFixPage("/account/personal/", ["birth_date", "whatsapp"])).toBe(true);
+    expect(onFixPage("/bookings", ["nationality"])).toBe(false);
+    expect(onFixPage("/account/password", ["password"])).toBe(false);
   });
 });
