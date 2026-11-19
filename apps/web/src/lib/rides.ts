@@ -88,6 +88,11 @@ export type RideSession = {
   /** A ride staff approve: its own places (sessions.spots, the booking app's spotsLeft cap before capacity). Only a read
    *  that asks for it has it (SESSION_COLS_SPOTS). */
   spots?: number | null;
+  /** The add-ons the session sells (sessions.addons, inventory ids; the booking wizard's review, lib/booking.ts). Only a read
+   *  that asks for it has it (SESSION_COLS_ADDONS). */
+  addons?: string[];
+  /** The waitlist's cap in riders (bike_slots._wl, the booking app's waitlistCap), null for none. */
+  wlCap?: number | null;
   /** Members book first (sessions.public_at, rentals 20261118210800; lib/members-first.ts): until this time (ISO) only
    *  Community members may book it. Only a read that asks for it has it (SESSION_COLS_PUBLIC_AT), and only when set; a
    *  copy kept at the edge from before has none, and reads as open to everyone. */
@@ -185,7 +190,7 @@ type Row = {
   id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; title_ar?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
-  location?: unknown; meet_url?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
+  spots?: unknown; addons?: unknown; location?: unknown; meet_url?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
   gender_only?: unknown; closed_types?: unknown;
   out_bikes?: unknown; hide_queue?: unknown;
   cancelled_at?: unknown; draft?: unknown; opens_at?: unknown; public_at?: unknown;
@@ -341,6 +346,28 @@ function placeOf(r: Row): Pick<RideSession, "location" | "meetUrl"> {
   return { location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null, meetUrl: /^https:\/\//i.test(meet) ? meet : null };
 }
 
+const slotsOf = (slots: unknown): Record<string, unknown> => {
+  let o: unknown = slots;
+  if (typeof o === "string") { try { o = JSON.parse(o); } catch { o = null; } }
+  return o && typeof o === "object" && !Array.isArray(o) ? (o as Record<string, unknown>) : {};
+};
+
+/** The waitlist's cap in riders (the booking app's waitlistCap): the settings' _wl, a count or a
+ *  percentage of the places (at least one); null for none. */
+export function waitlistCap(slots: unknown, places: number): number | null {
+  const w = slotsOf(slots)._wl as { m?: unknown; v?: unknown } | undefined;
+  const v = Number(w && typeof w === "object" ? w.v : NaN);
+  if (!w || !Number.isFinite(v) || v <= 0) return null;
+  return w.m === "pct" ? Math.max(1, Math.round((places || 0) * v / 100)) : Math.floor(v);
+}
+
+/** The add-on ids a session sells (sessions.addons: a JSON list, or one already parsed). */
+export function addonIds(v: unknown): string[] {
+  let a: unknown = v;
+  if (typeof a === "string") { try { a = JSON.parse(a); } catch { a = []; } }
+  return Array.isArray(a) ? [...new Set(a.filter((x): x is string => typeof x === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(x)))].slice(0, 40) : [];
+}
+
 /** The breakfast stop a row names: only when the read asked for the columns (SESSION_COLS_BREAKFAST),
  *  so a row without them gives neither field. */
 function breakfastOf(r: Row): Pick<RideSession, "breakfast" | "breakfastAr"> {
@@ -427,6 +454,9 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...(bfMembersOf(r.bike_slots) ? { bfMembers: true } : {}),
     ...(fewOf(r) ? { few: true as const } : r.status === "open" && fewAtOf(r.bike_slots) ? { fewAt: fewAtOf(r.bike_slots) } : {}),
     ...("spots" in r ? { spots: num(r.spots) } : {}),
+    ...("addons" in r ? { addons: addonIds(r.addons) } : {}),
+    // a capped waitlist (bike_slots._wl), counted on the places as the booking app counts them; absent for none
+    ...((c) => (c != null ? { wlCap: c } : {}))(waitlistCap(r.bike_slots, (community && r.needs_approval !== false ? num(r.spots) || seats || 0 : seats || 0) || 12)),
     ...((h) => (h ? { ig: h } : {}))(igOf(r.bike_slots)),
     ...revealOf(r),
     ...publicAtOf(r),
@@ -527,6 +557,8 @@ export const SESSION_COLS_SPOTS = "spots";
 // members may book the session. Riders may read it with the row; a group of its own, so a database without it reads as
 // before: nobody held.
 export const SESSION_COLS_PUBLIC_AT = "public_at";
+/** The add-ons a session sells (sessions.addons), for the booking wizard's review. */
+export const SESSION_COLS_ADDONS = "addons";
 /** The sessions the lists of the sessions ahead show (a PostgREST filter): open and full ones, and the closed ones whose
  *  settings carry the Full, no waitlist mark (bike_slots is text; toSession reads the mark itself and the rest of fbkOf). */
 export const SESSION_STATUS_SHOWN = "or=(status.in.(open,full),and(status.eq.closed,bike_slots.like.*_fbk*))";
@@ -723,7 +755,7 @@ async function sessionsAhead(fetchImpl: typeof fetch, url: string, key: string, 
     // and the bikes out of service, which the places left count (withPlacesLeft), and whether each rider list is out;
     // the closed sessions marked Full, no waitlist too, with what tells one from a night called off (SESSION_COLS_FBK)
     const page = await sessionRows(fetchImpl, url, key, `session_date=gte.${today}&${SESSION_STATUS_SHOWN}&order=session_date.asc,id.asc&limit=${AHEAD_PAGE}&offset=${i * AHEAD_PAGE}`, SESSION_COLS, now,
-      { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED, SESSION_COLS_FBK, SESSION_COLS_SPOTS, SESSION_COLS_PUBLIC_AT] });
+      { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED, SESSION_COLS_FBK, SESSION_COLS_SPOTS, SESSION_COLS_PUBLIC_AT, SESSION_COLS_ADDONS] });
     if (!Array.isArray(page)) throw new Error("sessions");
     out.push(...(page as Row[]));
     if (page.length < AHEAD_PAGE) break;

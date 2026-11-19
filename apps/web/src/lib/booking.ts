@@ -1,0 +1,482 @@
+// Booking a ride on the website, as the booking app books one (app.src.html renderRegister /
+// submitReg): the same steps, the same caps, the same bike types and prices, the same checks. The
+// plain logic lives here so the browser's wizard (components/experiences/BookingFlow.tsx) and the
+// server's booking route (app/api/booking) answer every question the same way, and so it can be
+// tested. The database stays the authority: customer_create_booking and its triggers price every
+// row (_enforce_booking_price, _fare_now), gate the members' rides, cap the parties and the solo
+// rides and coerce a booking past capacity onto the waitlist; nothing here can make a booking
+// cheaper or let one through that the database would refuse.
+import { typeOffered } from "./bike-kinds";
+import type { RideKind } from "./rides";
+import { genderOk, type SessionGender } from "./session-gender";
+import { codeKindOf } from "./tickets";
+
+/** A session as the wizard reads it: what lib/rides.ts reads for the cards, and the rest of the
+ *  row the booking needs. Display strings (the day, the clock) are made on the server, so the
+ *  browser draws exactly what the server did. */
+export type BookSession = {
+  id: string;
+  date: string;
+  kind: RideKind;
+  /** The ride's name as the page says it (sessionName), "" for a circuit night. */
+  name: string;
+  full: boolean;
+  /** A community ride: one seat per member, never priced per type unless a paid ride. */
+  community: boolean;
+  /** Booked only by community members (the Saturday tag): community and not open_to_all. */
+  members: boolean;
+  /** Nothing to pay (_isFreeRide): a community ride that is not a paid ride. */
+  free: boolean;
+  /** Staff approve each rider (_isApprovalRide): community and needs_approval not false. */
+  approval: boolean;
+  /** An event's price per seat in SAR (0 on a free event); null on a bike ride. */
+  seat: number | null;
+  /** Capacity as the app counts places (spots on an approval ride, else capacity; 12 unset). */
+  capacity: number;
+  /** Places left when counted, else null (an approval ride never shows it). */
+  left: number | null;
+  /** The waitlist's cap in riders (waitlistCap), null for none. */
+  wlCap: number | null;
+  /** The Saturday ride's two distances (_rgKm), km. */
+  km: { beg: number; int: number };
+  /** Add-on items this session sells (inventory ids, sessions.addons). */
+  addons: string[];
+  meetUrl: string | null;
+  location: string | null;
+  routeSlug: string | null;
+  /** "Sunday · 4 Oct 2026" and "Today"/"Tomorrow" (null), as the server wrote them. */
+  day: string;
+  near: string | null;
+  /** The card's time line ("Gathering 6:30 AM · Start 7 AM" / "9 PM – 11 PM"). */
+  time: string;
+  /** "Collect bikes from 8:15 PM", or null. */
+  collect: string | null;
+  /** Not open to book yet: the words for when it opens; null when it may be booked. */
+  opens: string | null;
+  description: string | null;
+  /** Men only ('male'), women only ('female') or mixed (null): sessions.gender_only (the owner, 2026-10-27;
+   *  lib/session-gender.ts). Only an account of that gender books one for a single gender (genderRefused). */
+  gender?: SessionGender | null;
+  /** The bike types staff closed on this session (sessions.closed_types; the owner, 2026-11-03): a rider picks none of
+   *  them, and none is priced (lib/bike-kinds.ts typeOffered). The database refuses one anyway (TYPE_CLOSED). */
+  closedTypes?: string[];
+  /** A Saturday ride while staff take its bookings at micromobility.sa/saturday with a ride code (rentals 20261108120000,
+   *  saturday_link_only; the owner, 2026-11-08): where its card goes. The database refuses a rider's booking made here. */
+  satLink?: string | null;
+  /** Full, no waitlist (lib/rides.ts fbkOf, the user, 2026-11-13): staff closed it as fully booked. It is listed, said Fully
+   *  booked, and nothing chooses it. */
+  fbk?: boolean;
+  /** A kind this site's booking has no steps for (a run, a race, the donor, yoga, the Farm House Night, a Petromin night):
+   *  the booking app opened on its card and this date (?ev=&session=), where its card goes. */
+  handoff?: string | null;
+  /** Few spots left (lib/rides.ts fewOf, 2026-11-15, and withPlacesLeft's bike_slots._fewAt, 2026-11-18): said where its
+   *  places would be, after the waitlist and a count of three or fewer. */
+  few?: true;
+  /** Members book first (lib/members-first.ts, 2026-11-18) while it lasts: `held` for a visitor who is not a member, whose
+   *  `opens` then says when everyone may (`everyone`); `label` is "Members book first" held, else a member's "Members first". */
+  mf?: { held: boolean; label: string; everyone: string };
+};
+
+/** The signed-in account, as the wizard needs it (lib/booking-server.ts bookingAccount). */
+export type BookAccount = {
+  name: string;
+  height: number | null;
+  /** Bike types staff hid from this account's picker (customers.hidden_types; a VIP's Road Carbon). */
+  hidden: string[];
+  /** The account's own default payment: 'all', the types on the house, or null. */
+  house: "all" | string[] | null;
+  /** Holds the community tag (community_member). */
+  member: boolean;
+  /** Sessions staff turned this account down for (a booking with approval 'rejected'). */
+  rejected: string[];
+  /** Live rows (waiting, on the bike, waitlisted) this account holds, per session. */
+  live: Record<string, number>;
+  /** Account fields the server holds the booking for (customer_fix_fields: FIX_FIRST). */
+  asks: string[];
+  /** The profile page before a booking (_profileGate): a detail due by the account's bookings and not on file (pgDue:
+   *  the nationality from the first booking, the birth date from the fourth); or a community member's asks
+   *  (customer_fix_save takes them). */
+  profileGate: "none" | "profile" | "community";
+  /** What that page asks, and only that (_pgOpen's ask): the birth date, the nationality or both. */
+  pgAsk: PgField[];
+  /** The account's bookings as _pgCount counts them (every row but a cancelled or removed one). */
+  count: number;
+  birth: string;
+  nationality: string;
+  /** The account's gender (customers.gender, from customer_profile), null when none is on file: a session for one
+   *  gender is booked by that gender alone (the owner, 2026-10-27). */
+  gender?: SessionGender | null;
+};
+
+// ── What a session involves (KIND_TRAITS) ────────────────────────────────────────────────────
+/** The kinds with no bike to ride (the booking app's KIND_TRAITS bike:false): the pool, the workshop, an event, the runs,
+ *  the races, the Blood Donation event, yoga and the Farm House Night. */
+const NO_BIKE: RideKind[] = ["swim", "workshop", "event", "runher", "vlap", "arena", "defe5k", "blood", "yoga", "farm"];
+export const needsBike = (s: Pick<BookSession, "kind">) => !NO_BIKE.includes(s.kind);
+/** A run (Run for Her, the DEFE 5KM Run: _isRun) and a race (Victory Lap, Arena Heros: _isRace). */
+export const isRun = (s: Pick<BookSession, "kind">) => s.kind === "runher" || s.kind === "defe5k";
+export const isRace = (s: Pick<BookSession, "kind">) => s.kind === "vlap" || s.kind === "arena";
+/** Which waiver a kind is agreed under (_waiverKind): the Blood Donation event's, the ride's where there is a bike, the
+ *  swim's for the swim, the Farm House Night's, and the activity waiver for everything else. */
+export type WaiverKind = "bike" | "swim" | "activity" | "farm" | "blood";
+export const waiverKind = (s: Pick<BookSession, "kind">): WaiverKind =>
+  (s.kind === "blood" ? "blood" : needsBike(s) ? "bike" : s.kind === "swim" ? "swim" : s.kind === "farm" ? "farm" : "activity");
+/** Every booking needs an agreed waiver (owner, 2026-10-03: "you can't book anything without
+ *  agreeing"; the database refuses one without: WAIVER_REQUIRED). */
+export const needsWaiver = (s: Pick<BookSession, "kind">) => Boolean(waiverKind(s));
+/** The wizard's path (_regSteps): a second step where there is a bike to size, an event's seats, the Farm House Night's
+ *  family, a runner's or an athlete's details and the donor's; then the review, where the waiver is ticked right above
+ *  the button (the booking app's review since 2026-10-10). 2.5 stays in the type for an older address only. */
+export type Step = 1 | 2 | 2.5 | 3;
+export const hasDetailsStep = (s: Pick<BookSession, "kind">) => needsBike(s) || s.kind === "event" || s.kind === "farm" || isRun(s) || isRace(s) || s.kind === "blood";
+export function regSteps(s: Pick<BookSession, "kind">): Step[] {
+  const st: Step[] = [1];
+  if (hasDetailsStep(s)) st.push(2);
+  st.push(3);
+  return st;
+}
+export const nextStep = (s: Pick<BookSession, "kind">, cur: Step): Step => {
+  const st = regSteps(s), i = st.indexOf(cur);
+  return i >= 0 && i < st.length - 1 ? st[i + 1] : 3;
+};
+/** An event's path before a date is picked (the research's row 15, 2026-11-10: "Step 1 of 3" must not turn into "of 2"
+ *  when a date is picked): its dates' path when they all share one, else null (an event mixing rides and sessions
+ *  without a bike, whose count can only follow the date picked). */
+export function eventSteps(sessions: Pick<BookSession, "kind">[]): Step[] | null {
+  if (!sessions.length) return null;
+  const first = regSteps(sessions[0]).join();
+  return sessions.every((s) => regSteps(s).join() === first) ? regSteps(sessions[0]) : null;
+}
+export const prevStep = (s: Pick<BookSession, "kind">, cur: Step): Step => {
+  const st = regSteps(s), i = st.indexOf(cur);
+  return i > 0 ? st[i - 1] : 1;
+};
+/** A ride that gathers then sets off (the Saturday and National Day rides). */
+export const gathers = (s: Pick<BookSession, "kind">) => s.kind === "saturday" || s.kind === "snd96";
+/** "I have my own bike" is offered on every community ride and the National Day ride (_ownOffered). */
+export const ownOffered = (s: Pick<BookSession, "community" | "kind">) => s.community || s.kind === "snd96";
+/** No Road Carbon on a community ride but Petromin (_noCarbon). */
+export const noCarbon = (s: Pick<BookSession, "community" | "kind">) => s.community && s.kind !== "petromin";
+/** The Saturday ride's two groups (RIDE_GROUPS). */
+export const hasRideGroups = (s: Pick<BookSession, "kind">) => s.kind === "saturday";
+export type RideGroup = "beg" | "int";
+export const RIDE_GROUPS: RideGroup[] = ["beg", "int"];
+export const rgOk = (g: unknown): g is RideGroup => g === "beg" || g === "int";
+
+/** One account books at most three riders on a circuit night (JCC_ACCOUNT_CAP), drawn from the
+ *  rows it already holds there; one on a community ride. Admins change the three in the booking
+ *  app (Settings > Business, jcc_account_cap; the database's _group_ride_cap reads it): the page
+ *  passes the setting in (lib/biz.ts bizOf), this is its default. */
+export const JCC_ACCOUNT_CAP = 3;
+/** Seats one account books on a ticketed event (EVENT_SEAT_MAX, Settings > Business event_seat_max; the database's
+ *  _group_ride_cap allows five): the page passes the setting in (lib/biz.ts bizOf), this is its default. */
+export const EVENT_SEAT_MAX = 5;
+/** Places a member books on a Farm House Night: themselves and their family by name (FARM_SEAT_MAX, 2026-11-13). */
+export const FARM_SEAT_MAX = 4;
+/** A Petromin night's party (GROUP_RIDE_MAX, Settings > Business group_ride_max): the member and one guest. */
+export const GROUP_RIDE_MAX = 2;
+/** A session that takes a party (_partyRide): a Petromin night, an event's seats and the Farm House Night's family. */
+export const partyRide = (s: Pick<BookSession, "community" | "kind">) => (s.community && s.kind === "petromin") || s.kind === "event" || s.kind === "farm";
+export function maxRiders(s: Pick<BookSession, "community" | "kind">, booked: number, cap: number = JCC_ACCOUNT_CAP, seatMax: number = EVENT_SEAT_MAX, groupMax: number = GROUP_RIDE_MAX): number {
+  if (s.kind === "farm") return Math.max(1, FARM_SEAT_MAX - booked); // the member and their family (_maxRiders)
+  if (s.kind === "event") return Math.max(1, seatMax - booked); // a ticketed event's seats, as the booking app's _maxRiders
+  if (s.community && s.kind === "petromin") return Math.max(1, groupMax - booked);
+  if (s.community) return 1;
+  return Math.max(1, cap - booked);
+}
+
+// ── Bike types and prices ────────────────────────────────────────────────────────────────────
+/** The types a rider picks from, in the booking app's order (CUST_TYPES without Any: "No
+ *  preference" is staff's to give since 2026-10-02, and Gravel is not a rental type). */
+export const RIDER_TYPES = ["Road", "Hybrid", "Mountain", "Kids", "Road Carbon", "Own"] as const;
+export type BikeType = (typeof RIDER_TYPES)[number];
+export const isRiderType = (v: unknown): v is BikeType => typeof v === "string" && (RIDER_TYPES as readonly string[]).includes(v);
+
+/** The picker's types for this session and account (bikeTypeOpts, less what staff hid on the account and what they
+ *  closed on the session). */
+export function typeOptions(s: Pick<BookSession, "community" | "kind" | "closedTypes">, hidden: string[] = []): BikeType[] {
+  const all = RIDER_TYPES.filter((t) => (t !== "Own" || ownOffered(s)) && typeOffered({ noCarbon: noCarbon(s), closedTypes: s.closedTypes }, t));
+  const shown = all.filter((t) => !hidden.includes(t));
+  return shown.length ? shown : all;
+}
+
+/** The booking app's own figures (RIDE_PRICES), used only where the database's ride_prices has
+ *  no row: the database charges ride_prices, so the page shows ride_prices. */
+export const APP_PRICES: Record<string, number> = { Road: 75, Hybrid: 57.5, Mountain: 57.5, Kids: 57.5, Any: 57.5, "Road Carbon": 250, Own: 0 };
+export type Prices = Record<string, number>;
+/** ride_prices as a map, with the app's figures where a row is missing. */
+export function priceMap(rows: { type: string; price: number }[]): Prices {
+  const m: Prices = { ...APP_PRICES };
+  for (const r of rows) if (r.type !== "Own" && Number.isFinite(r.price) && r.price >= 0) m[r.type] = r.price;
+  m.Own = 0; // _fare_now has no fare for a rider's own bike: it costs nothing
+  return m;
+}
+/** What one rider's bike costs: the type's price (_booking_fare), or an event's seat. */
+export const priceFor = (prices: Prices, type: string) => prices[type] ?? prices.Any ?? APP_PRICES.Any;
+/** A type not chosen yet reads as Any: from the Any price to its highest fare (ride_prices
+ *  max_price, `max` from lib/biz.ts faresOf), else the dearest standard bike. */
+export function unpickedRange(prices: Prices, max?: Prices): [number, number] {
+  const lo = priceFor(prices, "Any");
+  const hi = Math.max(lo, ...(max?.Any != null ? [max.Any] : ["Road", "Hybrid", "Mountain"].map((t) => priceFor(prices, t))));
+  return [lo, hi];
+}
+
+/** What a ride costs before anything is picked (_sessFromPrice): Free, a seat, or the cheapest
+ *  bike it offers. "" for a day with nothing to rent (the pool, the workshop). */
+export function fromPrice(s: Pick<BookSession, "free" | "seat" | "kind" | "community" | "closedTypes">, prices: Prices): { kind: "free" } | { kind: "from"; n: number } | { kind: "seat"; n: number } | null {
+  if (s.free) return { kind: "free" };
+  if (s.seat != null) return s.seat ? { kind: "seat", n: s.seat } : { kind: "free" };
+  if (!needsBike(s)) return null;
+  const ps = RIDER_TYPES.filter((t) => t !== "Own" && typeOffered({ noCarbon: noCarbon(s), closedTypes: s.closedTypes }, t)).map((t) => priceFor(prices, t));
+  return ps.length ? { kind: "from", n: Math.min(...ps) } : null;
+}
+
+/** Whether the account's own default payment puts this type on the house (_houseCovers). */
+export const houseCovers = (house: BookAccount["house"], type: string) => !!house && (house === "all" || house.includes(type));
+/** The house perk lands only on rider 1, and only while rider 1 is the account holder (an empty
+ *  name means the holder): _regHouseSelf. */
+export const houseSelf = (acctName: string, rider0Name: string | undefined) => {
+  const nm = (rider0Name ?? "").trim();
+  return !nm || nm.toLowerCase() === acctName.trim().toLowerCase();
+};
+
+export type Rider = { name: string; height: string; type: BikeType | "" };
+/** `one`: a personal one-use code (codeOne). */
+export type Promo = { code: string; kind: "flat" | "pct" | string; value: number; appliesTo: string | null; one?: boolean };
+/** A personal one-use code (the booking app's _codeOne): the friend's referral discount (RW-), the referrer's free ride
+ *  (RF-) and bonus (RB-), the blood donation free ride (BD-) and a volunteer's (VL-). It pays for rider 1's own bike
+ *  alone, never Carbon (the database's _ref_code_guard and _blood_code_guard refuse it there). */
+export const codeOne = (code: string) => codeKindOf(code) !== "promo";
+/** A referral code (RW-, RF-, RB-) is good only on a paid circuit ride or a Petromin night (_refCodeSessOk). */
+export const refCodeKind = (code: string) => ["rw", "rf", "rb"].includes(codeKindOf(code));
+export const refCodeSessOk = (s: Pick<BookSession, "free" | "kind">) => !s.free && (s.kind === "jcc" || s.kind === "petromin");
+
+/** One rider's price on the review: free, on the house, an amount, or a range (no type yet). */
+export type PriceLine = { kind: "free" } | { kind: "house" } | { kind: "sar"; n: number } | { kind: "range"; lo: number; hi: number };
+/** Each rider's line price, as the review lists them. */
+/** `max`: each type's highest fare (ride_prices max_price, lib/biz.ts faresOf): a type quoted above
+ *  its fare reads as a range, as the booking app's priceDisplay says it. */
+export function riderPrices(s: Pick<BookSession, "free" | "seat">, riders: Rider[], prices: Prices, acct: Pick<BookAccount, "name" | "house"> | null, max?: Prices): PriceLine[] {
+  return riders.map((r, i): PriceLine => {
+    if (s.free || r.type === "Own") return { kind: "free" as const };
+    const hf = i === 0 && !!acct && houseSelf(acct.name, r.name) && houseCovers(acct.house, r.type || "Any");
+    if (hf) return { kind: "house" as const };
+    if (s.seat != null) return { kind: "sar" as const, n: s.seat };
+    if (!r.type) { const [lo, hi] = unpickedRange(prices, max); return { kind: "range" as const, lo, hi }; }
+    const n = priceFor(prices, r.type), top = max?.[r.type];
+    return top != null && top > n ? { kind: "range" as const, lo: n, hi: top } : { kind: "sar" as const, n };
+  });
+}
+
+/** The rental's total as a range (a type not picked yet counts as Any). */
+export function rentalTotal(s: Pick<BookSession, "free" | "seat">, riders: Rider[], prices: Prices, acct: Pick<BookAccount, "name" | "house"> | null, max?: Prices): [number, number] {
+  let lo = 0, hi = 0;
+  for (const p of riderPrices(s, riders, prices, acct, max)) {
+    if (p.kind === "sar") { lo += p.n; hi += p.n; } else if (p.kind === "range") { lo += p.lo; hi += p.hi; }
+  }
+  return [round2(lo), round2(hi)];
+}
+export const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** What a code takes off the rental (_promoDiscount, _regPromoDisc): a personal one-use code rider 1's own bike alone
+ *  (never Carbon, Own or a bike on the house); a type-restricted code each matching bike; any other code the whole
+ *  rental. A first rider on the house pays nothing, so their bike earns no discount. */
+export function promoDiscount(p: Promo | null, s: Pick<BookSession, "free" | "seat">, riders: Rider[], prices: Prices, acct: Pick<BookAccount, "name" | "house"> | null): number {
+  if (!p || s.free) return 0;
+  const lines = riderPrices(s, riders, prices, acct);
+  const base = lines.reduce((sum, l, i) => sum + (l.kind === "sar" ? l.n : l.kind === "range" ? priceFor(prices, riders[i].type || "Any") : 0), 0);
+  if (p.one) {
+    const ty = riders[0]?.type ?? "";
+    if (!ty || ty === "Own" || /carbon/i.test(ty) || lines[0]?.kind === "house") return 0;
+    const n = priceFor(prices, ty);
+    const d = p.kind === "flat" ? Math.min(Number(p.value), n) : n * (Number(p.value) / 100);
+    return Math.min(base, Math.max(0, round2(d)));
+  }
+  if (codeFirst(p.code)) {
+    const i = promoRows(p, s, riders, acct).indexOf(true);
+    const l = i < 0 ? null : lines[i];
+    const n = !l ? 0 : l.kind === "sar" ? l.n : l.kind === "range" ? priceFor(prices, riders[i].type || "Any") : 0;
+    const d = p.kind === "flat" ? Math.min(Number(p.value), n) : n * (Number(p.value) / 100);
+    return Math.min(base, Math.max(0, round2(d)));
+  }
+  if (p.appliesTo) {
+    let d = 0;
+    lines.forEach((l, i) => {
+      if (riders[i].type !== p.appliesTo || l.kind !== "sar") return;
+      d += p.kind === "flat" ? Math.min(Number(p.value), l.n) : l.n * (Number(p.value) / 100);
+    });
+    return Math.min(base, Math.max(0, round2(d)));
+  }
+  const d = p.kind === "flat" ? Number(p.value) : base * (Number(p.value) / 100);
+  return Math.min(base, Math.max(0, round2(d)));
+}
+
+/** Which riders carry the code into the booking (_applyPromoToEntries): only the ones it
+ *  discounts - the database counts a use per row that carries it. A personal one-use code: rider 1 alone, never on
+ *  Carbon. */
+/** A gift ride's code (GF-) or a lesson pack's (PK-, the 2026-11-18 build, EF20/EF21): one rider's place per booking, so
+ *  only the first rider it fits carries it and is discounted (a party of two on the gifted bike type pays for the second;
+ *  the database counts one use per row that carries a code, and a gift has one). */
+export const codeFirst = (code: string | undefined) => !!code && /^(GF|PK)-[A-Z0-9]{8}$/.test(code);
+
+export function promoRows(p: (Pick<Promo, "appliesTo" | "one"> & { code?: string }) | null, s: Pick<BookSession, "free" | "seat">, riders: Pick<Rider, "type" | "name">[], acct: Pick<BookAccount, "name" | "house"> | null): boolean[] {
+  const rows = riders.map((r, i) => {
+    if (!p || s.free || r.type === "Own") return false;
+    // a seat on a paid event has no bike type and is discounted all the same (riderPrices, promoDiscount; bug hunt
+    // 2026-11-11): its row carries the code, or the database charges the full seat the review took the code off
+    if (!r.type && !(s.seat != null && s.seat > 0)) return false;
+    if (i === 0 && acct && houseSelf(acct.name, r.name) && houseCovers(acct.house, r.type || "Any")) return false;
+    if (p.one) return i === 0 && !!r.type && !/carbon/i.test(r.type);
+    return !p.appliesTo || p.appliesTo === r.type;
+  });
+  if (!p || !codeFirst(p.code)) return rows;
+  const first = rows.indexOf(true);
+  return rows.map((_, i) => i === first);
+}
+
+// ── Add-ons ──────────────────────────────────────────────────────────────────────────────────
+export type AddonItem = { id: string; name: string; brand: string; photo: string; price: number; qty: number; category: string; nutrition: boolean };
+export type AddonPick = { id: string; qty: number };
+/** How many of one item a booking may take (_setRegAddonQty): its stock, 10 when sold out
+ *  (a backorder), never past 20 (the server's cap). */
+export const addonCap = (it: Pick<AddonItem, "qty"> | undefined) => Math.min(20, it ? (it.qty > 0 ? it.qty : 10) : 0);
+export function addonsCost(picks: AddonPick[], items: AddonItem[]): number {
+  return round2(picks.reduce((sum, a) => sum + (items.find((x) => x.id === a.id)?.price ?? 0) * a.qty, 0));
+}
+const SUPP = ["ProteinSnacks", "ElectrolyteSachets", "EnergyGels"];
+const DRINK = /drink|beverage|water|juice|soda|cola|tea|coffee|مشروب|عصير|ماء/i;
+/** Equipment first, then Supplements, then Beverages (_aCatRank). */
+export function addonCatRank(cat: string, items: AddonItem[]): number {
+  if (DRINK.test(cat)) return 2;
+  if (SUPP.includes(cat) || /^Protein[A-Z]/.test(cat) || (cat !== "Helmet" && items.some((i) => i.category === cat && i.nutrition))) return 1;
+  return 0;
+}
+/** The add-ons a session sells, in stock first (sessionAddonItems); none on a free ride. */
+export function sessionAddons(s: Pick<BookSession, "free" | "addons">, items: AddonItem[]): AddonItem[] {
+  if (s.free) return [];
+  return s.addons.map((id) => items.find((x) => x.id === id)).filter((x): x is AddonItem => !!x)
+    .sort((a, b) => (a.qty > 0 ? 0 : 1) - (b.qty > 0 ? 0 : 1));
+}
+
+// ── Validation ───────────────────────────────────────────────────────────────────────────────
+/** The frame size that suits a rider (the owner's chart, bikeFit): 144 cm and under is a Kids
+ *  bike (no frame size kept), else Road's or Hybrid's chart. */
+const ROAD: [number, string][] = [[159, "XS"], [172, "S"], [179, "M"], [189, "L"], [Infinity, "XL"]];
+const HYBRID: [number, string][] = [[159, "XS"], [170, "S"], [185, "M"], [Infinity, "L"]];
+export function heightToSize(h: number, type: string): string {
+  if (!(h > 0) || h <= 144) return "";
+  const chart = type === "Hybrid" || type === "Mountain" ? HYBRID : ROAD;
+  return (chart.find(([max]) => h <= max) as [number, string])[1];
+}
+export const heightOk = (v: string | number) => { const h = typeof v === "number" ? v : parseInt(String(v), 10); return Number.isInteger(h) && h >= 100 && h <= 250; };
+/** Arabic-Indic and Persian digits as ASCII (the booking app's _asciiDigits): "١٦٥" is read as 165, never as nothing. */
+export const asciiDigits = (s: string) => s.replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)));
+/** The owner's chart (heightToSize): a rider of 144 cm or under rides the Kids bike, and the Kids bike is for them alone
+ *  (the owner, 2026-11-10: such a height picks Kids where it is offered, and Kids is refused from 145 cm). */
+export const KIDS_MAX_CM = 144;
+export const kidsHeight = (v: string) => heightOk(v) && parseInt(v, 10) <= KIDS_MAX_CM;
+
+export type RiderError = { i: number; field: "height" | "type" | "name" | "kids" } | { i: -1; field: "group" };
+/** The riders step's checks, in the app's order (validateRegInputs): the group, each height,
+ *  then each type (a Kids bike only up to 144 cm) and (in a party) each name. Null when all is well. */
+export function validateRiders(s: Pick<BookSession, "kind" | "community">, riders: Rider[], group: RideGroup | null, acctName: string): RiderError | null {
+  if (!needsBike(s)) return null;
+  if (hasRideGroups(s) && !rgOk(group)) return { i: -1, field: "group" };
+  for (let i = 0; i < riders.length; i++) if (!heightOk(riders[i].height)) return { i, field: "height" };
+  for (let i = 0; i < riders.length; i++) {
+    if (!riders[i].type) return { i, field: "type" };
+    if (riders[i].type === "Kids" && !kidsHeight(riders[i].height)) return { i, field: "kids" };
+    if (riders.length > 1 && !(riders[i].name.trim() || (i === 0 ? acctName : "")).trim()) return { i, field: "name" };
+  }
+  return null;
+}
+
+// ── The profile page (_profileGate) ──
+/** The booking app's thresholds (PG_NAT_AFTER, PG_BIRTH_AFTER; the owner, 2026-10-09): the nationality is asked from the
+ *  first booking, the birth date from the fourth. */
+export const PG_NAT_AFTER = 1, PG_BIRTH_AFTER = 4;
+export type PgField = "birth" | "nat";
+/** What the profile page asks of an account with n bookings (_pgDue): each detail once it is due and still empty. */
+export function pgDue(a: { birth: string; nationality: string }, n: number): PgField[] {
+  const out: PgField[] = [];
+  if (n >= PG_BIRTH_AFTER && !a.birth.trim()) out.push("birth");
+  if (n >= PG_NAT_AFTER && !a.nationality.trim()) out.push("nat");
+  return out;
+}
+/** A birth date the booking app takes (_dobErr): a real day, at least five and at most a hundred years ago. */
+export function birthOk(v: string, today: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return false;
+  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  if (d.getUTCFullYear() !== +m[1] || d.getUTCMonth() !== +m[2] - 1 || d.getUTCDate() !== +m[3]) return false;
+  const [ty, tm, td] = today.split("-").map(Number);
+  const age = ty - +m[1] - (tm < +m[2] || (tm === +m[2] && td < +m[3]) ? 1 : 0);
+  return age >= 5 && age <= 100;
+}
+
+
+// ── The answer the booking route gives ───────────────────────────────────────────────────────
+/** Every refusal the wizard words (the app's _bookRefused and its own checks). men_only and women_only: a session
+ *  for the other gender (the owner, 2026-10-27; the database's GENDER_ONLY). The rest follow the booking app's _bookRefused:
+ *  a type closed or full since the page was read (TYPE_CLOSED, TYPE_FULL), members book first (MEMBERS_FIRST), the capped
+ *  waitlist full (WAITLIST_FULL), the member bikes gone (MEMBER_BIKES_FULL), a runner, donor or athlete under age or
+ *  without the details or the agreement to share them (RUN_*, BLOOD_*, VL_*). */
+export const REFUSALS = ["signin", "closed", "members", "rejected", "already", "one_per_session", "group_cap", "cap", "fix_first", "pick_type",
+  "waitlist_full", "not_open", "waiver", "invalid", "generic", "offline", "origin", "slow", "men_only", "women_only",
+  "ref_code_carbon", "ref_code_session", "blood_code_carbon", "blood_code_session", "place_gone", "saturday_link", "waiver_outdated",
+  "type_closed", "type_full", "members_first", "member_bikes_full", "run_age", "run_km", "run_details", "share", "blood_age", "blood_details",
+  "vl_age", "vl_one_each", "vl_no_team", "vl_team_full", "vl_team_self", "vl_gender", "vl_race", "vl_div", "vl_shirt", "vl_team_locked", "vl_details"] as const;
+export type Refusal = (typeof REFUSALS)[number];
+
+/** A session for one gender that this account may not book (lib/session-gender.ts genderOk; the booking app's _sgOk):
+ *  the refusal that words it ("This session is for women only."), else null. An account with no gender on file books
+ *  mixed sessions alone, as the database's guard (_gender_entry_guard) refuses it the others. */
+export const genderRefused = (s: Pick<BookSession, "gender">, gender: SessionGender | null | undefined): Refusal | null =>
+  s.gender && !genderOk(s, gender ?? null) ? (s.gender === "male" ? "men_only" : "women_only") : null;
+
+/** A database refusal, read the way the booking app reads it (_bookRefused, _rideRuleRefusal):
+ *  the code first, the detail next, the English sentence last. */
+export function refusalOf(err: { code?: string; message?: string; details?: string } | null | undefined): Refusal {
+  const m = `${err?.code ?? ""} ${err?.message ?? ""}`;
+  const d = String(err?.details ?? "").trim();
+  const md = `${m} ${d}`;
+  if (/STALE_SESSION/.test(m)) return "signin";
+  // the last place went to another device while this rider was booking one (rentals 20261111030000; asked for with
+  // seat_only): nothing was kept, and the rider chooses the waitlist or another ride
+  if (/PLACE_GONE/.test(m)) return "place_gone";
+  // a session for one gender (GENDER_ONLY from _gender_entry_guard, its detail the gender it is for; \bmale\b never matches "female")
+  if (/GENDER_ONLY/.test(m)) return /\bmale\b/.test(d) ? "men_only" : "women_only";
+  if (/WAIVER_OUTDATED/.test(md)) return "waiver_outdated";
+  if (/WAIVER_REQUIRED/.test(m)) return "waiver";
+  if (/FIX_FIRST/.test(m)) return "fix_first";
+  // staff switched micromobility.sa/saturday on after this page was drawn (the queue guard's SATURDAY_LINK)
+  if (d === "SATURDAY_LINK" || /SATURDAY_LINK|micromobility\.sa\/saturday/.test(m)) return "saturday_link";
+  if (/WAITLIST_FULL/.test(md)) return "waitlist_full";
+  if (/SESSION_CLOSED/.test(m)) return "closed";
+  if (/TYPE_CLOSED/.test(m)) return "type_closed"; // closed since this page was read (_type_closed_guard)
+  if (/TYPE_FULL/.test(m)) return "type_full"; // its places taken since this page was read (_type_full_guard)
+  if (/PICK_TYPE/.test(m)) return "pick_type";
+  if (/MEMBERS_FIRST/.test(md)) return "members_first";
+  if (/NOT_OPEN_YET/.test(m)) return "not_open";
+  if (/MEMBER_BIKES_FULL/.test(md)) return "member_bikes_full";
+  if (/RUN_AGE/.test(md)) return "run_age";
+  if (/BLOOD_AGE/.test(md)) return "blood_age";
+  if (/BLOOD_DETAILS/.test(md)) return "blood_details";
+  if (/(BLOOD|RUN|VL)_SHARE/.test(md)) return "share";
+  // a personal code where it does not pay (_ref_code_guard, _blood_code_guard): its detail names why
+  const code = /\b(REF|BLOOD)_CODE_(CARBON|SESSION)\b/.exec(md);
+  if (code) return `${code[1].toLowerCase()}_code_${code[2].toLowerCase()}` as Refusal;
+  if (/RUN_KM/.test(md)) return "run_km";
+  if (/RUN_DETAILS/.test(md)) return "run_details";
+  // Victory Lap's and Arena Heros' own codes (_vl_entry_guard)
+  const vl = /VL_[A-Z_]+/.exec(md)?.[0];
+  if (vl) {
+    const k = vl.toLowerCase() as Refusal;
+    return (REFUSALS as readonly string[]).includes(k) ? k : "vl_details";
+  }
+  if (d === "MEMBERS_ONLY" || /community members only/i.test(m)) return "members";
+  if (d === "ONE_PER_SESSION" || /One place per person/i.test(m)) return "one_per_session";
+  if (d === "GROUP_CAP" || /riders per booking/i.test(m)) return "group_cap";
+  if (/BAD_INPUT|22023/.test(m)) return "invalid";
+  return "generic";
+}
