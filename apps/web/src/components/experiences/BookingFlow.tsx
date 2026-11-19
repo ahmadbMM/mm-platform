@@ -205,7 +205,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   // The account, read as the steps open (and again after a sign-in reloads the page): then the date Experiences sent, through
   // the same gates as a tap on its card.
   // null: signed out; undefined: the read failed.
-  const loadAcct = useCallback(async (): Promise<BookAccount | null | undefined> => {
+  const loadAcct = async (): Promise<BookAccount | null | undefined> => {
     setAcctState("loading");
     try {
       const r = await fetch("/api/booking/account", { cache: "no-store" });
@@ -218,7 +218,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       setAcctState("error");
       return undefined;
     }
-  }, []);
+  };
   const startedRef = useRef(false);
   useEffect(() => {
     if (startedRef.current) return;
