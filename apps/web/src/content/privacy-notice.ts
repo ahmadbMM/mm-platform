@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-18";
+export const PRIVACY_VERSION = "2026-11-19";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -173,7 +173,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Deciding whether to give you the badge. The proof is deleted as soon as our team answers."
      ],
      [
-      "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings, whether you said the day before that you are still coming, and any bike problem you report from your ticket (the fault you pick, a short note if you add one, and when)",
+      "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings, whether you said before a session that you are still coming or running late (and by about how many minutes), a note for the desk if you write one with a booking (seen only by you and our staff), and any bike problem you report from your ticket (the fault you pick, a short note if you add one, and when)",
       "Created as you use the service",
       "Running your rides, safety, payments and records. Our staff read a bike problem report to fix the bike."
      ],
@@ -188,9 +188,14 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Sending the notifications you chose and keeping proof of your choice. Each message passes, encrypted, through your browser’s own notification service, outside Saudi Arabia."
      ],
      [
-      "Your Updates list: the messages the app addresses to you (reminders, changes to sessions you booked, waitlist places, booking opening for a Saturday you planned, a new challenge, the Saturday recap, notes from our team), and when you opened the list",
+      "Your Updates list: the messages the app addresses to you (reminders, changes to sessions you booked, waitlist places, booking opening for a Saturday you planned or a date you asked about, a new challenge, the Saturday recap, notes from our team), and when you opened the list",
       "Kept for every account, with notifications on or off, for 90 days",
       "Showing you in the app every message we sent you, and which ones you have not read yet"
+     ],
+     [
+      "Booking reminders: the dates you ask us to tell you about when booking opens, when you asked, and when we told you",
+      "Always optional: only if you tap Remind me and choose Tell me in Updates. You can remove it at any time.",
+      "Telling you in your Updates list when booking opens for that date"
      ],
      [
       "Community plans and challenges: the Saturdays you tick as planning to come (Community members), each lap you scan at a circuit challenge (your account, the challenge, the session and the time), and the company challenge you join with its code, and when you joined",
@@ -392,6 +397,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>Technical error reports:</strong> deleted after 90 days.",
     "<strong>The proof you attach to a badge request:</strong> deleted as soon as our team answers the request.",
     "<strong>Your Updates list:</strong> each message is deleted after 90 days.",
+    "<strong>Booking reminders:</strong> kept until 30 days after we tell you, or after the reminder ends because the date can no longer be booked by you; deleted at once if you remove it, or when its date passes before booking opens.",
     "<strong>The Saturdays you plan to come:</strong> deleted when the month ends.",
     "<strong>Your interests:</strong> kept until you change them or your account is deleted.",
     "<strong>Testimonials:</strong> kept until you delete yours or our staff remove it; a photo is deleted as soon as our team decides not to publish it."
@@ -605,7 +611,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "تحديد ما إذا كنا سنمنحك الوسام. ويُحذف الإثبات فور ردّ فريقنا."
      ],
      [
-      "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات، وما إذا أكّدت في اليوم السابق أنك ما زلت قادمًا، وأي مشكلة في الدراجة تُبلغ عنها من تذكرتك (العطل الذي تختاره، وملاحظة قصيرة إن أضفتها، ووقت البلاغ)",
+      "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات، وما إذا أكّدت قبل الجلسة أنك ما زلت قادمًا أو أنك ستتأخر (وبكم دقيقة تقريبًا)، وملاحظة لفريق الاستقبال إن كتبتها مع الحجز (لا يراها إلا أنت وموظفونا)، وأي مشكلة في الدراجة تُبلغ عنها من تذكرتك (العطل الذي تختاره، وملاحظة قصيرة إن أضفتها، ووقت البلاغ)",
       "تُسجَّل أثناء استخدامك للخدمة",
       "تشغيل رحلاتك، والسلامة، والمدفوعات، والسجلات. يقرأ موظفونا بلاغ مشكلة الدراجة لإصلاحها."
      ],
@@ -620,9 +626,14 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "إرسال الإشعارات التي اخترتها والاحتفاظ بإثبات اختيارك. تمر كل رسالة مشفّرةً عبر خدمة الإشعارات الخاصة بمتصفحك، خارج المملكة العربية السعودية."
      ],
      [
-      "قائمة التحديثات: الرسائل التي يوجّهها إليك التطبيق (التذكيرات، والتغييرات على الجلسات التي حجزتها، والأماكن من قائمة الانتظار، وفتح الحجز ليوم سبت خطّطت له، وتحدٍّ جديد، وملخص السبت، وملاحظات فريقنا)، ووقت فتحك للقائمة",
+      "قائمة التحديثات: الرسائل التي يوجّهها إليك التطبيق (التذكيرات، والتغييرات على الجلسات التي حجزتها، والأماكن من قائمة الانتظار، وفتح الحجز ليوم سبت خطّطت له أو لموعد طلبت التذكير به، وتحدٍّ جديد، وملخص السبت، وملاحظات فريقنا)، ووقت فتحك للقائمة",
       "تُحفظ لكل حساب، سواء كانت الإشعارات مفعّلة أم لا، لمدة 90 يومًا",
       "أن نعرض لك داخل التطبيق كل رسالة أرسلناها إليك، وما لم تقرأه منها بعد"
+     ],
+     [
+      "تذكيرات الحجز: المواعيد التي تطلب أن نخبرك عند فتح الحجز لها، ووقت طلبك، ووقت إخبارك",
+      "اختياري دائماً: فقط إن ضغطت «ذكّرني» واخترت «أخبرني في التحديثات». يمكنك إزالته في أي وقت.",
+      "إخبارك في قائمة التحديثات عند فتح الحجز لذلك الموعد"
      ],
      [
       "خطط المجتمع والتحديات: أيام السبت التي تختار أنك تنوي الحضور فيها (لأعضاء المجتمع)، وكل لفة تمسح رمزها في تحدي الحلبة (حسابك والتحدي والجلسة والوقت)، وتحدي الشركة الذي تنضم إليه برمزه ووقت انضمامك",
@@ -824,6 +835,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>تقارير الأخطاء التقنية:</strong> تُحذف بعد 90 يومًا.",
     "<strong>الإثبات الذي ترفقه بطلب وسام:</strong> يُحذف فور ردّ فريقنا على الطلب.",
     "<strong>قائمة التحديثات:</strong> تُحذف كل رسالة بعد 90 يومًا.",
+    "<strong>تذكيرات الحجز:</strong> تُحفظ حتى 30 يومًا بعد إخبارك، أو بعد انتهاء التذكير لأن الموعد لم يعد متاحًا لك؛ وتُحذف فورًا إن أزلتها، أو عند مرور الموعد قبل فتح الحجز.",
     "<strong>أيام السبت التي تنوي الحضور فيها:</strong> تُحذف بانتهاء الشهر.",
     "<strong>اهتماماتك:</strong> نحتفظ بها حتى تغيّرها أو يُحذف حسابك.",
     "<strong>الشهادات:</strong> نحتفظ بها حتى تحذف شهادتك أو يزيلها موظفونا؛ وتُحذف الصورة فور أن يقرر فريقنا عدم نشر الشهادة."
