@@ -1,7 +1,9 @@
 import ToTop from "@/components/site/ToTop";
 import { SOCIAL_ICONS } from "@/components/site/social-icons";
 import { BOOKING_URL, bookingLink, pageOf } from "@/lib/links";
-import { serverL } from "@/i18n/dicts";
+import { w4FooterWithRules } from "@/lib/market/w4";
+import { T as MARKET } from "@/components/market/Market.text";
+import { serverL, serverLocalize } from "@/i18n/dicts";
 import { localeInfo } from "@/i18n/locales";
 import { phrase } from "@/i18n/tx";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -11,6 +13,10 @@ import { riyadhClock } from "@/lib/workshop-days";
 // top, the trust line and the legal line. Everything in it is staff-editable (Website > Whole
 // site > Footer); a link to a page staff have switched off is left out, and My Account opens
 // the booking app until the site's own account page is on.
+// One link is not left to the lists: while the Marketplace is on, its rules are one tap from every
+// page. The built-in third column carries the link (content/pages/site.ts); when the lists staff
+// saved lead nowhere to /marketplace/rules, it joins the last column (lib/market/w4.ts
+// w4FooterWithRules). Staff place or reword it by keeping a link to that address in any column.
 export type FooterLink = { label: string; href: string };
 export type FooterContent = {
   contact: { address: string; mapsHref: string; jccName: string; jccAddress: string; jccHref: string; email: string; phone: string; supportPhone: string; hoursText: string };
@@ -43,9 +49,10 @@ export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_U
   const year = riyadhClock(new Date()).slice(0, 4);
   const socials = SOCIAL_ORDER.map((id) => [id, c.social[id]] as const).filter(([, href]) => !!href);
   const link = (l: FooterLink) => (pageOf(l.href) === "account" && hidden.includes("account") ? { ...l, href: bookingLink(booking, locale) } : l.href.startsWith(BOOKING_URL) || l.href.startsWith(booking) ? { ...l, href: bookingLink(l.href, locale) } : l);
-  const columns = c.columns
+  const shown = c.columns
     .map((col) => ({ ...col, links: col.links.map(link).filter((l) => l.label && l.href && !(pageOf(l.href) && pageOf(l.href) !== "account" && hidden.includes(pageOf(l.href)))) }))
     .filter((col) => col.links.length > 0);
+  const columns = hidden.includes("marketplace") ? shown : w4FooterWithRules(shown, serverLocalize(MARKET, locale).rules);
   const pays = slim ? [] : c.payments.filter((p) => p.logo);
   const hub = !slim && c.showroom && (
     <span key="hub" className="mm-foot-hub" role="img" aria-label={tx("Prepay at Showroom", "الدفع المسبق في المعرض")}>

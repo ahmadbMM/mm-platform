@@ -38,8 +38,11 @@ import { spName, spOf, spOptionsOf } from "@/lib/sport";
 import { emAbsent, emState } from "@/lib/emergency";
 import { asLocale, resolvePage } from "@/lib/content";
 import { bookingLink, localHref } from "@/lib/links";
-import { MK_INBOX, MK_MINE } from "@/lib/market/core";
+import { MK_INBOX, MK_MINE, MK_MY_SHOP } from "@/lib/market/core";
+import { mkShopMine } from "@/lib/market/server";
+import { w4State } from "@/lib/market/w4";
 import { T as MARKET } from "@/components/market/Market.text";
+import { T as MARKET_SHOP } from "@/components/market/w4.text";
 import UnreadBadge from "@/components/market/UnreadBadge";
 import { pageState } from "@/lib/page-state";
 import { kindNames, type RideKind } from "@/lib/rides";
@@ -163,7 +166,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const cal = calendarWords(locale);
     // Everything the rows say, read at once with the account's own session; each read that fails, or a database without
     // the function, leaves its row out (or says nothing on it), as the booking app hides what the server cannot answer for.
-    const [aboutR, emR, spR, walletR, referralRaw, ambR, volR, purR, wsR, cochR, calOn, delR, rnR, unR, llR, updR] = await Promise.all([
+    const [aboutR, emR, spR, walletR, referralRaw, ambR, volR, purR, wsR, cochR, calOn, delR, rnR, unR, llR, updR, shopR] = await Promise.all([
       rpcServer<Record<string, unknown>[]>("customer_about", a),
       rpcServer<unknown[]>("customer_emergency", a),
       rpcServer<unknown>("customer_sport", a),
@@ -184,6 +187,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       // the learn-to-ride ladder (learn_ladder): its row only for an account whose sign-up has a lesson
       rpcServer<unknown>("learn_ladder", a),
       page === "updates" ? rpcServer<unknown>("customer_updates", { ...a, p_lang: updLang(locale) }) : Promise.resolve(null),
+      // the Marketplace's "My shop" row (market_shop_mine): only while the Marketplace is on, and only for an account
+      // that has applied to open a shop
+      !hidden.includes("marketplace") ? mkShopMine({ id: acct.id, token: acct.token }) : Promise.resolve(null),
     ]);
     const about = aboutR.status === 200 && Array.isArray(aboutR.data) ? (aboutR.data[0] ?? null) : null;
     const aboutOn = !!about; // gender, profession, company and how they heard: once customer_about answers (the app's 'workplace' in cust)
@@ -231,6 +237,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const cityVal = !dv.residence.add && S(prof.city)
       ? { ...dv.residence, node: <CityLabel city={S(prof.city)} country={S(prof.country)} locale={locale} /> } : dv.residence;
     const market = serverLocalize(MARKET, locale);
+    const marketShop = serverLocalize(MARKET_SHOP, locale);
+    const myShop = shopR && shopR.ok ? shopR.data.shop ?? null : null;
     const groups: MenuGroup[] = [
       { id: "details", title: w.grpDetails, rows: [
         row("personal", "person", v(dv.personal)), row("contact", "phone", v(dv.contact)), row("residence", "pin", v(cityVal)),
@@ -253,6 +261,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         ...(!hidden.includes("marketplace") ? [
           { id: "mk-listings", label: market.myListings, icon: "tag" as const, href: localHref(MK_MINE, locale), out: true },
           { id: "mk-inbox", label: market.inbox, icon: "chat" as const, href: localHref(MK_INBOX, locale), out: true, value: { text: "", add: false, node: <UnreadBadge where="account" /> } },
+          // an account with a shop, or an application for one: its page, with the application's state
+          ...(myShop && w4State(myShop) !== "none" ? [{ id: "mk-shop", label: marketShop.myShop, icon: "briefcase" as const, href: localHref(MK_MY_SHOP, locale), out: true, value: { text: marketShop.chip[myShop.status] ?? "", add: false } }] : []),
         ] : []),
         ...(learnOn ? [row("learn", "bike")] : []),
       ] },
