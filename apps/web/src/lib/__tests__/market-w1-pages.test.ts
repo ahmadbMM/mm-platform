@@ -248,6 +248,10 @@ describe("a listing's page", () => {
     expect(html).not.toContain("Original charger included");
     expect(view(listing())).not.toContain("Similar items");
   });
+  it("names who an item is made for in the page's words, and draws a value it does not know as written, in its own direction", () => {
+    expect(view(listing({ facts: { for_whom: "women" } }))).toContain("<dt>Made for</dt><dd>Women</dd>");
+    expect(view(listing({ facts: { for_whom: "<i>everyone</i>" } }))).toContain('<dd><span class="mk-user" dir="auto">&lt;i&gt;everyone&lt;/i&gt;</span></dd>');
+  });
   it("escapes everything the seller wrote", () => {
     const html = view(listing({ title: "<script>alert(1)</script>", description: "<b onclick=x>bold</b>", faults: "</p><iframe>", facts: { brand: "<i>x</i>" } }));
     for (const raw of ["<script>alert(1)", "<b onclick", "<iframe>", "<i>x</i>"]) expect(html).not.toContain(raw);
