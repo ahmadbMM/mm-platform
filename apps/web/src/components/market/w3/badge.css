@@ -1,0 +1,8 @@
+/* The Marketplace inbox's unread number (W3): beside the header's Marketplace link, in the narrow screen's menu and on
+   My Account's inbox row. It is a file of its own because the header is on every page of the site, where market.css
+   and its --mk-* tokens are not loaded: each token is named with its own value behind it. Logical properties only. */
+.mk-w3-badge { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--mk-green, #077a4b); color: var(--mk-paper, #fbf9f4); font-size: 11px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.mk-w3-badge-header { margin-inline-start: 6px; vertical-align: 1px; }
+/* the narrow menu is the dark sheet: the number sits at the row's end, before its arrow */
+.mk-w3-badge-sheet { margin-inline: auto 14px; min-width: 24px; height: 24px; padding: 0 7px; font-size: 13px; background: var(--mk-paper, #fbf9f4); color: var(--mk-ink, #1a1919); }
+.mk-w3-badge-account { min-width: 22px; height: 22px; padding: 0 7px; font-size: 13px; }
