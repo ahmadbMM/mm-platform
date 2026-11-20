@@ -1,6 +1,6 @@
 // The portal's words. English rides in the bundle; every other language is fetched when chosen and
-// falls back to English for anything missing. The booking app's ten languages. Numbers stay in Latin
-// digits in every language, as they do in the booking app.
+// falls back to English for anything missing. The booking app's ten languages, and Malay (2026-11-20, as the website
+// speaks it). Numbers stay in Latin digits in every language, as they do in the booking app.
 
 import en from "../lang/en.json";
 
@@ -17,6 +17,7 @@ export const LANGS: { code: string; label: string; rtl?: boolean }[] = [
   { code: "tl", label: "Tagalog" },
   { code: "ne", label: "नेपाली" },
   { code: "bn", label: "বাংলা" },
+  { code: "ms", label: "Bahasa Melayu" },
 ];
 const LANG_KEY = "mm_vol_lang";
 
@@ -69,7 +70,8 @@ export function startLang(): string {
   return LANGS.some((l) => l.code === nav) ? nav : "en";
 }
 
-const locale = () => `${lang}-u-ca-gregory-nu-latn`;
+/** Malay as Malaysia writes it (ms-MY); every other language by its own code. Gregorian, Latin digits. */
+const locale = () => `${lang === "ms" ? "ms-MY" : lang}-u-ca-gregory-nu-latn`;
 const KSA = "Asia/Riyadh";
 
 /** A day from a session's date (YYYY-MM-DD), read as noon in Riyadh so no time zone can move it. */

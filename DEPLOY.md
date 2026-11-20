@@ -246,5 +246,5 @@ staff accept work (rentals migration `20261105120000_volunteers.sql`; apply it B
 - Deploys: CI deploys it only while the repository variable `MM_VOLUNTEERS` is `on` (main → production, staging branch →
   `micromobility-volunteers-staging`). The address is a Workers custom domain in its `wrangler.jsonc`; Cloudflare makes the
   DNS record on the first deploy.
-- Words: `src/lang/<code>.json`, the booking app's ten languages; English rides in the bundle, the others are fetched when
-  chosen. `test/words.test.ts` fails when a language misses a word.
+- Words: `src/lang/<code>.json`, the booking app's ten languages and Malay (`ms`, as the website writes it); English rides
+  in the bundle, the others are fetched when chosen. `test/words.test.ts` fails when a language misses a word.

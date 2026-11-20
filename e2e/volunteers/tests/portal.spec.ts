@@ -895,6 +895,14 @@ test("Arabic reads right to left, and no page runs off the side at phone width",
     await expect.poll(() => page.evaluate((f) => [...document.fonts].some((x) => x.family.replace(/"/g, "") === f && x.status === "loaded"), family)).toBe(true);
     expect(await page.evaluate(() => parseFloat(getComputedStyle(document.body).lineHeight) / parseFloat(getComputedStyle(document.body).fontSize))).toBeGreaterThanOrEqual(1.55);
   }
+  // Malay (2026-11-20): in the menu with the rest, left to right, in its own words
+  await page.goto("/#profile");
+  await page.locator("main select.lang").selectOption("ms");
+  await expect(page.locator("html")).toHaveAttribute("lang", "ms");
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  await expect(page.getByRole("heading", { name: "Profil", exact: true })).toBeVisible();
+  await expect(tab(page, "Utama")).toBeVisible();
+  expect(await noSideways(page)).toBe(true);
   expect(errors).toEqual([]);
 });
 
