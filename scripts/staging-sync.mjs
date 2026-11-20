@@ -9,6 +9,10 @@
 // their dates) is copied here, with the store's photos, so staging.micromobility.sa shows what staff publish. Live
 // keeps no store pages: micromobility.sa/store still forwards to the old shop.
 //
+// The Marketplace's categories as well (2026-11-20, rentals 20261121300000): staff keep them in the live staff app, and
+// the ones the public key can read there (the visible ones) are copied here. Nothing else of the Marketplace is copied:
+// its listings, sellers, shops, messages and reports are each database's own, and its switch is staging's own.
+//
 // It reads the live site the way the website does - with the public key, so only what the public
 // can see - and writes staging with staging's service key. Only rows that differ are written, and rows
 // the live site no longer has are removed from staging. Riders, rides and bookings are never touched:
@@ -47,16 +51,23 @@ const TABLES = [
   { name: "store_products", pk: ["id"], optional: true, created: true },
   { name: "store_variants", pk: ["id"], optional: true, created: true },
   { name: "store_collection_items", pk: ["collection", "product_id"], optional: true },
+  // The Marketplace's categories, by their slug: skipped like the store's while live has none. `either`: skipped too
+  // while staging has no such table (this line reached main before the Marketplace's migration reached any database);
+  // no other table here points at them, so nothing else is left out with them.
+  { name: "market_categories", pk: ["slug"], id: "slug", optional: true, either: true },
 ];
 const idOf = (t, r) => r[t.id || "id"];
 // Store rows the public key no longer sees (a product unpublished, a variant switched off, a category hidden) are not
 // removed from staging but switched off there: staging's orders, stock requests and reviews point at them.
 // A hidden category also lets go of its parent: a sub-category staging keeps under P would otherwise stop live from
 // moving P under another category (two levels only: a category with sub-categories has no parent).
+// A Marketplace category the public key no longer sees is hidden on live, never deleted there: hidden here too, under
+// the sport it had (staging's listings point at it, and at the sport through it).
 const SOFT_GONE = {
   store_products: { published: false, preview: false },
   store_variants: { active: false },
   store_categories: { visible: false, parent: null },
+  market_categories: { visible: false },
 };
 // Stamps the database sets itself on every write; comparing them would rewrite every row every run.
 const IGNORE = new Set(["updated_at", "updated_by", "created_at"]);
@@ -67,8 +78,10 @@ const STAGING_OVERRIDES = { "site.coming_soon": false, ...Object.fromEntries(PAG
 // (pay.*), and the store is open there (store.open) while live keeps it shut. Every other store.* setting is kept by
 // staff in the live staff app since 2026-11-19 and copied here like the rest - once live has any (storeFromLive, set
 // when live's settings are read): until then staging keeps all its store.* settings, as before.
+// The Marketplace's switch (marketplace.on) is staging's own too (2026-11-20): it is looked at on staging while live
+// keeps it off. Every other marketplace.* setting is staff's, kept in the live staff app, and copied like the rest.
 let storeFromLive = false;
-const STAGING_OWN = (key) => /^pay\./.test(key) || key === "store.open" || (!storeFromLive && /^store\./.test(key));
+const STAGING_OWN = (key) => /^pay\./.test(key) || key === "store.open" || key === "marketplace.on" || (!storeFromLive && /^store\./.test(key));
 
 const prodH = { apikey: PROD_ANON_KEY, Authorization: `Bearer ${PROD_ANON_KEY}` };
 const stgH = { apikey: STAGING_SERVICE_KEY, Authorization: `Bearer ${STAGING_SERVICE_KEY}` };
@@ -121,6 +134,8 @@ const REFS = {
   store_products: [{ col: "category", to: "store_categories" }],
   store_variants: [{ col: "product_id", to: "store_products" }],
   store_collection_items: [{ col: "collection", to: "store_collections" }, { col: "product_id", to: "store_products" }],
+  // The Marketplace: a category's sport (two levels: a sport, then what is sold under it).
+  market_categories: [{ col: "parent", to: "market_categories" }],
 };
 // Columns a live row carries that mean something only on live's own database.
 const LOCAL_ONLY = { store_products: { fleet_bike_id: null } };
@@ -181,8 +196,15 @@ for (const t of TABLES) {
     prod = prod.filter((r) => !(r.key in STAGING_OVERRIDES) && !STAGING_OWN(r.key));
     for (const [key, value] of Object.entries(STAGING_OVERRIDES)) prod.push({ key, value });
   }
-  let stg = await readAll(STAGING_URL, stgH, t);
-  if (t.name === "site_content") stg = stg.filter((r) => !STAGING_OWN(r.key)); // staging's own pay./store. keys: never written over, never removed
+  let stg = await readAll(STAGING_URL, stgH, t).catch((e) => { if (e instanceof Absent && t.either) return null; throw e; });
+  if (!stg) {
+    // A table staging does not have yet (the Marketplace's, before its migration there): nothing to write to.
+    t.skip = true;
+    have[t.name] = new Set();
+    summary.push(`${t.name}: not on staging, skipped`);
+    continue;
+  }
+  if (t.name === "site_content") stg = stg.filter((r) => !STAGING_OWN(r.key)); // staging's own keys (pay., store., marketplace.on): never written over, never removed
   const refs = REFS[t.name] || [];
   const own = new Set([...stg, ...prod].map((r) => idOf(t, r))); // a parent in the same table: written in the same upsert, first
   const shown = [], left = [];
@@ -233,8 +255,8 @@ for (const t of TABLES) {
   // What staging holds now: its rows, those written in their new form.
   t.stay = new Map(stg.map((r) => [pkOf(t, r), r]));
   for (const r of done) t.stay.set(pkOf(t, r), r);
-  // A category leaving staging may yet be kept (a row staying points at it), and the store's rows are switched off,
-  // not removed (SOFT_GONE); the other tables' leaving rows go.
+  // A category leaving staging may yet be kept (a row staying points at it), and the store's rows and the Marketplace's
+  // categories are switched off, not removed (SOFT_GONE); the other tables' leaving rows go.
   const goneIds = new Set(t.name === "catalog_categories" || SOFT_GONE[t.name] ? [] : t.gone.map((r) => idOf(t, r)));
   have[t.name] = new Set([...t.stay.values()].map((r) => idOf(t, r)).filter((id) => !goneIds.has(id)));
   summary.push(`${t.name}: ${prod.length} on live, ${written} written` + (freed ? `, ${freed} unique key(s) (slug, SKU, barcode) freed for them` : "") +
