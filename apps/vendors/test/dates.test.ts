@@ -61,6 +61,13 @@ describe("Hijri labels", () => {
     expect(s).toContain("2026");
     expect(s).not.toMatch(/[٠-٩]/);
   });
+
+  it("writes dates in Malay as Malaysia does, Hijri months too", () => {
+    expect(localeTag("ms")).toBe("ms-MY-u-ca-gregory-nu-latn");
+    expect(longDate("2026-10-10", "ms")).toBe("Sabtu, 10 Oktober 2026");
+    expect(hijriLabel("2026-02-18", "ms")).toMatch(/^1 /);
+    expect(hijriLabel("2026-02-18", "ms")).not.toMatch(/[٠-٩]/);
+  });
 });
 
 describe("grid keys", () => {
@@ -130,10 +137,11 @@ describe("calendar statuses", () => {
 });
 
 describe("strings", () => {
-  it("have Arabic for every key, without emoji", () => {
+  it("have Arabic and Malay for every key, without emoji", () => {
     const keys = Object.keys(STRINGS.en);
     expect(Object.keys(STRINGS.ar).sort()).toEqual(keys.sort());
-    for (const lang of ["en", "ar"] as const) {
+    expect(Object.keys(STRINGS.ms).sort()).toEqual(keys.sort());
+    for (const lang of ["en", "ar", "ms"] as const) {
       for (const k of keys) {
         const s = STRINGS[lang][k as keyof typeof STRINGS.en];
         expect(s.length, `${lang}.${k}`).toBeGreaterThan(0);
@@ -147,6 +155,7 @@ describe("closed-date reasons", () => {
   it("translates the staff page's preset codes and keeps typed text", () => {
     expect(reasonText("en", "ramadan")).toBe("Ramadan");
     expect(reasonText("ar", "eid")).toBe("العيد");
+    expect(reasonText("ms", "eid")).toBe("Hari Raya");
     expect(reasonText("en", "Venue renovation")).toBe("Venue renovation");
   });
 });

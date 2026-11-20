@@ -4,7 +4,7 @@ import { rpc, type Result } from "./api";
 import { announce, app, button, errorNote, isRtl, t, tn } from "./app";
 import { openBooking } from "./book";
 import { openFeedback } from "./feedback";
-import { addDays, addMonths, addMonthsSameDay, arrowStep, hijriLabel, hijriMonthTitle, longDate, monthGrid, monthRange, monthStart, num, shortDate, spans, type Iso } from "./dates";
+import { addDays, addMonths, addMonthsSameDay, arrowStep, hijriLabel, hijriMonthTitle, longDate, monthGrid, monthRange, monthStart, monthTitle, num, shortDate, spans, type Iso } from "./dates";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
 import { awaitsFeedback, canRequest, dayStatus, reasonText, STATUS_KEY, type CalDay, type DayStatus } from "./model";
@@ -152,8 +152,7 @@ function draw(main: HTMLElement): void {
 }
 
 function monthTitleText(): string {
-  return new Intl.DateTimeFormat(`${app.lang === "ar" ? "ar-SA" : "en-GB"}-u-ca-gregory-nu-latn`, { month: "long", year: "numeric", timeZone: "UTC" })
-    .format(new Date(`${state.month}T00:00:00Z`));
+  return monthTitle(state.month, app.lang);
 }
 
 function grid(main: HTMLElement, today: Iso): HTMLElement {

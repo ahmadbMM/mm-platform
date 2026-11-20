@@ -73,13 +73,65 @@ test("Arabic turns the page right to left and keeps Western digits", async ({ pa
   await page.getByLabel("Confirm new password").fill("Breakfast2026");
   await page.getByRole("button", { name: "Save password" }).click();
   await expect(page.getByRole("heading", { name: "Breakfast calendar" })).toBeVisible();
-  await page.getByRole("button", { name: "Switch to Arabic" }).click();
+  await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.getByRole("heading", { name: "تقويم الفطور" })).toBeVisible();
   const text = await page.locator("main").innerText();
   expect(text).not.toMatch(/[٠-٩]/);
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "ar");
+});
+
+test("Malay: the language menu names the three in their own words; the portal speaks Malay left to right, and keeps it", async ({ page }) => {
+  const errors = watchCsp(page);
+  await page.goto("/");
+  const menu = page.getByRole("combobox", { name: "Language" });
+  await expect(menu).toHaveValue("en");
+  await expect(menu.locator("option")).toHaveText(["English", "العربية", "Bahasa Melayu"]);
+  await expect(menu.locator("option[value=ms]")).toHaveAttribute("lang", "ms");
+  await page.getByLabel("Email or mobile number").fill("cafe@example.com");
+  await menu.selectOption("ms");
+  await expect(page.locator("html")).toHaveAttribute("lang", "ms");
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  await expect(page.getByRole("heading", { name: "Log masuk" })).toBeVisible();
+  await expect(page.getByLabel("E-mel atau nombor telefon")).toHaveValue("cafe@example.com");
+  await expect(page.getByLabel("Kata laluan", { exact: true })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Bahasa" })).toBeFocused(); // the menu keeps the focus as the page redraws
+  await expect(page.locator("a.skip")).toHaveText("Langkau ke kandungan");
+  await expect(page).toHaveTitle("Vendor MicroMobility");
+  // Signed in (in English, through the sign-in meter), then Malay: the calendar's words, its month and weekdays, Western digits.
+  await page.getByRole("combobox", { name: "Bahasa" }).selectOption("en");
+  await signIn(page);
+  await page.getByLabel("New password", { exact: true }).fill("Breakfast2026");
+  await page.getByLabel("Confirm new password").fill("Breakfast2026");
+  await page.getByRole("button", { name: "Save password" }).click();
+  await expect(page.getByRole("heading", { name: "Breakfast calendar" })).toBeVisible();
+  await page.getByRole("combobox", { name: "Language" }).selectOption("ms");
+  await expect(page.getByRole("heading", { name: "Kalendar sarapan" })).toBeVisible();
+  await expect(page.locator("#cal-month")).toHaveText(/^(Januari|Februari|Mac|April|Mei|Jun|Julai|Ogos|September|Oktober|November|Disember) \d{4}$/);
+  await expect(page.getByRole("navigation").getByRole("link", { name: "Tempahan saya" })).toBeVisible();
+  expect(await page.locator("main").innerText()).not.toMatch(/[٠-٩]/);
+  // The header holds the venue, the menu and sign-out without running off the side, a phone included.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ms");
+  await expect(page.getByRole("combobox", { name: "Bahasa" })).toHaveValue("ms");
+  await page.goto("/#privacy");
+  await expect(page.getByRole("heading", { name: "Notis privasi untuk log masuk premis" })).toBeVisible();
+  await page.getByRole("combobox", { name: "Bahasa" }).selectOption("ar");
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(page.getByRole("combobox", { name: "اللغة" })).toHaveValue("ar");
+  expect(errors).toEqual([]);
+});
+
+test.describe("a device set to Malay", () => {
+  test.use({ locale: "ms-MY" });
+  test("opens the portal in Malay", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("lang", "ms");
+    await expect(page.getByRole("heading", { name: "Log masuk" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Bahasa" })).toHaveValue("ms");
+  });
 });
 
 test("the security headers and robots.txt (crawlers may read the noindex header)", async ({ request }) => {
@@ -175,7 +227,7 @@ test("after a breakfast: the calendar marks it, My bookings asks how it went, th
   expect(fill!.width / track!.width).toBeCloseTo(0.84, 1);
   await expect(said.getByRole("heading", { name: "Food" })).toBeVisible();
   await expect(said.locator("blockquote")).toHaveText(["The shakshuka was great.", "Fresh bread.", "Coffee took a while."]);
-  await page.getByRole("button", { name: "Switch to Arabic" }).click();
+  await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
   await expect(page.getByRole("heading", { name: "ماذا قال الدرّاجون" })).toBeVisible();
   await expect(page.getByText("الطعام 8.4 / 10")).toBeVisible();
   expect(errors).toEqual([]);

@@ -1,7 +1,9 @@
 // Every phrase with a count in it, worded for each plural form the language has. English has one
 // and other; Arabic has zero, one, two, few (3-10), many (11-99) and other (100 and up), and the
-// noun changes with each (Intl.PluralRules("ar") picks the form). Pure (tested).
+// noun changes with each (Intl.PluralRules("ar") picks the form); Malay has other alone, its noun
+// the same for any number. Pure (tested).
 
+import { num } from "./dates";
 import type { Lang } from "./strings";
 
 type Forms = Partial<Record<Intl.LDMLPluralRule, string>> & { other: string };
@@ -36,7 +38,21 @@ const ar: Record<PluralKey, Forms> = {
   otherVenues: { one: "طلب مكان آخر هذا التاريخ أيضًا.", two: "طلب مكانان آخران هذا التاريخ أيضًا.", few: "طلبت {n} أماكن أخرى هذا التاريخ أيضًا.", many: "طلب {n} مكانًا آخر هذا التاريخ أيضًا.", other: "طلب {n} مكان آخر هذا التاريخ أيضًا." },
 };
 
-export const PLURALS: Record<Lang, Record<PluralKey, Forms>> = { en, ar };
+const ms: Record<PluralKey, Forms> = {
+  ridersBooked: { other: "{n} penunggang telah menempah" },
+  srRiders: { other: "{n} penunggang menilai sarapan" },
+  srLow: { other: "{label}: {n} penunggang memberikan skor rendah" },
+  fbBanner: { other: "{n} sarapan sedang menunggu maklum balas anda." },
+  datesRequested: { other: "{n} tarikh dimohon." },
+  datesCancelled: { other: "{n} tarikh dibatalkan." },
+  previewSummary: { other: "{ok} daripada {n} tarikh boleh dimohon." },
+  datesMonth: { other: "Sehingga {n} tarikh sebulan" },
+  days: { other: "{n} hari" },
+  charsLeft: { other: "Tinggal {n} aksara" },
+  otherVenues: { other: "{n} premis lain telah memohon tarikh ini." },
+};
+
+export const PLURALS: Record<Lang, Record<PluralKey, Forms>> = { en, ar, ms };
 
 const rules: Partial<Record<Lang, Intl.PluralRules>> = {};
 /** The plural form a count takes in a language ("one", "few", ...). */
@@ -49,7 +65,7 @@ export function pluralForm(lang: Lang, n: number): Intl.LDMLPluralRule {
 export function plural(lang: Lang, key: PluralKey, n: number, vars?: Record<string, string | number>): string {
   const forms = PLURALS[lang][key];
   let s = forms[pluralForm(lang, n)] ?? forms.other;
-  const all: Record<string, string | number> = { ...vars, n: new Intl.NumberFormat(lang === "ar" ? "ar-SA-u-nu-latn" : "en-GB").format(n) };
+  const all: Record<string, string | number> = { ...vars, n: num(n, lang) };
   for (const [k, v] of Object.entries(all)) s = s.split(`{${k}}`).join(String(v));
   return s;
 }

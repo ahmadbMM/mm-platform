@@ -227,6 +227,8 @@ TypeScript, bundled by esbuild.
   before the secret) refuses every sign-in until the secret is in place.
 - The portal's privacy notice (`#privacy`, `src/client/privacy.ts`) is a DRAFT until the owner
   approves it; nobody is asked to accept it.
+- Words: English, Arabic and Malay (`src/client/strings.ts`, `plurals.ts`, the notice in `privacy.ts`), picked from the
+  header's language menu or the device's language; `test/audit.test.ts` fails when a language misses a word.
 
 ### The volunteer portal (apps/volunteers)
 

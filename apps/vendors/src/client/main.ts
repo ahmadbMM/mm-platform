@@ -2,18 +2,18 @@
 // (#calendar, #bookings, #insights, #venue, #team for owners), plus #privacy, open to everyone.
 
 import { post, rpc, whenMustChange, whenSignedOut } from "./api";
-import { app, busy, button, errorNote, field, note, savedLang, setLang, t } from "./app";
+import { app, busy, button, deviceLang, errorNote, field, note, savedLang, setLang, t } from "./app";
 import { afterBooking } from "./book";
 import { renderBookings } from "./bookings";
 import { invalidateCalendar, renderCalendar, resetCalendar } from "./calendar";
 import { mailLink, MM_EMAIL, pwWaLink } from "./contact";
 import { riyadhToday } from "./dates";
-import { clear, h } from "./dom";
+import { clear, h, uid } from "./dom";
 import { icon, type IconName } from "./icons";
 import { renderInsights } from "./insights";
 import { westernDigits, type Me } from "./model";
 import { renderPrivacy } from "./privacy";
-import type { Key } from "./strings";
+import { LANGS, type Key, type Lang } from "./strings";
 import { renderTeam } from "./team";
 import { passwordForm, renderVenue } from "./venue";
 
@@ -58,16 +58,21 @@ async function freshToday(): Promise<boolean> {
   return !!app.me && app.me.today !== before;
 }
 
-function langButton(): HTMLButtonElement {
-  // Only the visible name is in the other language; the label (aria-label) is in the page's own.
-  const b = h("button", { type: "button", class: "btn btn-ghost btn-small lang", "aria-label": t("langSwitchLabel") },
-    icon("globe"), h("span", { lang: app.lang === "ar" ? "en" : "ar" }, t("langSwitch")));
-  b.addEventListener("click", () => {
-    setLang(app.lang === "ar" ? "en" : "ar");
+/** The language menu, as the volunteer portal has it: a globe and a native menu of the languages (English, Arabic,
+ *  Malay), each named in its own language and marked as such; its label ("Language") is in the page's own. On a phone
+ *  it is the globe alone, as the header's other controls are. */
+function langMenu(): HTMLElement {
+  const id = uid("lang");
+  const sel = h("select", { id, class: "lang" },
+    ...LANGS.map((l) => h("option", { value: l.code, lang: l.code, dir: l.rtl ? "rtl" : "ltr", selected: l.code === app.lang }, l.label)));
+  sel.addEventListener("change", () => {
+    setLang(sel.value as Lang);
     app.render();
-    document.querySelector<HTMLButtonElement>("button.lang")?.focus();
+    document.querySelector<HTMLSelectElement>("select.lang")?.focus();
   });
-  return b;
+  return h("div", { class: "lang-menu" },
+    h("label", { class: "lang-pick", for: id }, icon("globe"), h("span", { class: "sr-only" }, t("language"))),
+    sel, icon("down", "icon lang-down"));
 }
 
 /** The website's header (SiteNav): the MicroMobility mark on a white bar, then the portal's name. */
@@ -82,7 +87,7 @@ function header(opts: { venue?: string; signOut?: boolean }): HTMLElement {
   return h("header", { class: "bar" }, brand(),
     h("div", { class: "bar-tools" },
       opts.venue ? h("p", { class: "venue-name" }, opts.venue) : null,
-      langButton(),
+      langMenu(),
       opts.signOut ? button(t("signOut"), { kind: "ghost", small: true, icon: "signout", onclick: (e) => void signOut(e.currentTarget as HTMLButtonElement) }) : null));
 }
 
@@ -310,8 +315,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 async function boot(): Promise<void> {
-  const nav = (navigator.language || "en").toLowerCase();
-  setLang(savedLang() || (nav.startsWith("ar") ? "ar" : "en"));
+  setLang(savedLang() || deviceLang(navigator.language));
   const r = await rpc<Me>("vendor_me");
   if (r.ok) {
     app.me = r.data;

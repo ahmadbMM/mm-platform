@@ -84,7 +84,8 @@ export function monthRange(anyDayInMonth: Iso): { from: Iso; to: Iso } {
   return { from: monthStart(anyDayInMonth), to: monthEnd(anyDayInMonth) };
 }
 
-const LOCALE: Record<Lang, string> = { en: "en-GB", ar: "ar-SA" };
+/** Malay as Malaysia writes it: "Sabtu, 10 Oktober 2026", "29 Rab. II". */
+const LOCALE: Record<Lang, string> = { en: "en-GB", ar: "ar-SA", ms: "ms-MY" };
 
 /** A locale tag with Western digits, in the Gregorian or the Umm al-Qura calendar. */
 export function localeTag(lang: Lang, hijri = false): string {
@@ -130,7 +131,7 @@ export function hijriMonthTitle(s: Iso, lang: Lang): string {
   return a === b ? a : `${a} - ${b}`;
 }
 
-/** Western digits for any number, in either language. */
+/** Western digits for any number, in every language. */
 export function num(n: number, lang: Lang): string {
   return new Intl.NumberFormat(`${LOCALE[lang]}-u-nu-latn`).format(n);
 }

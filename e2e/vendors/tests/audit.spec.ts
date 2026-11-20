@@ -71,7 +71,7 @@ test("switching the language keeps what was typed on the sign-in form", async ({
   await page.goto("/");
   await page.getByLabel("Email or mobile number").fill("cafe@example.com");
   await page.getByLabel("Password", { exact: true }).fill("half typed");
-  await page.getByRole("button", { name: "Switch to Arabic" }).click();
+  await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.locator("input[name=login]")).toHaveValue("cafe@example.com");
   await expect(page.locator("input[name=password]")).toHaveValue("half typed");
@@ -218,7 +218,7 @@ test("Arabic counts take Arabic plural forms; a pending date says when we answer
   const pending = page.locator(".booking.bs-pending").first();
   await expect(pending).toContainText("MicroMobility answers by");
   await expect(pending).toContainText("2 other venues have asked for this date.");
-  await page.getByRole("button", { name: "Switch to Arabic" }).click();
+  await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
   await expect(page.locator(".booking.bs-confirmed .brief").first()).toContainText("12 درّاجًا مسجّلًا");
   await expect(page.locator(".booking.bs-pending").first()).toContainText("طلب مكانان آخران هذا التاريخ أيضًا.");
   expect(await page.locator("main").innerText()).not.toMatch(/[٠-٩]/);
