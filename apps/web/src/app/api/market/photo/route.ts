@@ -55,7 +55,8 @@ export async function POST(req: Request) {
   const slot = await mkPhotoSlot(g.session, target, ref, full.kind, req);
   if (!slot.ok) return mkRefuse(slot.error, slot.status, slot.detail);
   const name = slot.data.name, type = W2_PHOTO_TYPE[full.kind];
-  if (!name.endsWith(`.${full.kind}`)) return mkRefuse("generic", 502);
+  // the name is stored under only when it is what was asked for: this listing's own folder (or a shop's), this kind
+  if (!name.startsWith(target === "listing" ? `l${ref}/` : "s") || !name.endsWith(`.${full.kind}`)) return mkRefuse("generic", 502);
   if (!(await mkStorePut(name, full.clean, type))) return mkRefuse("generic", 502);
   // the small copy once more if the storage did not answer: the photo is shown from its full copy without it, but a
   // grid of full copies is a slow page

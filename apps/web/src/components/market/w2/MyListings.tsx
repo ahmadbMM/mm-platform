@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import {
@@ -24,7 +24,8 @@ import { w2RefusalText } from "./say";
 // actions that state allows (lib/market/w2.ts w2Acts): a draft is carried on with or deleted; a listing on sale is
 // reserved, marked sold, edited, shared or deleted, and renewed in its last week; a reserved one goes back on sale; a
 // sold one can go back on sale while the sale can still fall through; an expired one is reposted in one tap. A listing
-// our team is checking, or one our team removed, says so plainly (with the reason staff wrote) and offers nothing.
+// our team is checking, or one our team removed, says so on its chip (a held one that buyers cannot see it, a removed
+// one the reason staff wrote) and offers nothing.
 // Marking a listing sold asks what it sold for, and then - when the honour commission is above 0 - a centred pop-up
 // shows the commission on that price and the way staff ask for it to be paid. Nothing is enforced and nothing is
 // collected here: the sale was between the two people.
@@ -59,6 +60,21 @@ export default function MyListings({ locale, items, error, how, now }: MyListing
   const [popBusy, setPopBusy] = useState(false);
   const [popErr, setPopErr] = useState<string | null>(null);
   const [price, setPrice] = useState("");
+
+  // Where the keyboard goes when a pop-up closes and what opened it is no longer on the page (a listing just marked
+  // sold has no "Mark as sold"; a deleted one has no card): to that listing's card, else to the list. The pop-up
+  // itself hands the focus back whenever its opener is still there (MkModal).
+  const spot = useRef<HTMLElement | null>(null);
+  const about = useRef<number | null>(null);
+  useEffect(() => {
+    if (pop) { if (pop.kind !== "commission") about.current = pop.l.id; return; }
+    const id = about.current;
+    about.current = null;
+    if (id === null) return;
+    const on = document.activeElement;
+    if (on && on !== document.body && on.isConnected) return;
+    (document.getElementById(`${uid}-l${id}`) ?? spot.current)?.focus({ preventScroll: true });
+  }, [pop, uid]);
 
   async function reload() {
     setLoading(true);
@@ -116,7 +132,7 @@ export default function MyListings({ locale, items, error, how, now }: MyListing
       </div>
     );
   }
-  if (!list.length) return <div className="mk-empty"><p>{m.empty}</p></div>;
+  if (!list.length) return <div className="mk-empty mk-w2-spot" ref={(el) => { spot.current = el; }} tabIndex={-1}><p>{m.empty}</p></div>;
 
   const groups = w2GroupsIn(list);
   const at = group !== "all" && groups.includes(group) ? group : "all";
@@ -148,7 +164,7 @@ export default function MyListings({ locale, items, error, how, now }: MyListing
           {groups.map((g) => <button key={g} type="button" className="mk-chip" aria-pressed={at === g} onClick={() => setGroup(g)}>{m.groups[g]}</button>)}
         </div>
       )}
-      <ul className="mk-w2-list">
+      <ul className="mk-w2-list mk-w2-spot" ref={(el) => { spot.current = el; }} tabIndex={-1}>
         {shown.map((l) => {
           const acts = w2Acts(l, now);
           const name = l.title?.trim() || m.untitled;
@@ -166,24 +182,19 @@ export default function MyListings({ locale, items, error, how, now }: MyListing
           );
           const owed = l.status === "sold" && (l.commission_due ?? 0) > 0 && !l.commission_received;
           return (
-            <li key={l.id} className="mk-card mk-w2-item">
+            <li key={l.id} id={`${uid}-l${l.id}`} className="mk-card mk-w2-item mk-w2-spot" tabIndex={-1}>
               <div className="mk-w2-item-head">
                 <span className={`mk-status mk-status-${l.status}`}>{t[statusKey(l.status)]}</span>
                 {l.threads > 0 && l.status !== "held" && l.status !== "hidden" && (
                   <Link className="mk-link mk-w2-msgs" href={MK_INBOX}>
                     <MkIcon name="chat" size={16} />{m.messages}
-                    {l.unread > 0 && <span className="mk-w2-badge" aria-label={m.unread(l.unread)}>{l.unread}</span>}
+                    {l.unread > 0 && <><span className="mk-w2-badge" aria-hidden="true">{l.unread}</span><span className="mm-sr">{m.unread(l.unread)}</span></>}
                   </Link>
                 )}
               </div>
               {acts.includes("view") ? <Link className="mk-w2-item-top" href={listingHref(l.id)}>{top}</Link> : <div className="mk-w2-item-top">{top}</div>}
-              {l.status === "held" && <p className="mk-w2-note">{m.heldNote}</p>}
-              {l.status === "hidden" && (
-                <>
-                  <p className="mk-w2-note">{m.hiddenNote}</p>
-                  {l.hidden_reason?.trim() && <p className="mk-w2-reason"><b>{m.reason}</b><span className="mk-user" dir="auto">{l.hidden_reason}</span></p>}
-                </>
-              )}
+              {l.status === "held" && <p className="mk-w2-note">{m.heldBody}</p>}
+              {l.status === "hidden" && l.hidden_reason?.trim() && <p className="mk-w2-reason"><b>{m.reason}</b><span className="mk-user" dir="auto">{l.hidden_reason}</span></p>}
               {l.status === "sold" && l.sold_price !== null && (
                 <p className="mk-w2-soldfor">
                   <span>{m.soldFor} <MkAmt n={l.sold_price} word={t.sar} /></span>

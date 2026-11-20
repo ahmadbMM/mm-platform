@@ -289,6 +289,26 @@ export function w2Sendable(changes: MkListingFields, issues: readonly W2Issue[])
   return Object.fromEntries(Object.entries(changes).filter(([k]) => !held.has(k as keyof W2Fields))) as MkListingFields;
 }
 
+/** The check that looks only at the values the database would refuse outright, whoever the account is: what a draft's
+ *  save holds back, and what decides where a draft opens. */
+export const W2_HARD_ONLY: W2Ctx = { draft: false, priceMax: Number.MAX_SAFE_INTEGER, shop: true, shortName: null, nameMode: "", consent: true, termsNeeded: false, termsTick: true };
+
+/** What one save sends (market_listing_save's `p`), or null when there is nothing to send. `l` is the listing as the
+ *  database last answered it (null: no draft yet), `base` what it holds.
+ *  - No draft yet: nothing is sent unless `create` - the first photo makes the draft (and Next, once there is one);
+ *    putting the page away with only a category chosen never does. With `create` an empty change still makes it.
+ *  - A draft: what changed, without the values the database would refuse outright (they stay in the form, said at
+ *    their field); with `all`, everything that changed.
+ *  - A listing already published: nothing unless `all` (it is saved in one go from its review, because the database
+ *    holds a listing on sale to every publish rule on each save). */
+export function w2SaveWhat(l: Pick<MkListingMine, "status"> | null, base: W2Fields, form: W2Form, cat: MkCategory | null, o: { all?: boolean; create?: boolean } = {}, now: number = Date.now()): MkListingFields | null {
+  if (!l && !o.create) return null;
+  if (l && l.status !== "draft" && !o.all) return null;
+  let changes = w2Changes(base, w2Fields(form, cat, now));
+  if (!o.all) changes = w2Sendable(changes, w2Issues(form, cat, { ...W2_HARD_ONLY, now }));
+  return w2HasChanges(changes) || !l ? changes : null;
+}
+
 /** Where a refusal the database gave belongs in the form: its step and its control; null for one that is about the
  *  account or the moment (a limit, a pause, no connection), which is said where the seller pressed. */
 export function w2Place(error: string, detail: string): { step: W2Step; field: string } | null {
@@ -308,6 +328,40 @@ export function w2Place(error: string, detail: string): { step: W2Step; field: s
   if (error === "consent") return { step: "final", field: "consent" };
   if (error === "terms") return { step: "final", field: "terms" };
   return null;
+}
+
+/* ------------------------------------------------------------------ the form kept in this browser */
+
+/** How long this browser keeps a form beside the page: twelve hours, so a phone several people use holds no one's
+ *  listing for longer. */
+export const W2_KEPT_MS = 12 * 3600 * 1000;
+/** What a listing's form opens with. `step` null: where the form itself would open. */
+export type W2Kept = { form: W2Form; step: W2Step | null; nameMode: MkNameMode | "" };
+
+/** What the selling form writes beside itself for one listing: when the database last changed the listing (`at`),
+ *  when this was written, the step and the name choice, and the form itself ONLY while it holds something the
+ *  database has not taken yet - a form that is saved is the database's and is not kept twice. */
+export function w2KeptValue(l: Pick<MkListingMine, "updated_at">, form: W2Form, dirty: boolean, step: W2Step, nameMode: MkNameMode | "", now: number): Record<string, unknown> {
+  return { at: l.updated_at, saved: now, dirty, step, nameMode, ...(dirty ? { form } : {}) };
+}
+/** A kept value past its time, or one that is not ours to read: it is let go. */
+export const w2KeptOld = (raw: unknown, now: number): boolean => !(mkIsObj(raw) && typeof raw.saved === "number" && now - raw.saved < W2_KEPT_MS);
+
+/** The form one of the seller's listings opens with, given what this browser kept for it (`raw`: the parsed value,
+ *  anything else when there is none). The kept form is used only when it held something unsaved and is either of
+ *  this very state of the listing or recent; when the listing changed since (a save whose answer never arrived,
+ *  another device), its photos are the database's. Everything else is the listing as the database has it. */
+export function w2KeptRead(raw: unknown, l: MkListingMine | null, now: number): W2Kept {
+  const server = w2FormOf(l);
+  if (!l || !mkIsObj(raw)) return { form: server, step: null, nameMode: "" };
+  const same = raw.at === l.updated_at;
+  const recent = !w2KeptOld(raw, now);
+  let form = server;
+  if (raw.dirty === true && (same || recent)) {
+    form = w2FormRead(raw.form, server);
+    if (!same) form = { ...form, photos: server.photos };
+  }
+  return { form, step: isW2Step(raw.step) && (same || recent) ? raw.step : null, nameMode: isMkNameMode(raw.nameMode) ? raw.nameMode : "" };
 }
 
 /* ------------------------------------------------------------------ the photo step */

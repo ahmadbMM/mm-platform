@@ -3,8 +3,8 @@
 //
 // The house rule holds here too: a screen says its titles, its labels and what a refusal means, and nothing else. No
 // hint under a field, no line saying why a button waits. The only sentences are the ticks a seller makes (the four
-// declarations of an e-bike or e-scooter, the consent to show the listing, the rules), what a held or removed listing
-// says of itself, and what each refusal says.
+// declarations of an e-bike or e-scooter, the consent to show the listing, the rules), that buyers cannot see a
+// listing our team is checking, and what each refusal says.
 export const T = {
   en: {
     // the form's frame
@@ -14,7 +14,6 @@ export const T = {
     saving: "Saving", saved: "Saved", notSaved: "Not saved",
     steps: { item: "Photos and category", details: "Details", words: "Title and description", price: "Price and city", final: "Final details", review: "Review" },
     // photos
-    photos: "Photos",
     takePhoto: "Take a photo", choosePhotos: "Choose photos", addPhoto: "Add a photo",
     cover: "Cover",
     photoN: (n: number) => `Photo ${n}`,
@@ -25,7 +24,7 @@ export const T = {
     photosFull: "A listing takes 10 photos at most.",
     shots: { drive: "Drive side", other: "Other side", drivetrain: "Drivetrain", cockpit: "Cockpit", frame: "Frame number", damage: "Any damage" },
     // the category and the facts it asks for
-    category: "Category", sport: "Sport", type: "Product type", choose: "Choose",
+    sport: "Sport", type: "Product type", choose: "Choose",
     facts: { brand: "Brand", model: "Model", year: "Year", frame_size: "Frame size", wheel_size: "Wheel size", size: "Size", for_whom: "Made for" },
     wheelOther: "Other",
     forWhom: { men: "Men", women: "Women", unisex: "Unisex", kids: "Kids" },
@@ -83,7 +82,7 @@ export const T = {
     all: "All",
     groups: { live: "On sale", draft: "Drafts", sold: "Sold", ended: "Ended" },
     act: {
-      continue: "Continue", view: "View", edit: "Edit", reserve: "Reserve", unreserve: "Back on sale", sold: "Mark as sold",
+      continue: "Continue", edit: "Edit", reserve: "Reserve", unreserve: "Back on sale", sold: "Mark as sold",
       unsold: "Back on sale", renew: "Renew", repost: "Repost", share: "Share", delete: "Delete",
     },
     endsToday: "Ends today", endsTomorrow: "Ends tomorrow",
@@ -91,8 +90,6 @@ export const T = {
     soldFor: "Sold for",
     messages: "Messages",
     unread: (n: number) => `${n} unread`,
-    heldNote: "Our team is checking this listing. Buyers cannot see it.",
-    hiddenNote: "Our team removed this listing.",
     reason: "Reason",
     soldTitle: "Mark as sold",
     soldPrice: "Price it sold for",
@@ -107,7 +104,6 @@ export const T = {
     next: "التالي",
     saving: "جارٍ الحفظ", saved: "تم الحفظ", notSaved: "لم يُحفظ",
     steps: { item: "الصور والفئة", details: "التفاصيل", words: "العنوان والوصف", price: "السعر والمدينة", final: "التفاصيل الأخيرة", review: "المراجعة" },
-    photos: "الصور",
     takePhoto: "التقط صورة", choosePhotos: "اختر صوراً", addPhoto: "أضف صورة",
     cover: "الغلاف",
     photoN: (n: number) => `الصورة ${n}`,
@@ -117,7 +113,7 @@ export const T = {
     unreadable: "تعذّرت قراءة هذه الصورة.",
     photosFull: "الإعلان يقبل 10 صور على الأكثر.",
     shots: { drive: "جهة ناقل الحركة", other: "الجهة الأخرى", drivetrain: "ناقل الحركة", cockpit: "المقود", frame: "رقم الهيكل", damage: "أي ضرر" },
-    category: "الفئة", sport: "الرياضة", type: "نوع المنتج", choose: "اختر",
+    sport: "الرياضة", type: "نوع المنتج", choose: "اختر",
     facts: { brand: "الماركة", model: "الموديل", year: "سنة الصنع", frame_size: "مقاس الهيكل", wheel_size: "مقاس العجلة", size: "المقاس", for_whom: "مخصص لـ" },
     wheelOther: "مقاس آخر",
     forWhom: { men: "الرجال", women: "النساء", unisex: "الجنسين", kids: "الأطفال" },
@@ -169,7 +165,7 @@ export const T = {
     all: "الكل",
     groups: { live: "معروضة للبيع", draft: "مسودات", sold: "مَبيعة", ended: "منتهية" },
     act: {
-      continue: "أكمل", view: "عرض", edit: "تعديل", reserve: "حجز", unreserve: "أعده للبيع", sold: "تم البيع",
+      continue: "أكمل", edit: "تعديل", reserve: "حجز", unreserve: "أعده للبيع", sold: "تم البيع",
       unsold: "أعده للبيع", renew: "جدّد", repost: "أعد النشر", share: "مشاركة", delete: "حذف",
     },
     endsToday: "ينتهي اليوم", endsTomorrow: "ينتهي غداً",
@@ -177,8 +173,6 @@ export const T = {
     soldFor: "بِيع بسعر",
     messages: "الرسائل",
     unread: (n: number) => `${n} غير مقروءة`,
-    heldNote: "فريقنا يراجع هذا الإعلان. لا يراه المشترون الآن.",
-    hiddenNote: "أزال فريقنا هذا الإعلان.",
     reason: "السبب",
     soldTitle: "تم البيع",
     soldPrice: "السعر الذي بِيع به",

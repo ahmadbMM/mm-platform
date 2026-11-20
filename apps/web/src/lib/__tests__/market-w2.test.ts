@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { T as M } from "@/components/market/Market.text";
 import { T } from "@/components/market/w2.text";
+import { w2Get, w2Post, w2PostForm } from "@/components/market/w2/api";
 import { w2IssueText, w2RefusalText, W2_BIRTH_HREF } from "@/components/market/w2/say";
 import { POST as savePost } from "../../app/api/market/listing/save/route";
 import { POST as publishPost } from "../../app/api/market/listing/publish/route";
@@ -13,9 +14,9 @@ import {
   MK_DECLARATIONS, MK_FACT_KEYS, MK_FOR_WHOM, MK_PHOTO_BYTES, MK_SMALL_BYTES, MK_STATUSES, mkHasExif, mkImageKind, type MkCategory, type MkListingMine,
 } from "../market/core";
 import {
-  W2_GROUPS, W2_SHOTS, W2_STATE_OF, W2_STEPS, w2Acts, w2BodyFields, w2BodyPublish, w2BodyState, w2Changes, w2Editable, w2Empty, w2Fields,
-  w2FormOf, w2FormRead, w2GroupOf, w2GroupsIn, w2HasChanges, w2IsBike, w2Issues, w2Move, w2Place, w2Sendable, w2SerialText, w2Slots, w2StartStep,
-  w2StepFrom, w2Steps, w2Stored, w2Whole, w2YearMax, type W2Ctx, type W2Form,
+  W2_GROUPS, W2_KEPT_MS, W2_SHOTS, W2_STATE_OF, W2_STEPS, w2Acts, w2BodyFields, w2BodyPublish, w2BodyState, w2Changes, w2Editable, w2Empty, w2Fields,
+  w2FormOf, w2FormRead, w2GroupOf, w2GroupsIn, w2HasChanges, w2IsBike, w2Issues, w2KeptOld, w2KeptRead, w2KeptValue, w2Move, w2Place, w2SaveWhat, w2Sendable,
+  w2SerialText, w2Slots, w2StartStep, w2StepFrom, w2Steps, w2Stored, w2Whole, w2YearMax, type W2Ctx, type W2Form,
 } from "../market/w2";
 import { w2PairRefusal, w2Photo } from "../market/w2-photo";
 
@@ -101,6 +102,48 @@ describe("the form and the listing it saves", () => {
     // a title that is only too short for publishing is still a draft's title
     const short = full({ title: "Ab" });
     expect(w2Sendable(w2Changes(w2Stored(mine()), w2Fields(short, cat(), NOW)), w2Issues(short, cat(), ctx()))).toEqual({ title: "Ab" });
+  });
+  it("makes a draft only when asked to, saves a draft as it goes and a listing on sale in one go", () => {
+    const road = cat();
+    const typed = { ...w2Empty(), category: "cycling-bike-road" };
+    // no draft yet: putting the page away with only a category chosen sends nothing; the first photo makes the draft
+    expect(w2SaveWhat(null, w2Stored(null), typed, road, {}, NOW)).toBeNull();
+    expect(w2SaveWhat(null, w2Stored(null), typed, road, { create: true }, NOW)).toEqual({ category: "cycling-bike-road" });
+    expect(w2SaveWhat(null, w2Stored(null), w2Empty(), null, { create: true }, NOW)).toEqual({});
+    // a draft: only what changed, without what the database would refuse outright
+    const l = mine();
+    const linked = full({ title: "see www.example.com", price: "2400" });
+    expect(w2SaveWhat(l, w2Stored(l), full(), road, {}, NOW)).toBeNull();
+    expect(w2SaveWhat(l, w2Stored(l), full(), road, { create: true }, NOW)).toBeNull();
+    expect(w2SaveWhat(l, w2Stored(l), linked, road, {}, NOW)).toEqual({ price: 2400 });
+    expect(w2SaveWhat(l, w2Stored(l), linked, road, { all: true }, NOW)).toEqual({ title: "see www.example.com", price: 2400 });
+    // a listing on sale: nothing until Save changes, then everything that changed
+    const live = mine({ status: "live" });
+    expect(w2SaveWhat(live, w2Stored(live), full({ price: "2400" }), road, {}, NOW)).toBeNull();
+    expect(w2SaveWhat(live, w2Stored(live), full({ price: "2400" }), road, { all: true }, NOW)).toEqual({ price: 2400 });
+    expect(w2SaveWhat(live, w2Stored(live), full(), road, { all: true }, NOW)).toBeNull();
+  });
+  it("keeps beside the page only what the database has not taken, and opens a listing with it", () => {
+    const l = mine();
+    const clean = w2KeptValue(l, w2FormOf(l), false, "words", "short", NOW);
+    expect(clean).toEqual({ at: l.updated_at, saved: NOW, dirty: false, step: "words", nameMode: "short" });
+    expect(JSON.stringify(clean)).not.toContain("WSBC"); // a saved form is not kept twice, its serial number least of all
+    const dirty: unknown = JSON.parse(JSON.stringify(w2KeptValue(l, full({ title: "Typed and not saved", photos: [hex(3), hex(1)] }), true, "words", "none", NOW)));
+    // the same state of the listing: the form as it was typed, on its step
+    expect(w2KeptRead(dirty, l, NOW + 60_000)).toMatchObject({ step: "words", nameMode: "none", form: { title: "Typed and not saved", photos: [hex(3), hex(1)] } });
+    // the listing changed since: the typed words stay, the photos are the database's
+    const moved = mine({ updated_at: "2026-11-20T10:00:00+00:00", photos: [hex(1)] });
+    expect(w2KeptRead(dirty, moved, NOW + 60_000).form).toMatchObject({ title: "Typed and not saved", photos: [hex(1)] });
+    // a saved form: the listing as the database has it, on the step it was left at
+    expect(w2KeptRead(clean, l, NOW + 60_000)).toEqual({ form: w2FormOf(l), step: "words", nameMode: "short" });
+    // past its twelve hours, not ours to read, or nothing kept: the listing as it is
+    expect(w2KeptOld(dirty, NOW + W2_KEPT_MS - 1)).toBe(false);
+    expect(w2KeptOld(dirty, NOW + W2_KEPT_MS)).toBe(true);
+    for (const junk of [null, "x", [], { saved: "yesterday" }]) expect(w2KeptOld(junk, NOW), JSON.stringify(junk)).toBe(true);
+    expect(w2KeptRead(dirty, moved, NOW + W2_KEPT_MS)).toEqual({ form: w2FormOf(moved), step: null, nameMode: "none" });
+    expect(w2KeptRead(null, l, NOW)).toEqual({ form: w2FormOf(l), step: null, nameMode: "" });
+    expect(w2KeptRead({ dirty: true, at: l.updated_at, saved: NOW, step: "nowhere", nameMode: "full", form: "x" }, l, NOW)).toEqual({ form: w2FormOf(l), step: null, nameMode: "" });
+    expect(w2KeptRead(dirty, null, NOW)).toEqual({ form: w2Empty(), step: null, nameMode: "" });
   });
   it("reads the form this browser kept back key by key, and never more than a form could hold", () => {
     const server = w2FormOf(mine());
@@ -325,7 +368,7 @@ describe("this builder's words", () => {
       for (const k of MK_DECLARATIONS) expect(m.declare[k].trim(), k).toBeTruthy();
       for (const k of MK_FOR_WHOM) expect(m.forWhom[k].trim(), k).toBeTruthy();
       for (const g of W2_GROUPS) expect(m.groups[g].trim(), g).toBeTruthy();
-      for (const a of ["continue", "view", "edit", "reserve", "unreserve", "sold", "unsold", "renew", "repost", "share", "delete"] as const) expect(m.act[a].trim(), a).toBeTruthy();
+      for (const a of ["continue", "edit", "reserve", "unreserve", "sold", "unsold", "renew", "repost", "share", "delete"] as const) expect(m.act[a].trim(), a).toBeTruthy();
       expect(Object.keys(m.need).sort()).toEqual(Object.keys(T.en.need).sort());
       expect(m.stepOf(2, 6)).toMatch(/2.*6/);
       expect(m.commissionOf("1", "⃁ 2,500")).toContain("1%");
@@ -688,6 +731,70 @@ describe("the selling routes", () => {
     stub((c) => (c.url.endsWith("/rpc/market_photo_slot") ? json({ name: NAME.replace(".jpg", ".webp"), small: "x", expires_at: "x" }) : json({ Key: "ok" })));
     expect((await photoPost(upload(good))).status).toBe(502);
     expect(calls.length).toBe(1);
+    // nor a name under another listing than the one asked for, nor a listing's name for a shop's logo
+    stub((c) => (c.url.endsWith("/rpc/market_photo_slot") ? json({ name: NAME.replace("l7/", "l70/"), small: "x", expires_at: "x" }) : json({ Key: "ok" })));
+    expect((await photoPost(upload(good))).status).toBe(502);
+    expect(calls.length).toBe(1);
+    stub(storage);
+    expect((await photoPost(upload({ ...good, for: "shop", ref: "" }))).status).toBe(502);
+    expect(calls.length).toBe(1);
+  });
+});
+
+/* ------------------------------------------------------------------ how the screens ask the routes */
+
+describe("asking the site's own routes", () => {
+  type Init = RequestInit & { keepalive?: boolean };
+  let asked: { url: string; init: Init }[] = [];
+  const answer = (make: () => Response | Promise<Response>) => {
+    asked = [];
+    vi.stubGlobal("fetch", vi.fn((url: string, init: Init = {}) => { asked.push({ url: String(url), init }); return Promise.resolve().then(make); }));
+  };
+  const body = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "content-type": "application/json" } });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+
+  it("hands a route's answer on as it is, and a refusal as its id and word", async () => {
+    answer(() => body({ ok: true, items: [{ id: 7 }] }));
+    expect(await w2Get<{ items: { id: number }[] }>("/api/market/listing/mine")).toEqual({ ok: true, items: [{ id: 7 }] });
+    expect(asked[0]).toMatchObject({ url: "/api/market/listing/mine", init: { cache: "no-store", credentials: "same-origin" } });
+    answer(() => body({ ok: false, error: "limit", detail: "drafts" }, 429));
+    expect(await w2Post("/api/market/listing/save", { id: null, fields: {} })).toEqual({ ok: false, error: "limit", detail: "drafts" });
+    expect(asked[0].init).toMatchObject({ method: "POST", body: JSON.stringify({ id: null, fields: {} }), credentials: "same-origin" });
+    answer(() => body({ ok: false, error: "birth" }, 409));
+    expect(await w2PostForm("/api/market/photo", new FormData())).toEqual({ ok: false, error: "birth", detail: "" });
+  });
+  it("reads no answer, a page that is not JSON and an answer of no known shape as the one refusal with words", async () => {
+    const generic = { ok: false, error: "generic", detail: "" };
+    answer(() => new Response("<html>502</html>", { status: 502 }));
+    expect(await w2Get("/api/market/me")).toEqual(generic);
+    answer(() => body({ message: "something else" }, 500));
+    expect(await w2Post("/api/market/listing/state", { id: 7, action: "renew" })).toEqual(generic);
+    answer(() => { throw new TypeError("Failed to fetch"); });
+    expect(await w2Post("/api/market/listing/state", { id: 7, action: "renew" })).toEqual(generic);
+  });
+  it("gives a request up after its time with a timer every browser has, and lets one that outlives the page run", async () => {
+    vi.useFakeTimers();
+    let signal: AbortSignal | null | undefined;
+    vi.stubGlobal("fetch", vi.fn((_url: string, init: Init = {}) => new Promise<Response>((_yes, no) => {
+      signal = init.signal;
+      signal?.addEventListener("abort", () => no(new DOMException("given up", "AbortError")));
+    })));
+    const waiting = w2Get("/api/market/listing/mine");
+    await vi.advanceTimersByTimeAsync(19_999);
+    expect(signal?.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(signal?.aborted).toBe(true);
+    expect(await waiting).toEqual({ ok: false, error: "generic", detail: "" });
+    vi.useRealTimers();
+    // the save sent as the page is put away: kept alive by the browser, never cut short by the page
+    answer(() => body({ ok: true, listing: { id: 7 } }));
+    expect(await w2Post("/api/market/listing/save", { id: 7, fields: { title: "x" } }, true)).toMatchObject({ ok: true });
+    expect(asked[0].init.keepalive).toBe(true);
+    expect(asked[0].init.signal).toBeUndefined();
+    // AbortSignal.timeout is not in Safari before 16: calling it there would fail every request before it was sent
+    for (const f of ["api.ts", "photo-client.ts", "SellApp.tsx", "SellForm.tsx", "PhotoGrid.tsx", "MyListings.tsx", "ShareButton.tsx"]) {
+      expect(readFileSync(fileURLToPath(new URL(`../../components/market/w2/${f}`, import.meta.url)), "utf8"), f).not.toMatch(/AbortSignal\.timeout\(/);
+    }
   });
 });
 
@@ -720,6 +827,15 @@ describe("the selling pages", () => {
     expect(src).toContain("href={MK_SELL}");
     expect(src).not.toContain("use client");
     expect(src).not.toContain("placeholder");
+  });
+  it("write no line under a choice or beside a chip beyond the ones the build names", () => {
+    // the condition's definitions are the only lines written inside an option: "No name" stands alone
+    expect(read("components/market/w2/SellForm.tsx").match(/className="mk-w2-def"/g)?.length).toBe(1);
+    // a held or removed listing's chip already says which it is: one line for a held one, staff's reason for a removed one
+    const mineSrc = read("components/market/w2/MyListings.tsx");
+    expect(mineSrc.match(/className="mk-w2-note"/g)?.length).toBe(1);
+    expect(Object.keys(T.en)).not.toEqual(expect.arrayContaining(["heldNote"]));
+    expect(Object.keys(T.en)).not.toEqual(expect.arrayContaining(["hiddenNote"]));
   });
   it("open every pop-up centred, through the one pop-up the Marketplace has", () => {
     for (const f of ["MyListings.tsx", "ConfirmDelete.tsx"]) expect(read(`components/market/w2/${f}`), f).toContain("<MkModal ");

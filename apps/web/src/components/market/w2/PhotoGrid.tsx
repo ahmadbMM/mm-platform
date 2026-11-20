@@ -49,6 +49,9 @@ export default function PhotoGrid({ photos, cat, m, retry, invalid, ensureId, on
   const dragAt = useRef<number | null>(null);
   useEffect(() => { list.current = photos; }, [photos]);
   useEffect(() => { onPending(pend.filter((p) => p.state === "work").length); }, [pend, onPending]);
+  // a refusal can move the form to another step while a photo is on its way: the count goes with the grid, so the
+  // form's own buttons never wait for a grid that is no longer there
+  useEffect(() => () => onPending(0), [onPending]);
   useEffect(() => () => { for (const u of urls.current) URL.revokeObjectURL(u); }, []);
 
   const send = useCallback(async (it: Pending) => {
@@ -153,7 +156,7 @@ export default function PhotoGrid({ photos, cat, m, retry, invalid, ensureId, on
         {photos.map((name, i) => (
           <li key={name} className={`mk-w2-tile${drag === i ? " mk-w2-lift" : ""}`} data-mk-tile={i}>
             <span className="mk-w2-pic">
-              <img src={local[name] ?? mkPhotoSrc(name, true) ?? ""} alt={m.photoN(i + 1)} draggable={false} />
+              <img src={local[name] ?? mkPhotoSrc(name, true) ?? undefined} alt={m.photoN(i + 1)} draggable={false} />
               {i === 0 && <span className="mk-w2-cover">{m.cover}</span>}
               <button type="button" className="mk-w2-grip" aria-label={`${m.drag}: ${m.photoN(i + 1)}`} onPointerDown={(e) => dragStart(e, i)} onKeyDown={(e) => gripKey(e, i)}>
                 <W2Grip />

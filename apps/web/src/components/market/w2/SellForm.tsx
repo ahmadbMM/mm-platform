@@ -5,12 +5,12 @@ import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import {
   MK_DECLARATIONS, MK_DESC_MAX, MK_FAULTS_MAX, MK_FOR_WHOM, MK_MINE, MK_RULES, MK_SERIAL_MAX, MK_TITLE_MAX, MK_WHEEL_SIZES, SA_CITIES,
-  conditionKeys, isMkNameMode, listingHref, mkCatName, mkCategoryOf, mkCityName, mkPhotoSrc, mkPick, mkSports, mkTypesOf, sellHref,
+  conditionKeys, listingHref, mkCatName, mkCategoryOf, mkCityName, mkPhotoSrc, mkPick, mkSports, mkTypesOf, sellHref,
   type MkCategory, type MkFactKey, type MkListingMine, type MkMe, type MkNameMode,
 } from "@/lib/market/core";
 import {
-  W2_CONDITIONS, W2_FACT_MAX, isW2Step, w2Changes, w2Fields, w2FormOf, w2FormRead, w2HasChanges, w2Issues, w2Place, w2Sendable, w2StartStep,
-  w2SerialText, w2StepFrom, w2Steps, w2Stored, w2Whole, type W2Ctx, type W2Fields, type W2Form, type W2Issue, type W2Step,
+  W2_CONDITIONS, W2_FACT_MAX, W2_HARD_ONLY, w2Changes, w2Fields, w2HasChanges, w2Issues, w2KeptOld, w2KeptRead, w2KeptValue, w2Place, w2SaveWhat,
+  w2StartStep, w2SerialText, w2StepFrom, w2Steps, w2Stored, w2Whole, type W2Ctx, type W2Fields, type W2Form, type W2Issue, type W2Kept, type W2Step,
 } from "@/lib/market/w2";
 import MkAmt from "../MkAmt";
 import MkIcon from "../MkIcon";
@@ -41,8 +41,6 @@ type Err = { field: string; text: string; birth?: boolean };
 type Done = { listing: MkListingMine; kind: "live" | "held" | "saved" };
 type Saved = { ok: true; listing: MkListingMine | null } | W2Refused;
 
-// For what a draft's save may send: only the values the database would refuse outright matter, never the account.
-const HARD_ONLY: W2Ctx = { draft: false, priceMax: Number.MAX_SAFE_INTEGER, shop: true, shortName: null, nameMode: "", consent: true, termsNeeded: false, termsTick: true };
 // The controls each step shows, so a refusal about one of them is said beside it.
 const STEP_FIELDS: Record<W2Step, readonly string[]> = {
   item: ["photos", "category"], details: ["facts", "condition", "faults"], words: ["title", "description"], price: ["price", "city"],
@@ -53,45 +51,27 @@ const STEP_FIELDS: Record<W2Step, readonly string[]> = {
 
 // Only a listing that exists is kept (by its number, which opens for its own account alone), and for twelve hours at
 // most: nothing is typed before the first photo makes the draft, and a phone several people use holds no one's form
-// for longer than that. What is kept is the seller's own listing as they were writing it, and nothing else.
-const KEPT_FOR_MS = 12 * 3600 * 1000;
+// for longer than that. What is kept is what the seller typed and the database has not taken yet, and nothing else:
+// once a save is answered only the step and the name choice stay (lib/market/w2.ts w2KeptValue, w2KeptRead).
 const KEPT = "mk-w2-form:";
 const keptKey = (id: number) => `${KEPT}${id}`;
-type Kept = { form: W2Form; step: W2Step | null; nameMode: MkNameMode | "" };
+const parsed = (raw: string | null): unknown => { try { return raw ? JSON.parse(raw) : null; } catch { return null; } };
 /** Forms kept longer ago than that are let go, whoever's they were. */
 function sweep(now: number) {
   try {
     const old: string[] = [];
     for (let i = 0; i < window.localStorage.length; i++) {
       const k = window.localStorage.key(i);
-      if (!k || !k.startsWith(KEPT)) continue;
-      let saved = 0;
-      try { const v = JSON.parse(window.localStorage.getItem(k) ?? "null") as { saved?: unknown } | null; if (v && typeof v.saved === "number") saved = v.saved; } catch { /* not ours to read: it goes */ }
-      if (!(now - saved < KEPT_FOR_MS)) old.push(k);
+      if (k && k.startsWith(KEPT) && w2KeptOld(parsed(window.localStorage.getItem(k)), now)) old.push(k);
     }
     for (const k of old) window.localStorage.removeItem(k);
   } catch { /* no storage */ }
 }
-function kept(l: MkListingMine | null, now: number): Kept {
-  const server = w2FormOf(l);
+function kept(l: MkListingMine | null, now: number): W2Kept {
   sweep(now);
-  if (!l) return { form: server, step: null, nameMode: "" };
-  try {
-    const raw = window.localStorage.getItem(keptKey(l.id));
-    const b = raw ? (JSON.parse(raw) as { at?: unknown; saved?: unknown; dirty?: unknown; step?: unknown; nameMode?: unknown; form?: unknown }) : null;
-    if (!b) return { form: server, step: null, nameMode: "" };
-    const same = b.at === l.updated_at;
-    const recent = typeof b.saved === "number" && now - b.saved < KEPT_FOR_MS;
-    let form = server;
-    if (b.dirty === true && (same || recent)) {
-      form = w2FormRead(b.form, server);
-      // the listing changed since (a save whose answer never arrived, or another device): its photos are the database's
-      if (!same) form = { ...form, photos: server.photos };
-    }
-    return { form, step: isW2Step(b.step) && (same || recent) ? b.step : null, nameMode: isMkNameMode(b.nameMode) ? b.nameMode : "" };
-  } catch {
-    return { form: server, step: null, nameMode: "" };
-  }
+  let raw: unknown = null;
+  try { if (l) raw = parsed(window.localStorage.getItem(keptKey(l.id))); } catch { /* no storage: the listing as the database has it */ }
+  return w2KeptRead(raw, l, now);
 }
 function keep(id: number, value: unknown) {
   try { window.localStorage.setItem(keptKey(id), JSON.stringify(value)); } catch { /* no storage: the form still works */ }
@@ -156,7 +136,7 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
     const list = w2Steps(isDraft, c);
     if (start.step && list.includes(start.step)) return start.step;
     if (!first) return "item";
-    return w2StartStep(isDraft, list, w2Issues(start.form, c, { ...HARD_ONLY, draft: isDraft, shop: false, consent: false, priceMax: me.limits.price_max }));
+    return w2StartStep(isDraft, list, w2Issues(start.form, c, { ...W2_HARD_ONLY, draft: isDraft, shop: false, consent: false, priceMax: me.limits.price_max }));
   });
   const at: W2Step = steps.includes(step) ? step : "review";
 
@@ -176,17 +156,15 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
 
   /* ---------------------------------------------------------------- saving */
 
-  // One save at a time, each sending only what changed since the database last answered. `all`: everything that
-  // changed, as it is (the review's Save or Publish, checked first); without it only the values the database would
-  // take in a draft, so a link in the title is said at the title and never sent. `create`: make the draft even when
-  // nothing has been filled in yet (the first photo needs a listing to belong to).
+  // One save at a time, each sending only what changed since the database last answered (lib/market/w2.ts
+  // w2SaveWhat). `all`: everything that changed, as it is (the review's Save or Publish, checked first); without it
+  // only the values the database would take in a draft, so a link in the title is said at the title and never sent.
+  // `create`: make the draft even when nothing has been filled in yet (the first photo needs a listing to belong
+  // to); without it no draft is ever made, so putting the page away with only a category chosen leaves nothing behind.
   const saveNow = useCallback(async (o: { all?: boolean; create?: boolean; leaving?: boolean }): Promise<Saved> => {
     const l = listingRef.current, f = formRef.current;
-    if (l && l.status !== "draft" && !o.all) return { ok: true, listing: l };
-    const c = mkCategoryOf(cats, f.category);
-    let changes = w2Changes(baseRef.current, w2Fields(f, c));
-    if (!o.all) changes = w2Sendable(changes, w2Issues(f, c, HARD_ONLY));
-    if (!w2HasChanges(changes) && (l || !o.create)) return { ok: true, listing: l };
+    const changes = w2SaveWhat(l, baseRef.current, f, mkCategoryOf(cats, f.category), o);
+    if (!changes) return { ok: true, listing: l };
     setSaveState("saving");
     const r = await w2Post<{ listing: MkListingMine }>("/api/market/listing/save", { id: l?.id ?? null, fields: changes }, o.leaving === true);
     if (!r.ok) { setSaveState("failed"); return r; }
@@ -223,7 +201,7 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
   useEffect(() => {
     if (done || !listing) return;
     const dirty = w2HasChanges(w2Changes(base, w2Fields(form, cat, now)));
-    keep(listing.id, { at: listing.updated_at, saved: Date.now(), dirty, step: at, nameMode, form });
+    keep(listing.id, w2KeptValue(listing, form, dirty, at, nameMode, Date.now()));
   }, [form, base, at, nameMode, listing, cat, now, done]);
 
   /* ---------------------------------------------------------------- moving, and saying what is wrong */
@@ -496,7 +474,7 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
                   )}
                   <label className="mk-w2-opt">
                     <input type="radio" name={idOf("name")} checked={nameMode === "none"} onChange={() => { setNameMode("none"); setErr(null); }} />
-                    <span><b>{m.noName}</b><span className="mk-w2-def">{t.seller_private}</span></span>
+                    <span><b>{m.noName}</b></span>
                   </label>
                 </div>
                 {said("name_mode")}
@@ -530,7 +508,7 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
             <header><h2>{m.steps.item}</h2><button type="button" className="mk-link" onClick={() => go("item")} aria-label={`${m.edit}: ${m.steps.item}`}>{m.edit}</button></header>
             {form.photos.length > 0 && (
               <ul className="mk-w2-strip">
-                {form.photos.map((p, i) => <li key={p}><img src={mkPhotoSrc(p, true) ?? ""} alt={m.photoN(i + 1)} loading="lazy" /></li>)}
+                {form.photos.map((p, i) => <li key={p}><img src={mkPhotoSrc(p, true) ?? undefined} alt={m.photoN(i + 1)} loading="lazy" /></li>)}
               </ul>
             )}
             {cat && <p className="mk-w2-val">{[mkCategoryOf(cats, cat.parent), cat].filter((c): c is MkCategory => !!c).map((c) => mkCatName(c, locale)).join(" · ")}</p>}
@@ -543,7 +521,8 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
                 const v = form.facts[k].trim();
                 if (!v) return null;
                 const shown = k === "for_whom" ? m.forWhom[v as keyof typeof m.forWhom] ?? v : k === "wheel_size" && v === "other" ? m.wheelOther : v;
-                return <div key={k}><dt>{m.facts[k]}</dt><dd><bdi dir="auto">{shown}</bdi></dd></div>;
+                // a year and a size are read left to right on an Arabic page too; a brand or a model in its own direction
+                return <div key={k}><dt>{m.facts[k]}</dt><dd><bdi dir={k === "year" || k === "frame_size" || (k === "wheel_size" && v !== "other") ? "ltr" : "auto"}>{shown}</bdi></dd></div>;
               })}
               {form.faults.trim() && <div><dt>{m.faults}</dt><dd><bdi dir="auto">{form.faults}</bdi></dd></div>}
             </dl>

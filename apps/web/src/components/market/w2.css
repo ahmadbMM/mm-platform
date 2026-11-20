@@ -6,7 +6,9 @@
 /* ── The selling form's frame ── */
 .mk-w2-wrap { display: flex; flex-direction: column; gap: 20px; }
 .mk-w2-wrap h1 { font-size: clamp(28px, 6.4vw, 40px); letter-spacing: -1px; margin: 0; }
-.mk-w2-wrap h1:focus { outline: none; }
+.mk-w2-wrap :is(h1, h2):focus { outline: none; }
+/* a card or the list takes the focus only from the script, when the pop-up that closed has no opener left to give it to */
+.mk-w2-spot:focus { outline: none; }
 .mk-w2-wrap h2 { font-size: 18px; letter-spacing: -.2px; margin: 0; }
 html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk-w2-wrap :is(h1, h2) { letter-spacing: 0; }
 .mk-w2-form { display: flex; flex-direction: column; gap: 20px; }

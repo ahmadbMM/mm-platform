@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { MK_MINE, mkErrorKey, sellHref, statusKey, type MkCategory, type MkListingMine, type MkMe } from "@/lib/market/core";
@@ -47,6 +47,16 @@ export default function SellApp({ locale, listingId, cats, me, mine, error }: Se
   const [del, setDel] = useState<MkListingMine | null>(null);
   const [delBusy, setDelBusy] = useState(false);
   const [delErr, setDelErr] = useState<string | null>(null);
+  // a deleted draft takes its Delete button with it: the keyboard goes to the drafts' heading, not to the page's top
+  const asked = useRef(false);
+  useEffect(() => {
+    if (del) { asked.current = true; return; }
+    if (!asked.current) return;
+    asked.current = false;
+    const on = document.activeElement;
+    if (on && on !== document.body && on.isConnected) return;
+    document.getElementById("mk-w2-drafts-h")?.focus({ preventScroll: true });
+  }, [del]);
 
   async function reload() {
     if (!cats.length) { window.location.reload(); return; } // the categories come with the page
@@ -131,7 +141,7 @@ export default function SellApp({ locale, listingId, cats, me, mine, error }: Se
     <>
       {title}
       <section className="mk-w2-drafts" aria-labelledby="mk-w2-drafts-h">
-        <h2 id="mk-w2-drafts-h">{m.drafts}</h2>
+        <h2 id="mk-w2-drafts-h" tabIndex={-1}>{m.drafts}</h2>
         <ul className="mk-w2-list">
           {drafts.map((l) => (
             <li key={l.id} className="mk-card mk-w2-item">
