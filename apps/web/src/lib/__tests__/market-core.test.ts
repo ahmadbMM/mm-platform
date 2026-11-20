@@ -2,16 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement, type ReactElement } from "react";
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
-import ContactButton from "@/components/market/ContactButton";
 import MkAmt from "@/components/market/MkAmt";
 import MkGate from "@/components/market/MkGate";
 import MkIcon from "@/components/market/MkIcon";
 import MkPhoto from "@/components/market/MkPhoto";
-import ReportButton from "@/components/market/ReportButton";
 import SellerTag from "@/components/market/SellerTag";
-import ShopContact from "@/components/market/ShopContact";
-import UnreadBadge from "@/components/market/UnreadBadge";
-import { TxProvider } from "@/i18n/TxProvider";
 import { T } from "@/components/market/Market.text";
 import { mkErrorText } from "@/components/market/Market.text";
 import { T as W1 } from "@/components/market/w1.text";
@@ -33,13 +28,13 @@ import {
   mkHasExif, mkHasLink, mkHasPhone, mkImageKind, mkNum, mkPhotoSrc, mkPick, mkRefusal, mkRenewable, mkSerial, mkSettings, mkSmallName,
   mkSoldShown, mkSports, mkTypesOf, mkWaDigits, mkWaHref, sellHref, sellerLabelKey, shopHref, statusKey, type MkCategory,
 } from "../market/core";
-import { marketPaths, marketSearch } from "../market/hooks";
 import { bodyId, bodyInt, bodyText, marketGuard, mkAnswer, mkRefuse } from "../market/route";
 import { loadMarketCategories, mkBrowse, mkListingGet, mkListingState, mkStorePut, purgeMarketPhotos } from "../market/server";
 
 // The Marketplace's foundation: the plain rules of lib/market/core.ts, the shared words, the launch switch in the
 // menus, the route guard, the typed database calls and the photo route. Nothing is read or written anywhere: every
-// database and storage call is a stub.
+// database and storage call is a stub. What the builders replace or fill (the placeholders, the sitemap and search
+// hooks, their own words) is not pinned down here, so this file stays true as their parts land.
 
 const render = renderUntyped as (el: ReactElement) => string;
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -75,10 +70,6 @@ describe("the launch switch", () => {
     expect(COMMUNITY.pages).not.toContain("marketplace");
     expect(T.en.name).toBe("Marketplace");
     expect(T.ar.name).toBe("السوق");
-  });
-  it("leaves the sitemap and the search empty until the browse builder fills them", async () => {
-    expect(await marketPaths(null)).toEqual([]);
-    expect(await marketSearch("en")).toEqual([]);
   });
 });
 
@@ -203,8 +194,9 @@ describe("the shared words", () => {
     expect(all).not.toMatch(/[\u{1F000}-\u{1FAFF}☀-➿]/u);
     expect(all).not.toMatch(/Micromobility|micromobility|مايكروموبيليتي/);
   });
-  it("leave each builder a words file of its own, empty", () => {
-    for (const w of [W1, W2, W3, W4]) expect(w).toEqual({ en: {}, ar: {} });
+  it("give each builder a words file of its own, with the same keys in English and Arabic", () => {
+    const keys = (v: unknown): string[] => (v && typeof v === "object" ? Object.entries(v).flatMap(([k, x]) => [k, ...keys(x).map((y) => `${k}.${y}`)]).sort() : []);
+    for (const w of [W1, W2, W3, W4]) expect(keys(w.ar)).toEqual(keys(w.en));
   });
   it("draw every mark from the one set", () => {
     expect(MK_ICONS).toEqual(expect.arrayContaining(["close", "back", "next", "search", "filter", "pin", "shop", "user", "shield", "flag", "chat", "whatsapp", "camera", "tick", "plus"]));
@@ -246,19 +238,6 @@ describe("the shared pieces", () => {
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain("mk-ic-flip");
     expect(render(createElement(MkIcon, { name: "close" }))).not.toContain("mk-ic-flip");
-  });
-  it("leave harmless placeholders where the builders' parts go", () => {
-    const within = (el: ReactElement, locale = "en") => render(createElement(TxProvider as unknown as (p: { locale: string; dict: null }) => ReactElement, { locale, dict: null }, el));
-    const base = { listingId: 4, title: "Road bike", city: "jeddah", signedIn: false, threadId: null };
-    const contact = within(createElement(ContactButton, { ...base, kind: "private", canMessage: true }));
-    expect(contact).toContain("Contact seller");
-    expect(contact).toContain("disabled");
-    expect(within(createElement(ContactButton, { ...base, kind: "shop", canMessage: true }), "ar")).toContain("تواصل مع المتجر");
-    expect(within(createElement(ContactButton, { ...base, kind: "company", canMessage: false }))).toContain("Ask on WhatsApp");
-    expect(within(createElement(ContactButton, { ...base, kind: "private", canMessage: false }))).toBe("");
-    expect(within(createElement(ReportButton, { target: "listing", refId: 4, signedIn: true }))).toContain("Report");
-    expect(within(createElement(UnreadBadge, { where: "header" }))).toBe("");
-    expect(within(createElement(ShopContact, { slug: "pedal-house", name: "Pedal House", signedIn: false, mapUrl: null }))).toBe("");
   });
   it("show a gated page's own content only to a signed-in visitor", () => {
     const inside = createElement("p", null, "My listings");
