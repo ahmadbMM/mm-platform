@@ -32,8 +32,12 @@ describe("the cancelled bookings (the booking app's _mrCancelled)", () => {
   const cx = (o: Record<string, unknown>) => ({ id: "c1", session_id: "2099-03-05", session_date: "2099-03-05", status: "cancelled", cancelled_by: "customer", ...o });
   it("keep one row per booking whose day has not gone, saying who cancelled it, soonest first", () => {
     expect(cancelledGroups([cx({ session_id: "2099-03-09", session_date: "2099-03-09", cancelled_by: null }), cx({}), cx({ id: "c2", cancelled_by: "staff" })], "2099-03-01"))
-      .toEqual([{ key: "2099-03-05", sessionId: "2099-03-05", date: "2099-03-05", by: "staff" }, { key: "2099-03-09", sessionId: "2099-03-09", date: "2099-03-09", by: "" }]);
+      .toEqual([{ key: "2099-03-05", sessionId: "2099-03-05", date: "2099-03-05", by: "staff", at: "" }, { key: "2099-03-09", sessionId: "2099-03-09", date: "2099-03-09", by: "", at: "" }]);
     expect(cancelledGroups([cx({ session_date: "2099-03-01", session_id: "2099-03-01" })], "2099-03-01")[0].by).toBe("customer"); // today is not gone
+  });
+  it("say when the ticket was cancelled: the latest stamp of its rows (2026-11-20)", () => {
+    expect(cancelledGroups([cx({ cancelled_at: "2099-02-27T08:00:00+00:00" }), cx({ id: "c2", cancelled_at: "2099-02-28T11:32:00+00:00" })], "2099-03-01")[0].at).toBe("2099-02-28T11:32:00+00:00");
+    expect(cancelledGroups([cx({ cancelled_at: null })], "2099-03-01")[0].at).toBe("");
   });
   it("leave out a day gone, a rider turned down, and a booking that still has a place on it", () => {
     expect(cancelledGroups([cx({ session_date: "2099-02-28", session_id: "2099-02-28" })], "2099-03-01")).toEqual([]);
@@ -49,6 +53,12 @@ describe("the cancelled bookings (the booking app's _mrCancelled)", () => {
     expect(html).toContain('<span class="tk-cx-chip">Cancelled by you</span>');
     expect(html).toContain("<bdi>Sunday 1 Mar 2099</bdi> · <bdi>9 PM – 11 PM</bdi>");
     expect(draw("staff")).toContain(">Cancelled by us<");
+    // when it was cancelled, in Riyadh time (2026-11-20); nothing when the row carries no stamp
+    const at = (x: string | undefined, t = TICKET.en, locale = "en") => renderToStaticMarkup(createElement(TicketCancelled, { locale, date: "2099-03-01", session: jcc, name: "Open Sports Day", by: "customer", at: x, t, gather: "Gathering", start: "Start" }));
+    expect(at("2099-02-28T11:32:00+00:00")).toContain('<p class="tk-cx-at">Cancelled: <bdi>28 Feb 2099, 14:32</bdi></p>');
+    expect(at("2099-02-28T11:32:00+00:00", TICKET.ar, "ar")).toContain('<p class="tk-cx-at">ملغي: <bdi>');
+    expect(html).not.toContain("tk-cx-at");
+    expect(at("")).not.toContain("tk-cx-at");
     expect(draw("")).toContain(">Cancelled<");
     for (const no of ["<a", "<button", "tk-qr", "MMC", "SAR", "⃁", "Ann"]) expect(html, no).not.toContain(no);
     expect(draw("customer", TICKET.ar, "ar")).toContain(">أُلغي بطلبك<");

@@ -678,16 +678,21 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
 /** A cancelled booking, one quiet row under the tickets until its day has gone (the booking app's _mrCxRow, 2026-11-10):
  *  what it was, when, and who cancelled it. With no email or SMS the page is the rider's only record of it. It holds no
  *  code, no money and nothing to press: the place is gone, and where any money went is the desk's to say. */
-export function TicketCancelled({ locale, date, session: s, name, by, t, gather, start }: {
-  locale: string; date: string; session: TicketSession | undefined; name: string; by: "staff" | "customer" | ""; t: TicketText; gather: string; start: string;
+export function TicketCancelled({ locale, date, session: s, name, by, at, t, gather, start }: {
+  locale: string; date: string; session: TicketSession | undefined; name: string; by: "staff" | "customer" | ""; at?: string; t: TicketText; gather: string; start: string;
 }) {
   const d = new Date(`${date}T00:00:00Z`);
   const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { ...o, timeZone: "UTC" }).format(d);
   const when = timesText(s?.times, !!s?.gathers, (x) => fmtClock(x, locale), s?.kind === "farm" ? { gather: t.fhArrive, start: t.fhDinner } : { gather, start });
+  // when it was cancelled, in Riyadh time, as the booking app's In / Out lines say theirs ("Cancelled: 20 Nov 2026, 14:32";
+  // the user, 2026-11-20: "whenever anyone cancels their booking show the time of cancellation too")
+  const atMs = at ? Date.parse(at) : NaN;
+  const stamp = Number.isFinite(atMs) ? new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Asia/Riyadh" }).format(new Date(atMs)) : "";
   return (
     <div className="tk-cx">
       <p className="tk-cx-top"><span className="tk-cx-n">{name}</span><span className="tk-cx-chip">{by === "staff" ? t.cxByUs : by === "customer" ? t.cxByYou : t.cancelled}</span></p>
       <p className="tk-cx-w"><bdi>{f({ weekday: "long" })} {f({ day: "numeric", month: "short", year: "numeric" })}</bdi>{when && <> · <bdi>{when}</bdi></>}</p>
+      {stamp && <p className="tk-cx-at">{t.cancelled}: <bdi>{stamp}</bdi></p>}
     </div>
   );
 }

@@ -333,9 +333,10 @@ export function doneToday(rows: Row[], today: string): Group[] {
   return grouped(all.filter((r) => r.status === "done" && !live.has(groupKey(r))));
 }
 
-/** A cancelled booking, as My Account lists it under the tickets (the booking app's _mrCxRow): its session, its day, and
- *  who cancelled it (queue_entries.cancelled_by: 'staff', 'customer', or '' when nobody knows). */
-export type CancelledGroup = { key: string; sessionId: string; date: string; by: "staff" | "customer" | "" };
+/** A cancelled booking, as My Account lists it under the tickets (the booking app's _mrCxRow): its session, its day,
+ *  who cancelled it (queue_entries.cancelled_by: 'staff', 'customer', or '' when nobody knows), and when (the server's
+ *  own stamp, queue_entries.cancelled_at, the latest of the ticket's rows; '' for a row cancelled before the column, 2026-11-20). */
+export type CancelledGroup = { key: string; sessionId: string; date: string; by: "staff" | "customer" | ""; at: string };
 /** The account's cancelled bookings whose day has not gone, one per ticket, soonest first (the booking app's _mrCancelled,
  *  2026-11-10): with no email or SMS the page is the rider's only record, and a booking cancelled by the rider, or by
  *  staff (a whole session cancelled with its refunds among them), used to vanish without a word. A ticket that still
@@ -351,8 +352,10 @@ export function cancelledGroups(rows: Row[], today: string): CancelledGroup[] {
     // Victory Lap's Singles and Doubles are two tickets (groupKey); an Arena Heros place reads its own column
     const key = groupKey({ sessionId, vl: isArenaId(sessionId) ? null : vlEntry(r.vl) });
     if (live.has(key)) continue;
-    const g = by.get(key) ?? { key, sessionId, date, by: "" as const, who: new Set<string>() };
+    const g = by.get(key) ?? { key, sessionId, date, by: "" as const, at: "", who: new Set<string>() };
     g.who.add(S(r.cancelled_by));
+    const at = S(r.cancelled_at);
+    if (at && (Date.parse(at) || 0) > (Date.parse(g.at) || 0)) g.at = at;
     by.set(key, g);
   }
   return [...by.values()]

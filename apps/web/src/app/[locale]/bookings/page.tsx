@@ -289,7 +289,7 @@ export default async function BookingsPage({ params, searchParams }: { params: P
               <ul className="tk-cx-list">
                 {cancelled.map((g) => {
                   const s = sessions.get(g.sessionId);
-                  return <li key={g.key}><TicketCancelled locale={locale} date={g.date} session={s} name={rideName(s, g.sessionId)} by={g.by} t={ticketText} gather={S(d.gather)} start={S(d.start)} /></li>;
+                  return <li key={g.key}><TicketCancelled locale={locale} date={g.date} session={s} name={rideName(s, g.sessionId)} by={g.by} at={g.at} t={ticketText} gather={S(d.gather)} start={S(d.start)} /></li>;
                 })}
               </ul>
             )}
