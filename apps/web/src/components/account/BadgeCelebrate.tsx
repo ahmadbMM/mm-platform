@@ -93,7 +93,7 @@ export default function BadgeCelebrate({ locale, short }: { locale: string; shor
         {c.given && <p className="badge-pop-earned"><TickIcon size={15} /> {c.given.line}</p>}
         {show.comm ? (
           <div className="bdg-new-acts">
-            <Link href="/club" className="badge-pop-ask bdg-new-go" onClick={done}>{fw.community}</Link>
+            <Link href="/club#challenges" className="badge-pop-ask bdg-new-go" onClick={done}>{fw.community}</Link>
             <button type="button" className="badge-pop-close" onClick={done}>{fw.done}</button>
           </div>
         ) : (

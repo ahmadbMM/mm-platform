@@ -171,12 +171,14 @@ async function area(locale: string, plan: HubPlan | null, month: HubMonth | null
 describe("the members' area", () => {
   const plan = hubPlanOf(ok({ ...PLAN, month: "2026-12", days: [{ date: "2026-12-05", on: true, past: true }, { date: "2026-12-26", on: false, past: false }] }), "2026-12-26");
   const month = hubMonthOf(ok(MONTH), "2026-12-27");
-  it("shows My month after the member's rides and Plan my Saturdays after the upcoming sessions", async () => {
+  it("shows My month and Plan my Saturdays in the Challenges part, the upcoming sessions and the member's rides in Sessions", async () => {
     const html = await area("en", plan, month);
     const at = (s: string) => html.indexOf(s);
-    expect(at('class="club-att"')).toBeLessThan(at('class="club-mon"'));
-    expect(at('class="club-mon"')).toBeLessThan(at('class="club-up"'));
-    expect(at('class="club-up"')).toBeLessThan(at('class="club-plan"'));
+    expect(at('class="club-up"')).toBeGreaterThan(at('id="club-pane-sess"'));
+    expect(at('class="club-up"')).toBeLessThan(at('class="club-att"'));
+    expect(at('class="club-att"')).toBeLessThan(at('id="club-pane-goals"'));
+    expect(at('id="club-pane-goals"')).toBeLessThan(at('class="club-mon"'));
+    expect(at('class="club-mon"')).toBeLessThan(at('class="club-plan"'));
   });
   it("draws the member's month: its name, three tiles and the comparison, then the kinds most first", async () => {
     const html = await area("en", null, month);

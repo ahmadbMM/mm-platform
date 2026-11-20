@@ -17,6 +17,14 @@ async function signIn(page: Page, lang = "en", scene = "regular") {
 type State = { me: { target: number; chosen: boolean }; mentor: { mentor: unknown; ask: { status: string } | null; offers: { num: number }[] }; writes: { fn: string; a: Record<string, unknown> }[] };
 const state = async (page: Page) => (await (await page.request.get(`${STUB}/__state`)).json()) as State;
 const area = (page: Page) => page.locator(".club-members");
+// The area's three parts (2026-11-20, as the booking app's Community tab): a card outside Sessions is reached through the
+// switch first, as a member does.
+async function part(page: Page, k: "sess" | "goals" | "club") {
+  const b = page.locator(`.club-members .club-part[data-part="${k}"]`);
+  await b.click();
+  await expect(b).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(`#club-pane-${k}`)).toBeVisible();
+}
 async function ordered(page: Page, sels: string[]) {
   for (let i = 1; i < sels.length; i++) {
     const a = page.locator(sels[i - 1]).first(), b = await page.locator(sels[i]).first().elementHandle();
@@ -24,12 +32,26 @@ async function ordered(page: Page, sels: string[]) {
   }
 }
 
-test("the cards stand where the app's tab has them, each with its own words, and no head count anywhere", async ({ page }) => {
+test("the cards stand in the parts the app's tab has them in, each with its own words, and no head count anywhere", async ({ page }) => {
   await signIn(page);
   await page.goto("/club");
   const a = area(page);
   await expect(a.locator("#club-hub-me-h")).toHaveText("Your challenge");
-  await ordered(page, ["#club-hub-yr-h", ".club-up", "#club-hub-me-h", ".club-hub-season", "#club-hub-club-h", "#club-hub-report-h", "#club-hub-mt-h", "#club-hub-vol-h", ".club-hub-inv"]);
+  // three parts behind a switch, Sessions showing first; the card and its tier bar above them
+  await expect(a.locator(".club-parts button")).toHaveText(["Sessions", "Challenges", "Club"]);
+  await expect(a.locator("#club-pane-sess")).toBeVisible();
+  await expect(a.locator("#club-pane-goals")).toBeHidden();
+  await expect(a.locator("#club-pane-club")).toBeHidden();
+  await ordered(page, [".club-members .club-cardviz", ".club-parts", "#club-pane-sess", ".club-up", "#club-hub-report-h", "#club-pane-goals", "#club-hub-yr-h", "#club-hub-me-h", ".club-hub-season", "#club-hub-club-h", "#club-pane-club", "#club-hub-mt-h", "#club-hub-vol-h", ".club-hub-inv"]);
+  // the Saturday report: its photo, the member's own Saturdays this month, the staff's line
+  const rep = a.locator(".club-hub-report");
+  await expect(rep.locator("h3")).toContainText("Saturday report");
+  await expect(rep.locator(".club-hub-minebox")).toHaveText(/Your Saturday rides this month\s*2/);
+  await expect(rep.locator(".club-hub-line")).toHaveText("A calm sea and a full breakfast table.");
+  await expect.poll(() => rep.locator("img.club-hub-photo").evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0);
+  let text = await page.locator("body").innerText();
+  await part(page, "goals");
+  await expect(a.locator("#club-pane-sess")).toBeHidden();
   await expect(a.locator(".club-hub-season h3")).toHaveText(["Season challenge", "Season challenge"]);
   // the season challenges: the Ramadan challenge done with its medal and Share, the Eid ride under way
   const ram = a.locator(".club-hub-season").first();
@@ -47,20 +69,16 @@ test("the cards stand where the app's tab has them, each with its own words, and
   await expect(club).toContainText("You: 3 of them");
   await expect(club.locator(".club-hub-fields")).toContainText("Next Saturday");
   await expect(club.locator(".club-hub-fields")).toContainText(/Target\s*12/);
-  // the Saturday report: its photo, the member's own Saturdays this month, the staff's line
-  const rep = a.locator(".club-hub-report");
-  await expect(rep.locator("h3")).toContainText("Saturday report");
-  await expect(rep.locator(".club-hub-minebox")).toHaveText(/Your Saturday rides this month\s*2/);
-  await expect(rep.locator(".club-hub-line")).toHaveText("A calm sea and a full breakfast table.");
-  await expect.poll(() => rep.locator("img.club-hub-photo").evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0);
+  text += await page.locator("body").innerText();
+  await part(page, "club");
   // volunteers: the portal opened on the call, in a new tab
   const vol = a.locator(".club-hub-vol a");
   await expect(vol).toHaveText("Volunteer");
   await expect(vol).toHaveAttribute("href", "https://volunteer.micromobility.sa/#o/s-vol");
   await expect(vol).toHaveAttribute("target", "_blank");
   await expect(a.locator(".club-hub-inv button")).toHaveText("Invite a friend to a Saturday social ride");
-  // hub_feed's club numbers, the report's counts, the year's club total and each session's riders: never on the page
-  const text = await page.locator("body").innerText();
+  // hub_feed's club numbers, the report's counts, the year's club total and each session's riders: never on the page, in any part
+  text += await page.locator("body").innerText();
   for (const n of ["873", "891", "3107", "3,107", "54021", "54,021", "24019", "24,019", "457", "871", "889", "113", "117", "119", "129", "802"]) expect(text, n).not.toContain(n);
   // the tip of the week only stands in for a report and the news
   await expect(a.locator(".club-hub-tip")).toHaveCount(0);
@@ -70,6 +88,7 @@ test("the cards stand where the app's tab has them, each with its own words, and
 test("Pick your challenge: a tap picks the level at once and the choice goes; the page says the same after a reload", async ({ page }) => {
   await signIn(page);
   await page.goto("/club");
+  await part(page, "goals");
   const me = area(page).locator(".club-hub-me");
   await expect(me.locator(".club-hub-name")).toHaveText("4 sessions this month");
   await expect(me.getByRole("group", { name: "Pick your challenge" }).getByRole("button")).toHaveText(["2", "4", "6"]);
@@ -95,16 +114,17 @@ test("under five rides the first five rides take the challenge's place", async (
   await expect(area(page).locator(".club-hub-me")).toHaveCount(0);
 });
 
-test("a ride done yesterday with nothing booked ahead: its Saturday report leads the area", async ({ page }) => {
+test("a ride done yesterday with nothing booked ahead: its Saturday report leads the Sessions part", async ({ page }) => {
   await signIn(page, "en", "recap");
   await page.goto("/club");
-  await ordered(page, [".club-members .club-hub-report", ".club-members .club-cardviz"]);
+  await ordered(page, ["#club-pane-sess", ".club-members .club-hub-report", ".club-members .club-up"]);
   await expect(area(page).locator(".club-hub-report")).toHaveCount(1);
 });
 
 test("Your year: See your year opens the slides, moved by the member, Share my year on the last, Close back to the card", async ({ page }) => {
   await signIn(page);
   await page.goto("/club");
+  await part(page, "goals");
   const yr = area(page).locator(".club-hub-yr");
   await expect(yr.locator("h3")).toHaveText("Your year so far");
   await expect(yr.locator(".club-yr-num")).toHaveText("14");
@@ -134,6 +154,7 @@ test("the invitation: the app's own message with the member's code goes to the s
     Object.defineProperty(navigator, "share", { configurable: true, value: async (d: { text?: string }) => { (window as unknown as { __shared: string[] }).__shared.push(d.text || ""); } });
   });
   await page.goto("/club");
+  await part(page, "club");
   await area(page).getByRole("button", { name: "Invite a friend to a Saturday social ride" }).click();
   const shared = await page.evaluate(() => (window as unknown as { __shared: string[] }).__shared);
   expect(shared).toEqual(["Hi! I ride with the MicroMobility community in Jeddah and I would love you to join us on a Saturday social ride. Please fill in this form to apply: https://micromobility.sa/community/registration?inv=INV7Q2&lang=en"]);
@@ -142,6 +163,7 @@ test("the invitation: the app's own message with the member's code goes to the s
 test("Mentorship: register as a mentor, offer to help a student (number, university and field only), withdraw, and ask for a mentor", async ({ page }) => {
   await signIn(page);
   await page.goto("/club");
+  await part(page, "club");
   const card = area(page).locator(".club-hub-mt");
   await expect(card.locator(".club-hub-name")).toHaveText("Help a member starting university");
   await expect(card).toContainText("Students looking for a mentor: 2");
@@ -205,6 +227,7 @@ test("in Arabic: the app's own words, right to left", async ({ page }) => {
   await page.goto("/club");
   const a = area(page);
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(a.locator(".club-parts button")).toHaveText(["الجلسات", "التحديات", "النادي"]);
   await expect(a.locator("#club-hub-me-h")).toHaveText("تحديك");
   await expect(a.locator("#club-hub-club-h")).toHaveText("هدف المجتمع");
   await expect(a.locator(".club-hub-season .club-hub-name").first()).toHaveText("تحدي رمضان");
@@ -212,4 +235,19 @@ test("in Arabic: the app's own words, right to left", async ({ page }) => {
   await expect(a.locator("#club-hub-mt-h")).toHaveText("الإرشاد");
   await expect(a.locator(".club-hub-inv button")).toHaveText("ادعُ صديقًا إلى جولة السبت الاجتماعية");
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/club-${test.info().project.name}-ar.png`, fullPage: true });
+});
+
+test("/club#challenges (a badge's pop-up, the rating's last screen) opens Challenges; the switch spans a phone in one row", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/club#challenges");
+  await expect(area(page).locator("#club-pane-goals")).toBeVisible();
+  await expect(area(page).locator("#club-pane-sess")).toBeHidden();
+  await expect(area(page).locator('.club-part[data-part="goals"]')).toHaveAttribute("aria-pressed", "true");
+  const geo = await area(page).locator(".club-parts").evaluate((bar) => {
+    const r = bar.getBoundingClientRect(), b = [...bar.querySelectorAll("button")].map((x) => x.getBoundingClientRect());
+    return { n: b.length, oneRow: new Set(b.map((x) => Math.round(x.top))).size === 1, inside: b.every((x) => x.left >= r.left - 0.5 && x.right <= r.right + 0.5), side: document.documentElement.scrollWidth <= window.innerWidth };
+  });
+  expect(geo).toEqual({ n: 3, oneRow: true, inside: true, side: true });
+  await part(page, "sess");
+  await expect(area(page).locator("#club-pane-goals")).toBeHidden();
 });

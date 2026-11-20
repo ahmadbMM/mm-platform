@@ -216,22 +216,37 @@ describe("the cards", () => {
     const v = renderToStaticMarkup(createElement(VolunteerCallCard, { id: "s-vol", w }));
     expect(v).toContain('href="https://volunteer.micromobility.sa/#o/s-vol" target="_blank" rel="noopener">Volunteer</a>');
   });
-  it("stand in the members' area where the app's tab has them, with no head count", async () => {
+  it("stand in the members' area in the parts the app's tab has them in, in its order, with no head count", async () => {
     const { default: MembersArea } = await import("@/components/club/MembersArea");
     const a = memberArea({ status: 200, data: { ok: true, member: true, first_name: "Sara", credits: 0, tier: 0, next: 100, rides: 6, group_rides: 4, last: [], upcoming: [], announcements: [] }, message: "" });
     if (!a.ok || !a.member) throw new Error("not a member");
     const props = { locale: "en", L: "en" as const, area: a, tierNames: ["Rider", "Pro", "Legend"] as [string, string, string], nameOf: () => "", bookAt: () => "", today: "2026-11-19", empty: "None" };
     const html = renderToStaticMarkup(createElement(MembersArea, { ...props, hub: f, invite: "INV7Q2", mentor: { ask: null, mentor: null, profiles: [], offers: [] } }));
     const at = (s: string) => { const i = html.indexOf(s); expect(i, s).toBeGreaterThan(-1); return i; };
-    const order = ["club-hub-yr-h", "club-up-h", "club-hub-me-h", "Season challenge", "club-hub-club-h", "club-hub-report-h", "club-hub-mt-h", "club-hub-vol-h", "club-hub-inv"].map(at);
-    expect(order).toEqual([...order].sort((x, y) => x - y));
+    // the three parts (2026-11-20): Sessions, Challenges, Club, each card in its own and in the app's order there
+    const parts = [...['id="club-pane-sess"', 'id="club-pane-goals"', 'id="club-pane-club"'].map(at), html.length];
+    const inPart = (k: number, list: string[]) => {
+      const order = list.map(at);
+      expect(order).toEqual([...order].sort((x, y) => x - y));
+      for (const [i, s] of list.entries()) { expect(order[i], s).toBeGreaterThan(parts[k]!); expect(order[i], s).toBeLessThan(parts[k + 1]!); }
+    };
+    inPart(0, ["club-up-h", "club-hub-report-h"]);
+    inPart(1, ["club-hub-yr-h", "club-hub-me-h", "Season challenge", "club-hub-club-h"]);
+    inPart(2, ["club-hub-mt-h", "club-hub-vol-h", "club-hub-inv"]);
+    expect(html).toMatch(/<div class="club-parts" role="group" aria-label="Your membership">(<button type="button" class="club-part[^"]*" aria-pressed="(true|false)" aria-controls="club-pane-\w+" data-part="\w+">[^<]+<\/button>){3}<\/div>/);
+    expect(html).toContain('>Sessions</button>');
+    expect(html).toContain('>Challenges</button>');
+    expect(html).toContain('>Club</button>');
+    expect(html).not.toMatch(/id="club-pane-sess"[^>]*hidden/); // Sessions shows first
+    expect(html).toMatch(/id="club-pane-goals"[^>]*hidden/);
     for (const n of ["873", "3107", "54021", "24019", "457", "871"]) expect(html, n).not.toContain(n);
     expect(html).not.toContain("club-hub-tip"); // a report shows
-    // with the first five rides, the path takes the challenge's place; with the report leading, it comes before the card
+    // with the first five rides, the path takes the challenge's place; with the report leading, it opens the Sessions part
     const p5 = renderToStaticMarkup(createElement(MembersArea, { ...props, hub: f, p5: { n: 2, tg: 5 }, recap: true }));
     expect(p5).toContain("Your first five rides");
     expect(p5).not.toContain("club-hub-me-h");
-    expect(p5.indexOf("club-hub-report-h")).toBeLessThan(p5.indexOf("club-cardviz"));
+    expect(p5.indexOf("club-hub-report-h")).toBeGreaterThan(p5.indexOf('id="club-pane-sess"'));
+    expect(p5.indexOf("club-hub-report-h")).toBeLessThan(p5.indexOf("club-up-h"));
     expect(p5.split("club-hub-report-h").length).toBe(3); // one report (its id and its aria-labelledby)
     // without the read: none of its cards
     expect(renderToStaticMarkup(createElement(MembersArea, props))).not.toContain("club-hub");

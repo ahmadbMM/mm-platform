@@ -59,6 +59,19 @@ html:is([lang="ar"], [lang="ur"]) .club-eyebrow { letter-spacing: 0; font-size: 
 .club-bar { display: block; height: 6px; border-radius: 3px; background: rgba(0, 0, 0, .08); overflow: hidden; }
 .club-bar span { display: block; height: 100%; background: #077a4b; }
 .club-mine-next { color: #57605a; font-size: 13.5px; margin: 0; }
+/* The area's three parts (2026-11-20, as the booking app's Community tab): Sessions, Challenges, Club. A soft segmented
+   switch like the app's, spanning the area on a phone; only the part picked shows (ClubParts.tsx). */
+.club-parts { display: flex; gap: 2px; width: fit-content; max-width: 100%; margin-top: 6px; padding: 4px; border-radius: 999px; background: rgba(0, 0, 0, .06); box-sizing: border-box; }
+.club-part { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 22px; border: 0; border-radius: 999px; background: transparent; color: #57605a; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.club-part:hover { color: #1a1919; }
+.club-part.active { background: #fff; color: #1a1919; font-weight: 800; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.club-part:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.club-pane { display: flex; flex-direction: column; gap: 14px; }
+.club-pane[hidden] { display: none; }
+@media (max-width: 767px) {
+  .club-parts { width: 100%; }
+  .club-part { flex: 1 1 0; min-width: 0; padding: 0 8px; }
+}
 .club-earn { display: flex; flex-direction: column; gap: 14px; }
 .club-earn h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 1.5px; color: #4a534c; margin: 0; }
 html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }

@@ -37,6 +37,7 @@ import ChallengeCard from "./ChallengeCard";
 import YearCard from "./YearCard";
 import Mentorship from "./Mentorship";
 import InviteFriend from "./InviteFriend";
+import ClubParts from "./ClubParts";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
 // their card - name, since when, credits, tier and what is left to the next - their attendance
@@ -63,6 +64,10 @@ import InviteFriend from "./InviteFriend";
 // Saturday report, the announcements, else the tip of the week), the Mentorship programme (mentor_feed, lib/
 // mentorship.ts), Volunteers needed, Suggest a ride, and the invitation to a Saturday social ride (`invite`, the member's
 // code). hub_feed's club numbers and each session's riders are never read (no head counts for customers, 2026-11-13).
+// Since 2026-11-20 the area is in three parts behind a switch, as the app's tab (ClubParts.tsx): Sessions (the Ramadan card,
+// the recap, the Build-up plan, My interests, the upcoming sessions, the member's rides, the staff card), Challenges (the
+// year, My month, the challenge, Plan my Saturdays, the season challenges, the club goal) and Club (the title, Ask,
+// Mentorship, Volunteers needed, Suggest a ride, the invitation); the card, its tier bar and the birthday stay above them.
 type Props = {
   locale: string;
   L: Locale;
@@ -136,33 +141,78 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
     const m = /^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/.exec(time || "");
     return m ? <bdi dir="ltr">{m[1]} – {m[2]}</bdi> : time ? <bdi dir="ltr">{time}</bdi> : null;
   };
-  return (
-    <InterestsBox initial={interests ?? null} words={interestWords(locale)}>
-    <div className={`club-mine club-members${season ? " club-ssn-on" : ""}`}>
-      <h2>{t.title}</h2>
+  // The three parts (2026-11-20, as the app's tab): Sessions, Challenges and Club, behind a switch (ClubParts.tsx). The card,
+  // its tier bar and the birthday greeting stay above them (/account's "Open my card" lands on the card). A part with
+  // nothing in it is not passed, so it has no button.
+  const sess = (
+    <>
       {season && <SeasonCard locale={locale} kind={season} />}
-      {isBirthday(a.birthDate, today) && (
-        <p className="club-bday" role="status"><strong>{t.birthday(a.firstName)}</strong><span>{t.birthdayText}</span></p>
-      )}
       {recap && report}
-      <div className={`club-cardviz tier-${a.tier}`}>
-        <div className="club-cardviz-top">
-          <span className="club-cardviz-brand"><img src={a.tier === 2 ? "/site/logo-mark-dark.png" : "/site/logo-mark.png"} alt="Micromobility" /><span>{t.label}</span></span>
-          <span className="club-pill">{tierNames[a.tier]}</span>
-        </div>
-        <div className="club-cardviz-bottom">
-          <span className="club-cardviz-label">{t.credits}</span>
-          <strong className="club-cardviz-num">{N(a.credits)}</strong>
-          <div className="club-cardviz-foot"><strong>{a.firstName}</strong>{since && <span>{t.since} {since}</span>}</div>
-        </div>
-      </div>
-      <span className="club-bar"><span style={{ width: `${pct}%` }} /></span>
-      <p className="club-mine-next">{a.tier >= 2 || !a.next ? t.top : t.toNext(N(Math.max(0, a.next - a.credits)), tierNames[a.tier + 1])}</p>
-
       {bup && <BuildupPlan locale={locale} plan={bup.plan} name={bup.name} bookAt={(id) => bookAt(id, "saturday")} />}
       <InterestsCard at="first" />
-      {hub?.year && <YearCard y={hub.year} locale={locale} w={pickWords(cw, YEAR_KEYS)} kinds={yearKinds ?? []} from={yearFrom(hub.year, locale)} />}
 
+      <section className="club-up" aria-labelledby="club-up-h">
+        <h3 id="club-up-h">{t.upcoming}</h3>
+        {a.upcoming.length ? (
+          <ul>
+            {a.upcoming.map((r) => {
+              const closed = opens ? opens(r.date, r.kind) : null;
+              const sg = sgOf ? sgOf(r) : null;
+              const refusal = refusalOf ? refusalOf(r) : null;
+              const book = <a href={bookAt(r.id, r.kind)}>{t.book} {arrow}</a>;
+              return (
+                <li key={r.id} className={closed ? "closed" : ""}>
+                  <span className="club-up-when">{day(r.date)}{r.time ? <> · {when(r.time)}</> : null}</span>
+                  <strong>{nameOf(r.kind, r.title)}{sg && <> <span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span></>}</strong>
+                  {r.booked ? <em>{t.booked}</em> : r.waitlist ? <em>{t.waitlist}</em> : refusal ? <small>{refusal}</small>
+                    : closed && opensWords ? <OpensIn as="small" className="club-wait" text={closed} at={opensAt ? opensAt(r.date) : null} words={opensWords}>{book}</OpensIn>
+                    : closed ? <small>{closed}</small> : book}
+                </li>
+              );
+            })}
+          </ul>
+        ) : <p className="club-att-empty">{empty}</p>}
+      </section>
+
+      <section className="club-att" aria-labelledby="club-att-h">
+        <h3 id="club-att-h">{t.attendance}</h3>
+        <div className="club-att-nums"><span>{t.rides(N(a.rides))}</span><span>{t.groupRides(N(a.groupRides))}</span></div>
+        <p className="club-att-sub">{t.last}</p>
+        {a.last.length ? (
+          <ul className="club-last">
+            {a.last.map((r, i) => (
+              <li key={i}><span>{day(r.date, { day: "numeric", month: "short", year: "numeric" })}</span><strong>{nameOf(r.kind, r.title)}</strong>{r.rated ? <em>{t.rated}</em> : <a href={localHref("/account", locale)}>{t.rate} {arrow}</a>}</li>
+            ))}
+          </ul>
+        ) : <p className="club-att-empty">{t.noLast}</p>}
+      </section>
+
+      {!recap && report}
+      {anns.length > 0 && (
+        <section className="club-ann" aria-labelledby="club-ann-h">
+          <h3 id="club-ann-h">{t.announcements}</h3>
+          <ul>{anns.map((x, i) => <li key={i}>{x.text}{x.cta && x.href ? <> <a href={localHref(x.href, locale)}>{x.cta} {arrow}</a></> : null}</li>)}</ul>
+        </section>
+      )}
+      {hub && !hub.post && !anns.length && <TipCard today={hub.today || today} w={cw} />}
+      <InterestsCard at="end" />
+    </>
+  );
+  const challenge = hub && (p5
+    ? <FirstFiveCard n={p5.n} tg={p5.tg} name={rf.p5} of={fill(rf.p5Of, N(p5.n), N(p5.tg))} w={cw} />
+    : hub.me ? <ChallengeCard me={hub.me} locale={locale} w={pickWords(cw, CHALLENGE_KEYS)} name={first} /> : null);
+  const goals = (hub?.year || (month && kindName) || challenge || plan || hub?.goals.length || hub?.club) ? (
+    <>
+      {hub?.year && <YearCard y={hub.year} locale={locale} w={pickWords(cw, YEAR_KEYS)} kinds={yearKinds ?? []} from={yearFrom(hub.year, locale)} />}
+      {month && kindName && <MyMonth locale={locale} month={month} kindName={kindName} first={firstNameOf(a.firstName)} />}
+      {challenge}
+      {plan && <PlanSaturdays boxes={planBoxes(plan, locale)} title={memberHubWords(locale).plan} month={plan.month ? monthName(plan.month, locale) : ""} err={memberHubWords(locale).err} />}
+      {hub?.goals.map((g) => <SeasonGoalCard key={g.id || g.name} g={g} locale={locale} w={cw} shareLabel={cw.kMile} first={first} />)}
+      {hub?.club && <ClubGoalCard g={hub.club} locale={locale} w={cw} />}
+    </>
+  ) : null;
+  const club = (title || (asks && asks.length > 0) || mentor || hub?.volunteer || suggestions || invite) ? (
+    <>
       {title && (
         <section className="club-comm" aria-labelledby="club-comm-h">
           <h3 id="club-comm-h">{t.community}</h3>
@@ -189,66 +239,34 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
           </ul>
         </section>
       )}
-
-      <section className="club-att" aria-labelledby="club-att-h">
-        <h3 id="club-att-h">{t.attendance}</h3>
-        <div className="club-att-nums"><span>{t.rides(N(a.rides))}</span><span>{t.groupRides(N(a.groupRides))}</span></div>
-        <p className="club-att-sub">{t.last}</p>
-        {a.last.length ? (
-          <ul className="club-last">
-            {a.last.map((r, i) => (
-              <li key={i}><span>{day(r.date, { day: "numeric", month: "short", year: "numeric" })}</span><strong>{nameOf(r.kind, r.title)}</strong>{r.rated ? <em>{t.rated}</em> : <a href={localHref("/account", locale)}>{t.rate} {arrow}</a>}</li>
-            ))}
-          </ul>
-        ) : <p className="club-att-empty">{t.noLast}</p>}
-      </section>
-
-      {month && kindName && <MyMonth locale={locale} month={month} kindName={kindName} first={firstNameOf(a.firstName)} />}
-
-      <section className="club-up" aria-labelledby="club-up-h">
-        <h3 id="club-up-h">{t.upcoming}</h3>
-        {a.upcoming.length ? (
-          <ul>
-            {a.upcoming.map((r) => {
-              const closed = opens ? opens(r.date, r.kind) : null;
-              const sg = sgOf ? sgOf(r) : null;
-              const refusal = refusalOf ? refusalOf(r) : null;
-              const book = <a href={bookAt(r.id, r.kind)}>{t.book} {arrow}</a>;
-              return (
-                <li key={r.id} className={closed ? "closed" : ""}>
-                  <span className="club-up-when">{day(r.date)}{r.time ? <> · {when(r.time)}</> : null}</span>
-                  <strong>{nameOf(r.kind, r.title)}{sg && <> <span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span></>}</strong>
-                  {r.booked ? <em>{t.booked}</em> : r.waitlist ? <em>{t.waitlist}</em> : refusal ? <small>{refusal}</small>
-                    : closed && opensWords ? <OpensIn as="small" className="club-wait" text={closed} at={opensAt ? opensAt(r.date) : null} words={opensWords}>{book}</OpensIn>
-                    : closed ? <small>{closed}</small> : book}
-                </li>
-              );
-            })}
-          </ul>
-        ) : <p className="club-att-empty">{empty}</p>}
-      </section>
-
-      {hub && (p5
-        ? <FirstFiveCard n={p5.n} tg={p5.tg} name={rf.p5} of={fill(rf.p5Of, N(p5.n), N(p5.tg))} w={cw} />
-        : hub.me && <ChallengeCard me={hub.me} locale={locale} w={pickWords(cw, CHALLENGE_KEYS)} name={first} />)}
-
-      {plan && <PlanSaturdays boxes={planBoxes(plan, locale)} title={memberHubWords(locale).plan} month={plan.month ? monthName(plan.month, locale) : ""} err={memberHubWords(locale).err} />}
-
-      {hub?.goals.map((g) => <SeasonGoalCard key={g.id || g.name} g={g} locale={locale} w={cw} shareLabel={cw.kMile} first={first} />)}
-      {hub?.club && <ClubGoalCard g={hub.club} locale={locale} w={cw} />}
-      {!recap && report}
-      {anns.length > 0 && (
-        <section className="club-ann" aria-labelledby="club-ann-h">
-          <h3 id="club-ann-h">{t.announcements}</h3>
-          <ul>{anns.map((x, i) => <li key={i}>{x.text}{x.cta && x.href ? <> <a href={localHref(x.href, locale)}>{x.cta} {arrow}</a></> : null}</li>)}</ul>
-        </section>
-      )}
-      {hub && !hub.post && !anns.length && <TipCard today={hub.today || today} w={cw} />}
       {mentor && <Mentorship feed={mentor} locale={locale} w={{ ...mentorWords(cw), cancel: memberHubWords(locale).intCancel }} />}
       {hub?.volunteer && <VolunteerCallCard id={hub.volunteer} w={cw} />}
       {suggestions && <SuggestRide locale={locale} rows={suggestions} words={suggestWords(locale)} />}
       {invite && <InviteFriend code={invite} locale={locale} label={cw.invBtn} msg={cw.invMsg} />}
-      <InterestsCard at="end" />
+    </>
+  ) : null;
+  return (
+    <InterestsBox initial={interests ?? null} words={interestWords(locale)}>
+    <div className={`club-mine club-members${season ? " club-ssn-on" : ""}`}>
+      <h2>{t.title}</h2>
+      {isBirthday(a.birthDate, today) && (
+        <p className="club-bday" role="status"><strong>{t.birthday(a.firstName)}</strong><span>{t.birthdayText}</span></p>
+      )}
+      <div className={`club-cardviz tier-${a.tier}`}>
+        <div className="club-cardviz-top">
+          <span className="club-cardviz-brand"><img src={a.tier === 2 ? "/site/logo-mark-dark.png" : "/site/logo-mark.png"} alt="Micromobility" /><span>{t.label}</span></span>
+          <span className="club-pill">{tierNames[a.tier]}</span>
+        </div>
+        <div className="club-cardviz-bottom">
+          <span className="club-cardviz-label">{t.credits}</span>
+          <strong className="club-cardviz-num">{N(a.credits)}</strong>
+          <div className="club-cardviz-foot"><strong>{a.firstName}</strong>{since && <span>{t.since} {since}</span>}</div>
+        </div>
+      </div>
+      <span className="club-bar"><span style={{ width: `${pct}%` }} /></span>
+      <p className="club-mine-next">{a.tier >= 2 || !a.next ? t.top : t.toNext(N(Math.max(0, a.next - a.credits)), tierNames[a.tier + 1])}</p>
+
+      <ClubParts parts={{ sess, ...(goals ? { goals } : {}), ...(club ? { club } : {}) }} labels={{ sess: cw.secSess, goals: cw.secGoals, club: cw.secClub }} label={t.title} />
     </div>
     </InterestsBox>
   );
