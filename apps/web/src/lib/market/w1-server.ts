@@ -1,7 +1,7 @@
 import { edgeScope, memo } from "../memo";
 import type { MkBrowse, MkBrowseQuery, MkIndex } from "./core";
 import { mkBrowse, mkIndex, type MkResult } from "./server";
-import { w1KeptKey } from "./w1";
+import { w1KeptKey, w1MayKeep } from "./w1";
 
 // Browsing the Marketplace on the server (W1): the public reads the browse page, a shop's page, the sitemap and the
 // site's search share, kept a minute in the Worker as the site's other public reads are (lib/memo.ts). market_browse
@@ -12,16 +12,23 @@ import { w1KeptKey } from "./w1";
 const TTL_MS = 60_000;
 type Fail = Extract<MkResult<MkBrowse>, { ok: false }>;
 // why the last read under a key failed, so a kept "nothing" still says whether the database has no marketplace yet
-// ("absent") or did not answer; a handful of keys at most (w1KeptKey)
+// ("absent") or did not answer; as many keys as are kept, at most
 const fails = new Map<string, Fail>();
 const GENERIC: Fail = { ok: false, error: "generic", detail: "", status: 502 };
+// the keys kept so far: W1_KEPT_MAX at most (lib/market/w1.ts w1MayKeep), so what is kept never grows with what
+// people type into an address
+const keys = new Set<string>();
 
 /** One page of the grid. The first page of everything, of one sport, one product type, one seller kind or one shop
- *  is kept a minute (lib/market/w1.ts w1KeptKey); any other search is read as it is asked. */
-export async function browseKept(q: MkBrowseQuery = {}): Promise<MkResult<MkBrowse>> {
+ *  is kept a minute (lib/market/w1.ts w1KeptKey); any other search is read as it is asked, and so is one more
+ *  search than the Worker keeps.
+ *  `vouched`: every sport and product type in `q` is one the database listed. False when the categories could not be
+ *  read and the address was taken as written: such a sport or type is asked for, never kept. */
+export async function browseKept(q: MkBrowseQuery = {}, vouched = true): Promise<MkResult<MkBrowse>> {
   const k = w1KeptKey(q);
-  if (k === null) return mkBrowse(q);
+  if (k === null || (!vouched && (q.sport || q.category))) return mkBrowse(q);
   const key = `market:browse:${edgeScope()}:${k}`;
+  if (!w1MayKeep(keys, key)) return mkBrowse(q);
   const data = await memo<MkBrowse>(key, {
     ttl: TTL_MS,
     read: async () => {

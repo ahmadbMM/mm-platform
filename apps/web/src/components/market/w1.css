@@ -14,6 +14,9 @@
 .mk-w1-search { position: relative; display: flex; gap: 8px; margin-block-end: 14px; }
 .mk-w1-search > .mk-ic { position: absolute; inset-block-start: 14px; inset-inline-start: 16px; color: var(--mk-ink-3); pointer-events: none; }
 .mk-w1-search input { flex: 1; min-width: 0; box-sizing: border-box; min-height: 48px; padding-block: 0; padding-inline: 46px 16px; border: 1px solid var(--mk-ctl); border-radius: 999px; background: #fff; color: var(--mk-ink); font: inherit; font-size: 16px; appearance: none; -webkit-appearance: none; transition: border-color .2s ease, box-shadow .2s ease; }
+/* what is typed reads in its own direction (a brand in Latin letters on an Arabic page, Arabic on an English one)
+   while the box keeps the page's, so the words never run under the mark at its start */
+.mk-w1-search input { unicode-bidi: plaintext; }
 .mk-w1-search input::placeholder { color: var(--mk-ink-3); }
 .mk-w1-search input:hover { border-color: var(--mk-ink-4); }
 .mk-w1-search input:focus-visible { outline: none; border-color: var(--mk-green); box-shadow: 0 0 0 3px var(--mk-green-soft); }
@@ -23,12 +26,17 @@
 .mk-w1-sports { margin-block-end: 12px; }
 .mk-w1-bar { display: flex; flex-direction: column; gap: 10px; margin-block-end: 20px; }
 .mk-chips.mk-w1-seg { align-self: flex-start; box-sizing: border-box; max-width: 100%; margin-inline: 0; padding: 4px; gap: 2px; flex-wrap: nowrap; overflow-x: auto; background: var(--mk-well); border-radius: 999px; }
-.mk-w1-seg .mk-chip { padding-inline: 12px; border-color: transparent; background: none; color: var(--mk-ink-2) !important; }
+.mk-w1-seg .mk-chip { justify-content: center; min-width: 44px; padding-inline: 12px; border-color: transparent; background: none; color: var(--mk-ink-2) !important; }
 .mk-w1-seg .mk-chip:hover { background: none; color: var(--mk-ink) !important; }
 .mk-w1-seg .mk-chip[aria-current="true"] { background: #fff; border-color: var(--mk-line); color: var(--mk-ink) !important; box-shadow: var(--mk-sh-1); }
 /* the city, the order, Filters and "Clear all": two to a row on a phone, one row beside the sellers from 900px */
 .mk-w1-picks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: center; }
 .mk-w1-picks .mk-field :is(select) { min-height: 44px; padding-block: 8px; border-radius: 999px; font-size: 15px; font-weight: 600; }
+/* a picker shows its arrow, and keeps its words clear of it. market.css draws it (.mk-field select), but its rule for
+   every field weighs more and paints over it, so this builder's pickers (the city, the order, the product type) say it
+   again with weight to spare. The arrow sits at the end of the box: the right, and the left on a right-to-left page. */
+.mk :is(.mk-w1-picks, .mk-w1-form) .mk-field select { padding-inline-end: 40px; background: #fff var(--mk-chev) no-repeat right 16px center; }
+[dir="rtl"] .mk :is(.mk-w1-picks, .mk-w1-form) .mk-field select { background-position: left 16px center; }
 .mk-w1-fbtn { min-height: 44px; padding-inline: 18px; }
 .mk-w1-fbtn[aria-expanded="true"] { border-color: var(--mk-ink); }
 .mk-w1-n { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--mk-green); color: var(--mk-paper); font-size: 12px; font-weight: 700; line-height: 1; }
@@ -48,9 +56,7 @@
 .mk-w1-also { margin-block-start: 40px; }
 .mk .mk-w1-also h2 { margin-block-end: 16px; }
 /* where a search that found nothing can go next */
-.mk-w1-near { align-self: stretch; display: flex; flex-direction: column; gap: 10px; }
-.mk-w1-near-h { font-size: 13px; font-weight: 700; color: var(--mk-ink-2); }
-.mk-w1-near-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.mk-w1-near { align-self: stretch; display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ── A listing's card ── */
 .mk-w1-card { transition: box-shadow .25s ease, transform .25s var(--mk-ease); }
@@ -101,7 +107,10 @@
 .mk-w1-crumbs li { display: flex; align-items: center; min-width: 0; min-height: 44px; }
 .mk-w1-crumbs li + li::before { content: ""; flex: none; width: 6px; height: 6px; margin-inline: 8px 10px; border-block-start: 1.5px solid var(--mk-ink-4); border-inline-end: 1.5px solid var(--mk-ink-4); transform: rotate(45deg); }
 [dir="rtl"] .mk-w1-crumbs li + li::before { transform: rotate(-45deg); }
-.mk-w1-crumbs a { display: inline-flex; align-items: center; min-height: 44px; color: var(--mk-ink-2) !important; font-weight: 600; text-decoration: none; }
+.mk-w1-crumbs a { position: relative; display: inline-flex; align-items: center; min-height: 44px; color: var(--mk-ink-2) !important; font-weight: 600; text-decoration: none; }
+/* a short name (a five-letter sport, the section's name in Arabic) is still 44px wide to a finger: the link reaches
+   9px past its word on each side, into the 24px the mark between two steps takes, and nothing moves */
+.mk-w1-crumbs a::after { content: ""; position: absolute; inset-block: 0; inset-inline: -9px; }
 .mk-w1-crumbs a:hover { color: var(--mk-ink) !important; text-decoration: underline; }
 .mk-w1-crumbs [aria-current] > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* on a phone the page's own name is the heading right under the trail */

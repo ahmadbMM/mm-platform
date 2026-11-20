@@ -25,7 +25,7 @@ import ShopView from "@/components/market/w1/ShopView";
 import { moreListings } from "@/components/market/w1/more";
 import { mkCategory, type MkBrowse, type MkCard, type MkCategory, type MkListing, type MkListingMine, type MkShop } from "../market/core";
 import { marketPaths, marketSearch } from "../market/hooks";
-import { W1_NONE } from "../market/w1";
+import { W1_NONE, w1Own } from "../market/w1";
 import { browseKept, indexKept } from "../market/w1-server";
 import { resetMemo } from "../memo";
 
@@ -96,6 +96,21 @@ describe("the reads the pages share", () => {
     expect(rpc("market_browse")).toHaveLength(5);
     expect(rpc("market_browse")[2].body).toEqual({ p: { q: "trek" } });
   });
+  it("never keep a sport or a type nobody checked: with no categories read, an address is asked for as written", async () => {
+    stub(() => json(page));
+    await browseKept({ sport: "made-up-1" }, false);
+    await browseKept({ sport: "made-up-1" }, false);
+    await browseKept({ sport: "cycling", category: "made-up-2" }, false);
+    await browseKept({ sport: "cycling", category: "made-up-2" }, false);
+    expect(rpc("market_browse")).toHaveLength(4);
+    // what carries no slug of the address is kept as ever
+    await browseKept({}, false);
+    await browseKept({}, false);
+    await browseKept({ kind: "shop" }, false);
+    await browseKept({ kind: "shop" }, false);
+    expect(rpc("market_browse")).toHaveLength(6);
+    expect(read("app/[locale]/marketplace/page.tsx")).toContain("browseKept(w1QueryOf(filters), cats.length > 0)");
+  });
   it("say why a kept read failed: a database without the marketplace is not an error to try again", async () => {
     stub(() => json({ code: "PGRST202", message: "Could not find the function public.market_browse" }, 404));
     expect(await browseKept({})).toMatchObject({ ok: false, error: "absent", status: 404 });
@@ -110,8 +125,8 @@ describe("the reads the pages share", () => {
     stub(() => json({ listings: [{ id: 12, title: "Trek Domane" }], shops: [{ slug: "wheel-house", name_en: "Wheel House Cycles", name_ar: "بيت العجلات" }] }));
     expect(await marketPaths(null)).toEqual(["/marketplace", "/marketplace/rules", "/marketplace/shop/wheel-house", "/marketplace/12"]);
     expect(await marketSearch("ar")).toEqual([
-      { title: "بيت العجلات", text: "متجر في السوق", href: "/marketplace/shop/wheel-house", words: expect.stringContaining("wheel house cycles") },
-      { title: "Trek Domane", text: "إعلان في السوق", href: "/marketplace/12", words: "trek domane" },
+      { title: w1Own("بيت العجلات"), text: "متجر في السوق", href: "/marketplace/shop/wheel-house", words: expect.stringContaining("wheel house cycles") },
+      { title: w1Own("Trek Domane"), text: "إعلان في السوق", href: "/marketplace/12", words: "trek domane" },
     ]);
     expect((await marketSearch("en"))[1].text).toBe("Marketplace listing");
     expect(rpc("market_index")).toHaveLength(1);
@@ -306,7 +321,15 @@ describe("the house rules, read from the files", () => {
       expect(m[1], m[1]).toMatch(/^mk-w1-|^mk-(?:card|box|btn|btn2|chips?|field|pop-title|user|ic|tags|tag|amt|photo)$/);
     }
   });
+  it("a picker shows its arrow, at the end of its box on either kind of page", () => {
+    // market.css's own rule for it is outweighed by its rule for every field, so the arrow is said again here, heavier
+    expect(rules).toMatch(/\.mk :is\(\.mk-w1-picks, \.mk-w1-form\) \.mk-field select \{[^}]*padding-inline-end:\s*40px;[^}]*var\(--mk-chev\) no-repeat right 16px center/);
+    expect(rules).toMatch(/\[dir="rtl"\] \.mk :is\(\.mk-w1-picks, \.mk-w1-form\) \.mk-field select \{\s*background-position:\s*left 16px center/);
+  });
   it("every tap target the styles size is 44px or more", () => {
+    // a short word is still 44px wide to a finger: the seller choice's chips, and the trail's links
+    expect(rules).toMatch(/\.mk-w1-seg \.mk-chip\s*\{[^}]*min-width:\s*44px/);
+    expect(rules).toMatch(/\.mk-w1-crumbs a::after\s*\{[^}]*position:\s*absolute;\s*inset-block:\s*0;\s*inset-inline:\s*-9px/);
     for (const m of rules.matchAll(/min-height:\s*(\d+)px/g)) if (Number(m[1]) > 8) expect(Number(m[1])).toBeGreaterThanOrEqual(44);
     expect(rules).toMatch(/\.mk-w1-gal-arrow\s*\{[^}]*width:\s*44px;\s*height:\s*44px/);
     expect(rules).toMatch(/\.mk-w1-view-btn\s*\{[^}]*width:\s*48px;\s*height:\s*48px/);
@@ -333,6 +356,19 @@ describe("the house rules, read from the files", () => {
     expect(browse).toContain("<MkModal");
     expect(browse).toContain('"(min-width: 1000px)"');
     expect(browse).toMatch(/aria-expanded=\{open\}/);
+  });
+  it("the search box keeps the page's direction and lets what is typed find its own, so the words never run under its mark", () => {
+    // dir="auto" on the box itself would turn its padding round with the first letter typed, away from the mark's side
+    const input = /<input key=\{filters\.q\}[^>]*\/>/.exec(read("components/market/w1/Browse.tsx"))?.[0] ?? "";
+    expect(input).toContain('type="search"');
+    expect(input).not.toContain("dir=");
+    expect(rules).toMatch(/\.mk-w1-search input\s*\{\s*unicode-bidi:\s*plaintext/);
+    expect(rules).toMatch(/\.mk-w1-search input\s*\{[^}]*padding-inline:\s*46px 16px/);
+  });
+  it("a search that found nothing adds no line of advice: the chips' name is for a screen reader only", () => {
+    const browse = read("components/market/w1/Browse.tsx");
+    expect(browse).toContain('<nav className="mk-w1-near" aria-label={w.nearby}>');
+    expect(browse).not.toMatch(/>\s*\{w\.nearby\}\s*</);
   });
   it("Arabic and English say the same things", () => {
     const keys = (v: unknown, at = ""): string[] => (v && typeof v === "object" ? Object.entries(v).flatMap(([k, x]) => keys(x, `${at}.${k}`)) : [at]);

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { mkCategory, type MkCategory, type MkIndex, type MkListing, type MkShop } from "../market/core";
 import {
-  W1_NONE, W1_SEARCH_LISTINGS, W1_SITEMAP_LISTINGS, w1Append, w1Cut, w1Date, w1Digits, w1Facts, w1FiltersFrom, w1FiltersOf, w1Further, w1Href, w1Indexable, w1KeptKey,
-  w1Key, w1MapUrl, w1Narrowed, w1Nearby, w1Norm, w1Others, w1Paths, w1Price, w1Q, w1QueryOf, w1SearchItems, w1ShopFiltersOf, w1SportChips, w1Stage,
+  W1_KEPT_MAX, W1_NONE, W1_SEARCH_LISTINGS, W1_SITEMAP_LISTINGS, w1Append, w1Cut, w1Date, w1Digits, w1Facts, w1FiltersFrom, w1FiltersOf, w1Further, w1Href, w1Indexable, w1KeptKey,
+  w1Key, w1MapUrl, w1MayKeep, w1Narrowed, w1Nearby, w1Norm, w1Others, w1Own, w1Paths, w1Price, w1Q, w1QueryOf, w1SearchItems, w1ShopFiltersOf, w1SportChips, w1Stage,
   w1TypeOptions, w1With, type W1Filters,
 } from "../market/w1";
 import { clampPan, clampScale, keyStep, pinchScale, stepPhoto, swipeStep } from "../market/w1-gallery";
@@ -94,6 +94,18 @@ describe("what is asked of market_browse", () => {
     expect(w1KeptKey({ sort: "new", limit: 24 })).toBe("|||");
     for (const q of [{ q: "trek" }, { city: "jeddah" }, { condition: "good" as const }, { price_min: 5 }, { price_max: 5 }, { after: "c" }, { sort: "price_asc" as const }, { limit: 9 },
       { sport: "cycling", kind: "shop" as const }, { shop: "a-b", sport: "cycling" }, { sport: "Not A Slug" }]) expect(w1KeptKey(q)).toBeNull();
+  });
+  it("is kept for so many searches and no more, so what is kept never grows with what people type", () => {
+    const seen = new Set<string>();
+    expect(w1MayKeep(seen, "a", 2)).toBe(true);
+    expect(w1MayKeep(seen, "b", 2)).toBe(true);
+    expect(w1MayKeep(seen, "c", 2)).toBe(false);
+    // one already kept stays kept, and one refused is not remembered
+    expect(w1MayKeep(seen, "a", 2)).toBe(true);
+    expect([...seen]).toEqual(["a", "b"]);
+    const many = new Set<string>();
+    for (let i = 0; i < W1_KEPT_MAX + 50; i++) w1MayKeep(many, `k${i}`);
+    expect(many.size).toBe(W1_KEPT_MAX);
   });
 });
 
@@ -229,10 +241,13 @@ describe("the sitemap and the site's search", () => {
   });
   it("gives the search one entry per shop and per listing, found as the database would match it", () => {
     const items = w1SearchItems(index, "ar", { listing: "إعلان في السوق", shop: "متجر في السوق" });
-    expect(items.map((i) => [i.title, i.href])).toEqual([["بيت العجلات", "/marketplace/shop/wheel-house"], ["Trek Domane", "/marketplace/12"], ["دراجة طريق", "/marketplace/13"]]);
+    expect(items.map((i) => [i.title, i.href])).toEqual([[w1Own("بيت العجلات"), "/marketplace/shop/wheel-house"], [w1Own("Trek Domane"), "/marketplace/12"], [w1Own("دراجة طريق"), "/marketplace/13"]]);
+    // what a seller or a shop wrote is set apart in its own direction: the search draws a title as plain text
+    expect([w1Own("x").charCodeAt(0), w1Own("x").charCodeAt(2), w1Own("x")[1], w1Own("x").length]).toEqual([0x2068, 0x2069, "x", 3]);
+    expect(items[1].title.toLowerCase()).toContain("trek dom");
     expect(items[2].words).toBe("دراجه طريق");
     expect(items[0].words).toContain("wheel house cycles");
-    expect(w1SearchItems(index, "en", { listing: "l", shop: "s" })[0].title).toBe("Wheel House Cycles");
+    expect(w1SearchItems(index, "en", { listing: "l", shop: "s" })[0].title).toBe(w1Own("Wheel House Cycles"));
     expect(w1SearchItems(null, "en", { listing: "l", shop: "s" })).toEqual([]);
   });
   it("sends the browser, and the sitemap, the newest listings only: the Marketplace's own search has them all", () => {

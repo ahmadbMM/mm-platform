@@ -38,7 +38,8 @@ export default async function MarketplacePage({ params, searchParams }: { params
   const [sp, at, cats] = await Promise.all([searchParams, marketSite(locale), loadMarketCategories()]);
   const t = serverLocalize(T, locale);
   const filters = w1FiltersOf(sp, cats);
-  const r = await browseKept(w1QueryOf(filters));
+  // with no categories to check the address against, its sport and type are as written: asked for, never kept
+  const r = await browseKept(w1QueryOf(filters), cats.length > 0);
   const data = r.ok ? r.data : null;
   // a search that found nothing: where to look next, and the newest listings to go on from
   const nothing = data !== null && data.items.length === 0 && w1Narrowed(filters);

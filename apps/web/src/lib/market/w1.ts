@@ -183,6 +183,18 @@ export function w1KeptKey(q: MkBrowseQuery): string | null {
   for (const v of [q.sport, q.category, q.shop]) if (v !== undefined && !slug(v)) return null;
   return `${q.sport ?? ""}|${q.category ?? ""}|${q.kind ?? ""}|${q.shop ?? ""}`;
 }
+/** The most searches kept at once. The keys are few while every slug is one the database vouched for (a visible
+ *  category, an approved shop); while the categories cannot be read a sport or a type in an address is taken as
+ *  written, so anyone could ask for as many as they can type, and each would stay in the Worker's memory. */
+export const W1_KEPT_MAX = 400;
+/** Whether a read may be kept under `key`: one already kept, or a new one while there is room (`seen` then holds it).
+ *  A search past the limit is read as it is asked, like any search someone typed. */
+export function w1MayKeep(seen: Set<string>, key: string, max: number = W1_KEPT_MAX): boolean {
+  if (seen.has(key)) return true;
+  if (seen.size >= max) return false;
+  seen.add(key);
+  return true;
+}
 
 /* ------------------------------------------------------------------ a listing's page */
 
@@ -246,12 +258,19 @@ export function w1Norm(v: string): string {
     .trim();
 }
 
+/** A text someone wrote, set apart in its own direction where a page draws it as plain text with no place for
+ *  dir="auto": a first-strong isolate round it (U+2068 before, U+2069 after), which is what dir="auto" does for an
+ *  element. The header's search (components/site/SiteSearch.tsx, not this builder's) draws a result's title as given. */
+const FSI = String.fromCharCode(0x2068), PDI = String.fromCharCode(0x2069);
+export const w1Own = (text: string): string => `${FSI}${text}${PDI}`;
+
 /** The most listings the header's search is given: it is sent whole to the browser. The Marketplace's own search
  *  (the browse page) looks through every listing. */
 export const W1_SEARCH_LISTINGS = 200;
 
 /** market_index as the header's search lists it: one entry per listing on sale (the newest first) and one per
- *  approved shop, each found by its name as written and as the database would match it. */
+ *  approved shop, each found by its name as written and as the database would match it. A title is what a seller or
+ *  a shop wrote, so it is set apart in its own direction (w1Own). */
 export function w1SearchItems(index: MkIndex | null, locale: string, words: { listing: string; shop: string }): MkSearchItem[] {
   if (!index) return [];
   const out: MkSearchItem[] = [];
@@ -259,11 +278,11 @@ export function w1SearchItems(index: MkIndex | null, locale: string, words: { li
   for (const s of index.shops) {
     if (!s || typeof s.slug !== "string" || !slug(s.slug) || typeof s.name_en !== "string") continue;
     const title = mkPick(locale, s.name_en, s.name_ar);
-    if (title) out.push({ title, text: words.shop, href: shopHref(s.slug), words: found(s.name_en, s.name_ar) });
+    if (title) out.push({ title: w1Own(title), text: words.shop, href: shopHref(s.slug), words: found(s.name_en, s.name_ar) });
   }
   for (const l of index.listings.slice(0, W1_SEARCH_LISTINGS)) {
     if (!l || !Number.isSafeInteger(l.id) || l.id <= 0 || typeof l.title !== "string" || !l.title.trim()) continue;
-    out.push({ title: l.title, text: words.listing, href: listingHref(l.id), words: w1Norm(l.title) });
+    out.push({ title: w1Own(l.title), text: words.listing, href: listingHref(l.id), words: w1Norm(l.title) });
   }
   return out;
 }

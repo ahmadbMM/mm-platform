@@ -56,7 +56,7 @@ export default function ListingView({ l, cats, locale, t, w, signedIn, companyWa
     ...(type ? [{ href: w1Href(MK_HOME, { ...W1_NONE, sport: type.parent, type: type.slug }), label: mkCatName(type, locale) }] : []),
   ];
   const factValue = (key: string, value: string) => {
-    if (key === "for_whom") return (MK_FOR_WHOM as readonly string[]).includes(value) ? w.who[value] : value;
+    if (key === "for_whom") return (MK_FOR_WHOM as readonly string[]).includes(value) ? w.who[value] : <span className="mk-user" dir="auto">{value}</span>;
     if (key === "wheel_size" && value === "other") return w.other;
     return key === "brand" || key === "model" ? <span className="mk-user" dir="auto">{value}</span> : <bdi dir="ltr">{value}</bdi>;
   };

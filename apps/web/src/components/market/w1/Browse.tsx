@@ -99,7 +99,9 @@ export default function Browse({ locale, base, filters, sports, types, result, f
       <form className="mk-w1-search" role="search" action={base} method="get" onSubmit={search}>
         <label htmlFor={`${id}-q`} className="mm-sr">{w.searchHint}</label>
         <MkIcon name="search" size={20} />
-        <input key={filters.q} id={`${id}-q`} type="search" name="q" defaultValue={filters.q} maxLength={80} placeholder={w.searchHint} enterKeyHint="search" autoComplete="off" dir="auto" />
+        {/* the box stays in the page's direction, so its room for the mark is on the mark's side; what is typed finds
+            its own direction (w1.css: unicode-bidi plaintext, which is what dir="auto" gives a text box) */}
+        <input key={filters.q} id={`${id}-q`} type="search" name="q" defaultValue={filters.q} maxLength={80} placeholder={w.searchHint} enterKeyHint="search" autoComplete="off" />
         {/* without script the form still searches inside what is picked */}
         {filters.type ? <input type="hidden" name="type" value={filters.type} /> : filters.sport ? <input type="hidden" name="sport" value={filters.sport} /> : null}
         {filters.seller && <input type="hidden" name="seller" value={filters.seller} />}
@@ -175,11 +177,9 @@ export default function Browse({ locale, base, filters, sports, types, result, f
             <>
               <div className="mk-empty">
                 <p>{w.none}</p>
+                {/* the chips say where to look next by themselves: their name is for a screen reader, not a line on the page */}
                 {near.length > 0 && (
-                  <nav className="mk-w1-near" aria-label={w.nearby}>
-                    <span className="mk-w1-near-h">{w.nearby}</span>
-                    <span className="mk-w1-near-list">{near.map((n) => chip(n.name ?? w.allListings, n.filters, false, n.key))}</span>
-                  </nav>
+                  <nav className="mk-w1-near" aria-label={w.nearby}>{near.map((n) => chip(n.name ?? w.allListings, n.filters, false, n.key))}</nav>
                 )}
               </div>
               {newest.length > 0 && (
