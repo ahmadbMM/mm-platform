@@ -137,7 +137,7 @@ function english(i: W4RulesInput): W4Rules {
         { p: "MicroMobility shows the listings. The sale, the payment and the handover are between the buyer and the seller." },
         { ul: [
           "MicroMobility is not the seller and is not a party to the sale. The one exception is a listing marked “Sold by MicroMobility”, which MicroMobility sells itself under the site’s [Terms & Conditions](/terms).",
-          "MicroMobility takes no payment for an item and holds no money for anyone.",
+          "MicroMobility takes no payment for someone else’s item and holds no money for anyone.",
           "The buyer and the seller agree the price, how to pay and where to meet. Any delivery or courier is theirs to arrange and to pay for.",
           "MicroMobility does not inspect the items and does not confirm that a listing is accurate. Check the item yourself before you pay.",
           "“Checked by our team” on a listing means our team saw that item on the date shown. It is not a warranty and it does not replace your own check.",
@@ -305,7 +305,7 @@ function arabic(i: W4RulesInput): W4Rules {
         { p: "تعرض MicroMobility الإعلانات. أما البيع والدفع والتسليم فبين المشتري والبائع." },
         { ul: [
           "MicroMobility ليست البائع وليست طرفاً في البيع. والاستثناء الوحيد هو الإعلان المكتوب عليه «تبيعه MicroMobility»، فهذا تبيعه MicroMobility نفسها وفق [الشروط والأحكام](/terms) الخاصة بالموقع.",
-          "لا تأخذ MicroMobility ثمن أي غرض، ولا تحتفظ بمال لأحد.",
+          "لا تأخذ MicroMobility ثمن غرض يبيعه غيرها، ولا تحتفظ بمال لأحد.",
           "يتفق المشتري والبائع على السعر وطريقة الدفع ومكان اللقاء. وأي توصيل أو شحن يرتّبانه هما ويدفعان تكلفته.",
           "لا تفحص MicroMobility الأغراض ولا تؤكد صحة ما في الإعلان. افحص الغرض بنفسك قبل أن تدفع.",
           "عبارة «فحصه فريقنا» على الإعلان تعني أن فريقنا رأى ذلك الغرض في التاريخ المذكور. ليست ضماناً، ولا تغني عن فحصك أنت.",

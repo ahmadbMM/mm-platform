@@ -5,8 +5,8 @@ import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { MK_RULES, mkErrorKey, type MkMe, type MkShopMine } from "@/lib/market/core";
 import {
-  W4_MAX, w4Cities, w4DraftKey, w4DraftRead, w4DraftWrite, w4EditFieldsOf, w4FieldsOf, w4FormOf, w4IsLocked, w4Issues, w4NeedAgree,
-  w4RefusalField, w4RefusalIssue, type W4Field, type W4Form, type W4IssueKey, type W4Key,
+  W4_BIRTH_HREF, W4_DRAFT_PREFIX, w4Cities, w4DraftKey, w4DraftRead, w4DraftStale, w4DraftWrite, w4EditFieldsOf, w4FieldsOf, w4FormOf, w4IsLocked,
+  w4Issues, w4NeedAgree, w4Said, w4TypeMax, type W4Field, type W4Form, type W4IssueKey, type W4Key,
 } from "@/lib/market/w4";
 import { rulesHref } from "@/lib/market/w4-rules";
 import MkIcon from "../MkIcon";
@@ -44,7 +44,6 @@ export type ShopFormProps = {
 };
 
 type Refusal = { field: W4Field | null; text: string; birth?: boolean };
-const BIRTH_HREF = "/account/personal";
 const MAP_EXAMPLE = "https://maps.app.goo.gl/…";
 
 function kept(tag: string): string | null {
@@ -55,6 +54,18 @@ function keep(tag: string, f: W4Form) {
 }
 function forget(tag: string) {
   try { window.localStorage.removeItem(w4DraftKey(tag)); } catch { /* nothing kept */ }
+}
+/** An application kept here over thirty days ago is taken out of this browser, whichever account left it: a phone
+ *  can be used by several, and a shop's details do not stay on it for good. */
+function prune() {
+  try {
+    const ls = window.localStorage, names: string[] = [];
+    for (let i = 0; i < ls.length; i++) {
+      const k = ls.key(i);
+      if (k && k.startsWith(W4_DRAFT_PREFIX)) names.push(k);
+    }
+    for (const k of names) if (w4DraftStale(ls.getItem(k))) ls.removeItem(k);
+  } catch { /* no storage: nothing is kept */ }
 }
 
 export default function ShopForm({ locale, mode, shop, termsVersion, tag, onDone, onSignedOut, onCancel }: ShopFormProps) {
@@ -71,13 +82,16 @@ export default function ShopForm({ locale, mode, shop, termsVersion, tag, onDone
   const [busy, setBusy] = useState(false);
   const [pick, setPick] = useState<{ copies: W4Copies; url: string } | null>(null);
   const [logoErr, setLogoErr] = useState<string | null>(null);
+  // the database asked for the agreement again (the rules changed while the form was open)
+  const [asked, setAsked] = useState(false);
+  useEffect(prune, []);
   // the chosen picture's preview address is let go when another is chosen, when it is dropped and when the form closes
   useEffect(() => {
     const url = pick?.url;
     return () => { if (url) URL.revokeObjectURL(url); };
   }, [pick]);
 
-  const needAgree = w4NeedAgree(shop, version);
+  const needAgree = asked || w4NeedAgree(shop, version);
   const rules = { locked: edit, needAgree, agree };
   const issues = tried ? w4Issues(form, rules) : [];
   const issueText = (k: W4IssueKey): string => (k === "link" ? t.errors.link : k === "phone_text" ? t.errors.phone : k === "agree" ? t.errors.consent : w.need[k] ?? t.errors.input);
@@ -113,25 +127,22 @@ export default function ShopForm({ locale, mode, shop, termsVersion, tag, onDone
   }
 
   async function refuse(error: string, detail: string, at?: W4Field) {
-    if (error === "signin") { onSignedOut(); return; }
-    if (error === "terms") {
-      // the rules changed while the form was open: the tick is asked for again, for the version now in force
+    const said = w4Said(error, detail, { edit, at });
+    if (said.do === "signin") { onSignedOut(); return; }
+    if (said.do === "terms") {
+      // the rules changed while the form was open: the tick is asked for again, for the version now in force (and is
+      // drawn from here on even when that version could not be read just now)
       const me = await w4Get<{ signedIn?: boolean; me?: MkMe }>("/api/market/me");
       if (me.ok && me.me) setVersion(me.me.terms_version);
+      setAsked(true);
       setAgree(false);
       setRefusal({ field: "agreement", text: t.errors.terms });
       focus("agreement");
       return;
     }
-    if (error === "birth") { setRefusal({ field: null, text: t.errors.birth, birth: true }); return; }
-    if (error === "input" && detail === "locked") { setRefusal({ field: null, text: w.locked }); return; }
-    if (error === "dup" && detail === "cr") { setRefusal({ field: "cr_no", text: w.dupCr }); focus("cr_no"); return; }
-    const found = at ?? w4RefusalField(error, detail);
-    // a locked field is not in an approved shop's form: what is said about it is said under the form
-    const field = found && !(edit && found !== "agreement" && w4IsLocked(found)) ? found : null;
-    const issue = w4RefusalIssue(error, detail);
-    setRefusal({ field, text: issue ? issueText(issue) : mkErrorText(t, mkErrorKey(error, detail)) });
-    if (field) focus(field);
+    const text = said.own ? w[said.own] : said.issue ? issueText(said.issue) : mkErrorText(t, mkErrorKey(error, detail));
+    setRefusal({ field: said.field, text, birth: said.birth });
+    if (said.field) focus(said.field);
   }
 
   async function submit(e: FormEvent) {
@@ -191,13 +202,16 @@ export default function ShopForm({ locale, mode, shop, termsVersion, tag, onDone
   type Kind = { dir?: "ltr" | "rtl" | "auto"; lang?: string; mode?: "numeric" | "tel" | "url"; auto?: string; placeholder?: string; required?: boolean };
   const line = (k: W4Key, o: Kind = {}, wide = false) => shows(k) && wrap(k, !o.required,
     <input type={o.mode === "tel" ? "tel" : o.mode === "url" ? "url" : "text"} inputMode={o.mode} dir={o.dir ?? "auto"} lang={o.lang} autoComplete={o.auto ?? "off"}
-      placeholder={o.placeholder} maxLength={W4_MAX[k]} aria-required={o.required || undefined} {...common(k)} />, wide);
+      placeholder={o.placeholder} maxLength={w4TypeMax(k)} aria-required={o.required || undefined} {...common(k)} />, wide);
   const para = (k: W4Key, o: Kind = {}) => shows(k) && wrap(k, !o.required,
-    <textarea rows={4} dir={o.dir ?? "auto"} lang={o.lang} maxLength={W4_MAX[k]} aria-required={o.required || undefined} {...common(k)} />, true);
+    <textarea rows={4} dir={o.dir ?? "auto"} lang={o.lang} maxLength={w4TypeMax(k)} aria-required={o.required || undefined} {...common(k)} />, true);
 
   const logoErrText = errOf("logo");
   const hasLogo = !!pick || !!form.logo;
-  const general = refusal && refusal.field === null ? refusal : null;
+  // what is said about the whole form, and about anything that has no place on this screen (a field an approved
+  // shop's form does not have, the tick when it is not asked for): never a refusal that is said nowhere
+  const onScreen = (f: W4Field) => (f === "agreement" ? needAgree : shows(f));
+  const general = refusal && (refusal.field === null || !onScreen(refusal.field)) ? refusal : null;
   const sendLabel = edit ? (busy ? w.saving : w.save) : busy ? w.sending : shop?.status === "rejected" ? w.sendAgain : w.send;
   const section = (id: string, title: string, body: ReactNode) => (
     <section className="mk-box mk-w4-sec" aria-labelledby={`${uid}-${id}`}>
@@ -280,7 +294,7 @@ export default function ShopForm({ locale, mode, shop, termsVersion, tag, onDone
           {general ? (
             <>
               <p className="mk-err">{general.text}</p>
-              {general.birth && <Link className="mk-btn2" href={BIRTH_HREF}>{w.addBirth}</Link>}
+              {general.birth && <Link className="mk-btn2" href={W4_BIRTH_HREF}>{w.addBirth}</Link>}
             </>
           ) : issues.length > 0 ? <p className="mk-err">{w.fixFirst}</p> : null}
         </div>

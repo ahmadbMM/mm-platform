@@ -77,11 +77,14 @@ describe("what the rules say", () => {
   it("say MicroMobility shows the listings and the sale is between the two people", () => {
     const how = section(en(), "how");
     expect(how).toContain("MicroMobility shows the listings. The sale, the payment and the handover are between the buyer and the seller.");
-    expect(how).toContain("takes no payment for an item and holds no money");
+    // "someone else's item": MicroMobility is paid for what it sells itself, and the sentence before says so
+    expect(how).toContain("takes no payment for someone else’s item and holds no money");
+    expect(how).not.toContain("takes no payment for an item");
     expect(how).toContain("is not a party to the sale");
     const howAr = section(ar(), "how");
     expect(howAr).toContain("تعرض MicroMobility الإعلانات. أما البيع والدفع والتسليم فبين المشتري والبائع.");
     expect(howAr).toContain("وليست طرفاً في البيع");
+    expect(howAr).toContain("لا تأخذ MicroMobility ثمن غرض يبيعه غيرها، ولا تحتفظ بمال لأحد.");
   });
   it("never promise protection, a guarantee, a refund or compensation from MicroMobility for someone else's item", () => {
     const risky = /warrant|guarantee|refund|compensat|protect|insur|money back|reimburse|cover(s|ed)? (you|the buyer)/i;

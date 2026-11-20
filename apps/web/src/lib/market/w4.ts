@@ -38,6 +38,12 @@ export const W4_MAX: Record<W4Key, number> = {
 };
 export const W4_NAME_MIN = 2;
 export const W4_ACTIVITY_MIN = 2;
+/** The most characters a field's box takes while it is typed in: its column's length, and for the two business
+ *  numbers room for the spaces and dashes people write them with ("4030 123 456"), which are taken out before the
+ *  number is judged or sent. Without the room a number pasted with its spaces lost its last digits. */
+export const w4TypeMax = (k: W4Key): number => (k === "cr_no" || k === "vat_no" ? W4_MAX[k] + 8 : W4_MAX[k]);
+/** Where an account adds its birth date (the shop pages and the form's refusal link there). */
+export const W4_BIRTH_HREF = "/account/personal";
 
 export const w4Blank = (): W4Form => Object.fromEntries(W4_KEYS.map((k) => [k, ""])) as W4Form;
 
@@ -255,6 +261,28 @@ export function w4RefusalIssue(error: string, detail: string): W4IssueKey | null
   }
 }
 
+/** What the form does with a refusal, whichever route answered it (the application's, or the photo route for a logo):
+ *    "signin"  the session is no longer accepted: the page draws the sign-in;
+ *    "terms"   the rules changed while the form was open: the tick is asked again, for the version now in force;
+ *    "say"     it is said: beside `field`, or under the form when `field` is null. `issue` is the form's own wording
+ *              for it, `own` one of this builder's two sentences ("locked", "dupCr"); with neither, the shared words
+ *              of the error say it. `birth`: the way to add a birth date goes with it.
+ *  `edit`: an approved shop's form, which has none of the locked fields: what is said about one is said under the
+ *  form, never beside a field that is not there. `at`: the field a refusal belongs to whatever it names (the logo). */
+export type W4Said =
+  | { do: "signin" }
+  | { do: "terms" }
+  | { do: "say"; field: W4Field | null; issue: W4IssueKey | null; own: "locked" | "dupCr" | null; birth: boolean };
+export function w4Said(error: string, detail: string, o: { edit?: boolean; at?: W4Field } = {}): W4Said {
+  if (error === "signin") return { do: "signin" };
+  if (error === "terms") return { do: "terms" };
+  const there = (f: W4Field | null): W4Field | null => (f && o.edit && f !== "agreement" && w4IsLocked(f) ? null : f);
+  if (error === "birth") return { do: "say", field: null, issue: null, own: null, birth: true };
+  if (error === "input" && detail === "locked") return { do: "say", field: null, issue: null, own: "locked", birth: false };
+  if (error === "dup" && detail === "cr") return { do: "say", field: there("cr_no"), issue: null, own: "dupCr", birth: false };
+  return { do: "say", field: there(o.at ?? w4RefusalField(error, detail)), issue: w4RefusalIssue(error, detail), own: null, birth: false };
+}
+
 /* ------------------------------------------------------------------ the application's state */
 
 /** What the pages show for a shop: none yet, waiting, open, not approved (it can be sent again), or paused. */
@@ -265,6 +293,12 @@ export const w4State = (shop: Pick<MkShopMine, "status"> | null | undefined): W4
 export const w4CanApply = (s: W4State): boolean => s === "none" || s === "pending" || s === "rejected";
 /** Whether the owner can change the details an approved shop leaves open. */
 export const w4CanEdit = (s: W4State): boolean => s === "approved";
+/** Whether a shop page opens on its form: the application page for an account with no shop, and for one whose
+ *  application is waiting or was not approved when it asked to change it (?edit=1). My shop never opens on its form.
+ *  Asked when the page is first drawn and again after "Try again" has read the account's shop: an application that
+ *  turns out to exist is then shown by its state, not as a form nobody asked for. */
+export const w4FormFirst = (page: "apply" | "mine", shop: Pick<MkShopMine, "status"> | null | undefined, edit: boolean): boolean =>
+  page === "apply" && (!shop || (edit && w4CanApply(w4State(shop))));
 /** The shared status chip's colour for a shop's state (market.css .mk-status-<x>). */
 export const w4StatusClass = (s: MkShopStatus): string => ({ pending: "held", approved: "live", rejected: "hidden", suspended: "hidden" })[s];
 
@@ -278,7 +312,20 @@ export const w4NeedAgree = (shop: Pick<MkShopMine, "status" | "agreement_version
 export const W4_DRAFT_DAYS = 30;
 /** Where an account's unsent application is kept in its browser. `tag` is the account's own, made on the server from
  *  its session (lib/market/w4-server.ts): another account on the same phone never reads it. */
-export const w4DraftKey = (tag: string): string => `mk-w4-shop:${/^[0-9a-f]{8,64}$/.test(tag) ? tag : "x"}`;
+export const W4_DRAFT_PREFIX = "mk-w4-shop:";
+export const w4DraftKey = (tag: string): string => `${W4_DRAFT_PREFIX}${/^[0-9a-f]{8,64}$/.test(tag) ? tag : "x"}`;
+/** Whether what a browser holds under a draft's name is to be taken out of it: older than thirty days, or not a
+ *  draft at all. The form removes these when it opens, whichever account left them (a phone can be used by several):
+ *  a shop's details do not stay on a phone for good. */
+export function w4DraftStale(raw: string | null | undefined, now: number = Date.now()): boolean {
+  if (!raw) return true;
+  try {
+    const b = JSON.parse(raw) as { at?: unknown } | null;
+    return !(b && typeof b === "object" && typeof b.at === "number" && now - b.at < W4_DRAFT_DAYS * 86_400_000);
+  } catch {
+    return true;
+  }
+}
 
 /** What is written: the typed text and when. The logo is never kept (a picture is chosen again). */
 export function w4DraftWrite(f: W4Form, now: number = Date.now()): string {
@@ -315,10 +362,11 @@ export const w4Cities = (locale: string): { key: string; name: string }[] =>
 /* ------------------------------------------------------------------ the footer's link to the rules */
 
 /** The footer's columns with a way to the Marketplace's rules: as they are when one of their links already opens
- *  /marketplace/rules (the built-in list has it; staff may have moved or reworded it), else with the link added to the
- *  end of the last column. The footer calls it only while the Marketplace is on. */
+ *  /marketplace/rules (the built-in list has it; staff may have moved or reworded it, or written it the old way with
+ *  its language first, "/ar/marketplace/rules", which lib/links.ts pageOf reads as the same page), else with the link
+ *  added to the end of the last column. The footer calls it only while the Marketplace is on. */
 export function w4FooterWithRules<C extends { links: { label: string; href: string }[] }>(columns: C[], label: string): C[] {
-  const opensRules = (href: string) => href.replace(/[?#].*$/, "").replace(/\/$/, "") === MK_RULES;
+  const opensRules = (href: string) => href.replace(/[?#].*$/, "").replace(/\/$/, "").replace(/^\/(?:en|ar)(?=\/)/, "") === MK_RULES;
   if (!label || columns.length === 0 || columns.some((c) => c.links.some((l) => opensRules(l.href)))) return columns;
   const last = columns.length - 1;
   return columns.map((c, i) => (i === last ? { ...c, links: [...c.links, { label, href: MK_RULES }] } : c));

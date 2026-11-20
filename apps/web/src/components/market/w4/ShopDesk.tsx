@@ -4,7 +4,7 @@ import { useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { MK_MY_SHOP, MK_SHOP_APPLY, mkErrorKey, shopHref, type MkMe, type MkShopMine } from "@/lib/market/core";
-import { w4CanApply, w4State } from "@/lib/market/w4";
+import { W4_BIRTH_HREF, w4CanApply, w4FormFirst, w4State } from "@/lib/market/w4";
 import MkIcon from "../MkIcon";
 import MkSignIn from "../MkSignIn";
 import { T as M, mkErrorText } from "../Market.text";
@@ -37,7 +37,6 @@ export type ShopDeskProps = {
 };
 
 const never = () => () => {};
-const BIRTH_HREF = "/account/personal";
 type Data = { me: MkMe; shop: MkShopMine | null };
 
 export default function ShopDesk({ page, locale, me, shop, error, tag, edit = false }: ShopDeskProps) {
@@ -47,7 +46,8 @@ export default function ShopDesk({ page, locale, me, shop, error, tag, edit = fa
   const [data, setData] = useState<Data | null>(me ? { me, shop } : null);
   const [why, setWhy] = useState(error);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState(page === "apply" ? shop === null || (edit && w4CanApply(w4State(shop))) : false);
+  // nothing opens on a form until the account's shop has been read: a read that failed knows of no shop either way
+  const [form, setForm] = useState(me ? w4FormFirst(page, shop, edit) : false);
   const [flash, setFlash] = useState<"sent" | "saved" | null>(null);
   const [logoMissed, setLogoMissed] = useState(false);
   const head = useRef<HTMLHeadingElement>(null);
@@ -63,7 +63,7 @@ export default function ShopDesk({ page, locale, me, shop, error, tag, edit = fa
     if (a.ok && a.me && b.ok) {
       setData({ me: a.me, shop: b.shop ?? null });
       setWhy(null);
-      if (page === "apply" && !b.shop) setForm(true);
+      setForm(w4FormFirst(page, b.shop ?? null, edit));
       return;
     }
     const no = !a.ok ? a : !b.ok ? b : null;
@@ -105,7 +105,7 @@ export default function ShopDesk({ page, locale, me, shop, error, tag, edit = fa
   const blocked = block && (
     <div className="mk-empty" role="alert">
       <p>{t.errors[block]}</p>
-      {block === "birth" && <Link className="mk-btn2" href={BIRTH_HREF}>{w.addBirth}</Link>}
+      {block === "birth" && <Link className="mk-btn2" href={W4_BIRTH_HREF}>{w.addBirth}</Link>}
     </div>
   );
 

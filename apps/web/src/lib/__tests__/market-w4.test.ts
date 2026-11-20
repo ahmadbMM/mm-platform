@@ -12,11 +12,12 @@ import { siteSchema } from "@/content/pages/site";
 import { POST as applyPost } from "../../app/api/market/shop/apply/route";
 import { GET as mineGet } from "../../app/api/market/shop/mine/route";
 import { pageOf } from "../links";
-import { MK_RULES, type MkShopMine } from "../market/core";
+import { MK_RULES, mkErrorKey, type MkShopMine } from "../market/core";
 import {
-  W4_KEYS, W4_LOCKED, W4_MAX, w4Blank, w4BodyFields, w4CanApply, w4CanEdit, w4Changed, w4Cities, w4CrOk, w4Digits, w4DraftKey, w4DraftRead,
-  w4DraftWrite, w4EditFieldsOf, w4FieldsOf, w4FooterWithRules, w4FormOf, w4Issues, w4LogoOk, w4MapOk, w4NeedAgree, w4Phone, w4PhoneLocal,
-  w4PhoneShown, w4RefusalField, w4RefusalIssue, w4State, w4StatusClass, w4VatOk, w4Wa, type W4Form,
+  W4_DRAFT_PREFIX, W4_KEYS, W4_LOCKED, W4_MAX, w4Blank, w4BodyFields, w4CanApply, w4CanEdit, w4Changed, w4Cities, w4CrOk, w4Digits, w4DraftKey,
+  w4DraftRead, w4DraftStale, w4DraftWrite, w4EditFieldsOf, w4FieldsOf, w4FooterWithRules, w4FormFirst, w4FormOf, w4Issues, w4LogoOk, w4MapOk,
+  w4NeedAgree, w4Phone, w4PhoneLocal, w4PhoneShown, w4RefusalField, w4RefusalIssue, w4Said, w4State, w4StatusClass, w4TypeMax, w4VatOk, w4Wa,
+  type W4Form,
 } from "../market/w4";
 import { w4DraftTag, w4ShopData } from "../market/w4-server";
 
@@ -104,6 +105,16 @@ describe("the application form", () => {
     expect(w4Issues(form({ about_en: "a".repeat(600) }))).toEqual([]);
     expect(W4_MAX.sells).toBe(300);
   });
+  it("leaves room to type a business number with its spaces and dashes, and reads it without them", () => {
+    expect(w4TypeMax("cr_no")).toBeGreaterThanOrEqual("4030-123-456".length);
+    expect(w4TypeMax("vat_no")).toBeGreaterThanOrEqual("3101 2345 6700 003".length);
+    for (const k of W4_KEYS) if (k !== "cr_no" && k !== "vat_no") expect(w4TypeMax(k), k).toBe(W4_MAX[k]);
+    const spaced = form({ cr_no: "4030 123 456", vat_no: "3101-2345-6700-003" });
+    expect(w4Issues(spaced, { needAgree: true, agree: true })).toEqual([]);
+    expect(w4FieldsOf(spaced, "2026-11-21")).toMatchObject({ cr_no: "4030123456", vat_no: "310123456700003" });
+    // the room is for typing only: a number with too many digits is still refused as a number
+    expect(w4Issues(form({ cr_no: "4030 123 456 78" })).map((i) => i.key)).toContain("cr");
+  });
   it("does not judge what an approved shop's owner cannot change", () => {
     expect(W4_LOCKED).toEqual(["name_en", "cr_no", "cr_activity", "vat_no", "city"]);
     const f = form({ name_en: "", cr_no: "", cr_activity: "", city: "", vat_no: "1" });
@@ -161,6 +172,17 @@ describe("the application kept in the browser", () => {
     expect(w4DraftRead(w4DraftWrite(form(), now), base, { now: now + 31 * 86_400_000 })).toBe(base);
     for (const raw of [null, "", "not json", "[]", JSON.stringify({ at: now }), JSON.stringify({ at: "x", form: {} })]) expect(w4DraftRead(raw, base, { now })).toBe(base);
   });
+  it("is taken out of the browser once it is past its thirty days or is no draft at all", () => {
+    expect(w4DraftKey("0123456789abcdef01234567").startsWith(W4_DRAFT_PREFIX)).toBe(true);
+    const raw = w4DraftWrite(form(), now);
+    expect(w4DraftStale(raw, now + 86_400_000)).toBe(false);
+    expect(w4DraftStale(raw, now + 29 * 86_400_000)).toBe(false);
+    expect(w4DraftStale(raw, now + 30 * 86_400_000)).toBe(true);
+    for (const junk of [null, undefined, "", "not json", "null", "5", "[]", JSON.stringify({ form: {} }), JSON.stringify({ at: "x" })]) expect(w4DraftStale(junk, now), String(junk)).toBe(true);
+    // what the form would not read back is what is removed, and nothing else
+    expect(w4DraftRead(raw, w4Blank(), { now: now + 29 * 86_400_000 }).name_en).toBe("Corniche Cycles");
+    expect(w4DraftRead(raw, w4Blank(), { now: now + 30 * 86_400_000 }).name_en).toBe("");
+  });
   it("takes only the form's own text, a city of the list, and never a locked value of an approved shop", () => {
     const raw = JSON.stringify({ at: now, form: { name_en: "Typed", city: "atlantis", sells: 5, extra: "x", about_en: "a".repeat(5000), cr_no: "9999999999", address: "Typed road" } });
     const open = w4DraftRead(raw, form(), { now });
@@ -205,6 +227,61 @@ describe("a refusal about the application", () => {
   });
 });
 
+describe("what the form does with a refusal", () => {
+  const say = (field: string | null, issue: string | null = null, own: string | null = null, birth = false) => ({ do: "say", field, issue, own, birth });
+  it("draws the sign-in for a session that is no longer accepted, and asks for the tick again when the rules changed", () => {
+    expect(w4Said("signin", "")).toEqual({ do: "signin" });
+    expect(w4Said("signin", "", { at: "logo" })).toEqual({ do: "signin" });
+    expect(w4Said("terms", "")).toEqual({ do: "terms" });
+    expect(w4Said("terms", "", { edit: true })).toEqual({ do: "terms" });
+  });
+  it("says a refusal beside the field it names, in the form's own words where it has them", () => {
+    expect(w4Said("input", "cr_no")).toEqual(say("cr_no", "cr"));
+    expect(w4Said("input", "map_url")).toEqual(say("map_url", "map"));
+    expect(w4Said("link", "about_en")).toEqual(say("about_en", "link"));
+    expect(w4Said("phone", "returns_ar")).toEqual(say("returns_ar", "phone_text"));
+    expect(w4Said("dup", "cr")).toEqual(say("cr_no", null, "dupCr"));
+    expect(w4Said("input", "logo")).toEqual(say("logo"));
+    expect(w4Said("input", "agreement")).toEqual(say("agreement"));
+    expect(w4Said("consent", "")).toEqual(say("agreement"));
+  });
+  it("says a refusal about the whole form under it: a limit, no birth date, a paused account, a locked value, no answer", () => {
+    expect(w4Said("birth", "")).toEqual(say(null, null, null, true));
+    expect(w4Said("input", "locked")).toEqual(say(null, null, "locked"));
+    for (const [error, detail] of [["limit", "shop"], ["adult", ""], ["suspended", ""], ["busy", ""], ["dup", "slug"], ["absent", ""], ["generic", ""], ["invalid", ""], ["origin", ""], ["too_big", ""], ["input", "nonsense"], ["what", "ever"]]) {
+      expect(w4Said(error, detail), `${error} ${detail}`).toEqual(say(null));
+    }
+  });
+  it("never says a refusal beside a field an approved shop's form does not have", () => {
+    // the five locked values are not in that form: a refusal that names one is said under it
+    for (const k of W4_LOCKED) expect(w4Said("input", k, { edit: true }), k).toMatchObject({ do: "say", field: null });
+    expect(w4Said("dup", "cr", { edit: true })).toEqual(say(null, null, "dupCr"));
+    expect(w4Said("link", "name_en", { edit: true })).toEqual(say(null, "link"));
+    // the fields it does have keep their place
+    expect(w4Said("input", "map_url", { edit: true })).toEqual(say("map_url", "map"));
+    expect(w4Said("phone", "about_ar", { edit: true })).toEqual(say("about_ar", "phone_text"));
+    expect(w4Said("input", "agreement", { edit: true })).toEqual(say("agreement"));
+  });
+  it("says whatever the photo route refused beside the logo", () => {
+    for (const [error, detail] of [["invalid", ""], ["too_big", ""], ["generic", ""], ["limit", "photos"], ["gone", ""], ["state", ""], ["suspended", ""], ["busy", ""]]) {
+      expect(w4Said(error, detail, { at: "logo" }), error).toEqual(say("logo"));
+      expect(w4Said(error, detail, { at: "logo", edit: true }), error).toEqual(say("logo"));
+    }
+  });
+  it("has words in both languages for every refusal the application can meet", () => {
+    // market_shop_apply's refusals (contract section 4), the guard's, the site's own, and the photo route's for a logo
+    const met: [string, string][] = [["busy", ""], ["birth", ""], ["adult", ""], ["suspended", ""], ["terms", ""], ["input", "name_en"], ["input", "locked"], ["link", "sells"],
+      ["phone", "about_en"], ["dup", "cr"], ["dup", "slug"], ["limit", "shop"], ["limit", "photos"], ["gone", ""], ["state", ""], ["origin", ""], ["invalid", ""], ["too_big", ""], ["absent", ""], ["generic", ""]];
+    for (const [error, detail] of met) {
+      const key = mkErrorKey(error, detail);
+      for (const words of [M.en, M.ar]) expect(words.errors[key], `${error} ${detail}`).toBeTruthy();
+      // only a refusal that is none of the site's falls back to the generic words
+      expect(key === "generic", `${error} ${detail}`).toBe(error === "generic");
+    }
+    for (const words of [T.en, T.ar]) { expect(words.locked).toBeTruthy(); expect(words.dupCr).toBeTruthy(); expect(words.addBirth).toBeTruthy(); }
+  });
+});
+
 describe("an application's state", () => {
   it("decides what its owner may do", () => {
     expect(w4State(null)).toBe("none");
@@ -213,6 +290,15 @@ describe("an application's state", () => {
     expect(["none", "pending", "rejected", "approved", "suspended"].map((s) => w4CanApply(s as never))).toEqual([true, true, true, false, false]);
     expect(["none", "pending", "rejected", "approved", "suspended"].map((s) => w4CanEdit(s as never))).toEqual([false, false, false, true, false]);
     expect((["pending", "approved", "rejected", "suspended"] as const).map(w4StatusClass)).toEqual(["held", "live", "hidden", "hidden"]);
+  });
+  it("opens the application page on the form only for an account with no shop, or one that asked to change its application", () => {
+    expect(w4FormFirst("apply", null, false)).toBe(true);
+    expect(w4FormFirst("apply", null, true)).toBe(true);
+    // an application that exists is shown by its state; ?edit=1 opens the form of one that can still be sent
+    for (const status of ["pending", "rejected", "approved", "suspended"] as const) expect(w4FormFirst("apply", shop({ status }), false), status).toBe(false);
+    expect((["pending", "rejected", "approved", "suspended"] as const).map((status) => w4FormFirst("apply", shop({ status }), true))).toEqual([true, true, false, false]);
+    // My shop never opens on its form
+    for (const s of [null, shop(), shop({ status: "approved" })]) { expect(w4FormFirst("mine", s, false)).toBe(false); expect(w4FormFirst("mine", s, true)).toBe(false); }
   });
   it("asks for the agreement on every application, and on an approved shop's edit only after the rules changed", () => {
     expect(w4NeedAgree(null, "2026-11-21")).toBe(true);
@@ -323,6 +409,10 @@ describe("the shop routes", () => {
     expect((await applyPost(post({ nothing: true }))).status).toBe(400);
     expect((await applyPost(post({ fields }, { origin: "https://evil.example" }))).status).toBe(403);
     expect((await applyPost(post({ fields }, { cookie: "" }))).status).toBe(401);
+    // a body past the route's 20,000 bytes is refused as too large, whatever it holds
+    const big = await applyPost(post({ fields, padding: "a".repeat(30_000) }));
+    expect(big.status).toBe(413);
+    expect(await big.json()).toEqual({ ok: false, error: "too_big" });
     expect(calls).toHaveLength(0);
   });
   it("read the account's own shop, or none", async () => {
@@ -365,15 +455,20 @@ describe("the ways into the rules and the shop pages", () => {
     expect(out[1].title).toBe("Company");
   });
   it("leaves the columns alone when one of their links already opens the rules, however staff worded or placed it", () => {
-    for (const href of [MK_RULES, `${MK_RULES}#safety`, `${MK_RULES}/`, `${MK_RULES}?x=1`]) {
+    for (const href of [MK_RULES, `${MK_RULES}#safety`, `${MK_RULES}/`, `${MK_RULES}?x=1`, `/ar${MK_RULES}`, `/en${MK_RULES}#shops`]) {
       const mine = cols();
       mine[0].links.push({ label: "Selling rules", href });
       expect(w4FooterWithRules(mine, "Marketplace rules")).toBe(mine);
     }
     expect(w4FooterWithRules([], "Marketplace rules")).toEqual([]);
+    // every address the footer's own rule reads as a Marketplace page (and so hides while it is off) is read here too
+    for (const href of [`/ar${MK_RULES}`, `/en${MK_RULES}#shops`]) expect(pageOf(href), href).toBe("marketplace");
     const other = cols();
     other[0].links.push({ label: "Marketplace", href: "/marketplace" });
     expect(w4FooterWithRules(other, "Marketplace rules")[1].links).toHaveLength(2);
+    const elsewhere = cols();
+    elsewhere[0].links.push({ label: "Rules", href: "/arena/marketplace/rules" });
+    expect(w4FooterWithRules(elsewhere, "Marketplace rules")[1].links).toHaveLength(2);
   });
   it("gives My Account a My shop row only for an account that has applied, while the Marketplace is on", () => {
     const src = read("app/[locale]/account/[[...part]]/page.tsx");
