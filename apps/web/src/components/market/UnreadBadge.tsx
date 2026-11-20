@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocalize } from "@/i18n/TxProvider";
-import { unreadText } from "@/lib/market/w3";
+import { unreadText } from "@/lib/market/w3-unread";
 import { T } from "./w3/badge.text";
 import { useUnread } from "./w3/unread";
 import "./w3/badge.css";

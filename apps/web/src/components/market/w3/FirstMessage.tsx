@@ -4,12 +4,13 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { MK_HUB_CITY, MK_MESSAGE_MAX, inboxHref, listingHref, mkErrorKey, type MkError, type MkMe, type MkNameMode, type MkSellerKind } from "@/lib/market/core";
-import { MK_CONTACT_HASH, bodyProblem, nameModes, quickReplies, signInHref } from "@/lib/market/w3";
+import { MK_CONTACT_HASH, bodyProblem, nameModes, quickReplies, signInHref, writeRefusal } from "@/lib/market/w3";
 import { mkGet, mkPost } from "@/lib/market/w3-client";
 import MkIcon from "../MkIcon";
 import MkModal from "../MkModal";
 import { T as S, mkErrorText } from "../Market.text";
 import { T } from "../w3.text";
+import { useFocusKept } from "./focus";
 import "../w3.css";
 
 // The first message about a listing: the centred pop-up the Contact button opens for a signed-in buyer. It asks how
@@ -27,8 +28,6 @@ async function readMe(): Promise<Load> {
   if (r.signedIn !== true || !r.me) return { state: "fail", error: "signin", detail: "" };
   return { state: "ready", me: r.me };
 }
-/** Why this account cannot write, as an error id; null when it can. */
-const refusedFor = (me: MkMe): MkError | null => (me.seller?.status === "suspended" ? "suspended" : me.adult === null ? "birth" : me.adult === false ? "adult" : null);
 
 export default function FirstMessage({ listingId, title, kind, city, onClose }: { listingId: number; title: string; kind: MkSellerKind; city: string; onClose: () => void }) {
   const s = useLocalize(S);
@@ -41,7 +40,10 @@ export default function FirstMessage({ listingId, title, kind, city, onClose }: 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const box = useRef<HTMLTextAreaElement>(null);
+  const about = useRef<HTMLParagraphElement>(null);
   const back = useRef(false); // the notice about phone numbers was just closed: the words are there to be changed
+  // "Try again" gives way to the form it asked for: the keyboard stays in the pop-up (./focus.ts)
+  useFocusKept(about, load.state);
   const nameId = useId();
   const msgId = useId();
   const errId = useId();
@@ -86,10 +88,10 @@ export default function FirstMessage({ listingId, title, kind, city, onClose }: 
   }
 
   const heading = kind === "shop" ? s.contactShop : s.contactSeller;
-  const refused = load.state === "ready" ? refusedFor(load.me) : null;
+  const refused = load.state === "ready" ? writeRefusal(load.me) : null;
   return (
     <MkModal title={heading} onClose={onClose} busy={busy} wide>
-      <p className="mk-w3-about mk-user" dir="auto">{title}</p>
+      <p ref={about} className="mk-w3-about mk-user" dir="auto">{title}</p>
       {load.state === "loading" && <p className="mk-w3-wait" role="status" aria-busy="true">{w.loading}</p>}
       {load.state === "fail" && (
         <>

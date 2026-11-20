@@ -1,11 +1,12 @@
 // The Marketplace's contact side (W3): the plain rules of the Contact button, the first-message pop-up, the inbox, a
-// thread, a report, a shop's contact buttons and the unread number, kept apart from their components so they can be
-// tested. Browser-safe: it imports nothing only a server has. The shapes are lib/market/core.ts's, with the database's
-// own field names; the words are components/market/w3.text.ts and Market.text.ts.
+// thread, a report and a shop's contact buttons, kept apart from their components so they can be tested. Browser-safe:
+// it imports nothing only a server has. The shapes are lib/market/core.ts's, with the database's own field names; the
+// words are components/market/w3.text.ts and Market.text.ts. (The unread number's rules are lib/market/w3-unread.ts,
+// a file of their own that imports nothing: the site's header shows the number on every page.)
 import { SIGNIN_PATH, withNext } from "../signup";
 import {
   MK_MESSAGE_MAX, MK_REPORT_REASONS, inboxHref, isMkError, listingHref, mkClean, mkHasLink, mkHasPhone, mkPick, mkWaHref,
-  type MkError, type MkMessage, type MkOther, type MkReportReason, type MkReportTarget, type MkSellerKind, type MkStatus, type MkThreadListing,
+  type MkError, type MkMe, type MkMessage, type MkOther, type MkReportReason, type MkReportTarget, type MkSellerKind, type MkStatus, type MkThreadListing,
 } from "./core";
 
 /* ------------------------------------------------------------------ a route's answer, read in the browser */
@@ -66,6 +67,27 @@ export function otherName(o: MkOther, locale: string, words: { buyer: string; se
   const name = (o.name ?? "").trim();
   return name || (o.kind === "buyer" ? words.buyer : words.seller);
 }
+/** Why this account cannot write to a seller, as the error id whose words say so (market_me's answer): its use of the
+ *  Marketplace is paused, it has no birth date on file, or it is under 18; null when it can. The first-message pop-up
+ *  says it in place of the form; the database refuses the same accounts whatever a page shows. */
+export function writeRefusal(me: Pick<MkMe, "adult" | "seller">): "suspended" | "birth" | "adult" | null {
+  if (me.seller?.status === "suspended") return "suspended";
+  if (me.adult === null || me.adult === undefined) return "birth";
+  return me.adult === false ? "adult" : null;
+}
+
+/* ------------------------------------------------------------------ a person's words inside the page's own */
+
+/** A sentence of the page's that carries what a person wrote ("You: {0}"), as the words before it and the words after
+ *  it, so the page can put what was written between them in its own direction: an English message inside an Arabic
+ *  sentence (or the other way round) otherwise has its punctuation thrown to the wrong end. `say` is the sentence
+ *  (w3.text.ts `you`); a translation that lost the value's place keeps it at the end. */
+export function aroundWords(say: (text: string) => string): [string, string] {
+  const MARK = String.fromCharCode(0xe000); // a private-use character no sentence holds
+  const s = say(MARK);
+  const i = s.indexOf(MARK);
+  return i < 0 ? [s, ""] : [s.slice(0, i), s.slice(i + MARK.length)];
+}
 
 /* ------------------------------------------------------------------ quick replies */
 
@@ -120,6 +142,13 @@ export function mergeMessages(have: readonly MkMessage[], got: readonly MkMessag
 }
 /** The newest message's number (0 for none): what a poll compares to know something arrived. */
 export const lastId = (list: readonly MkMessage[]): number => (list.length ? list[list.length - 1].id : 0);
+/** The newest message the OTHER person wrote (its number; 0 for none): when it changes something arrived, and the
+ *  header's unread number is asked for again. The reader's own messages never change that number, so sending one asks
+ *  nothing (an account has thirty Marketplace requests a minute, and a lively conversation needs them for itself). */
+export function lastTheirs(list: readonly MkMessage[]): number {
+  for (let i = list.length - 1; i >= 0; i--) if (!list[i].mine) return list[i].id;
+  return 0;
+}
 
 /** How long to wait before asking again while the thread's page is in view: 15 seconds while the talk is going, 30
  *  after two quiet minutes, a minute after ten. The page asks nothing while it is hidden. */
@@ -130,8 +159,6 @@ export function pollDelay(quietMs: number): number {
 }
 /** The inbox asks again every 45 seconds while in view. */
 export const INBOX_POLL_MS = 45_000;
-/** The unread number is asked for again every 90 seconds while a page is in view, for a signed-in visitor only. */
-export const UNREAD_POLL_MS = 90_000;
 
 /* ------------------------------------------------------------------ when */
 
@@ -210,9 +237,3 @@ export function mapHref(url: string | null | undefined): string | null {
 }
 /** A shop's slug as its address carries it. */
 export const isShopSlug = (v: unknown): v is string => typeof v === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v) && v.length >= 3 && v.length <= 40;
-
-/** The unread number as the badge writes it: nothing for none, "99+" above 99. */
-export function unreadText(n: number): string {
-  if (!Number.isFinite(n) || n < 1) return "";
-  return n > 99 ? "99+" : String(Math.floor(n));
-}

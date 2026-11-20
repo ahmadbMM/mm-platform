@@ -99,6 +99,9 @@ a.mk-w3-item:hover { box-shadow: var(--mk-sh-2); }
 .mk-w3-msg.is-mine { align-items: flex-end; align-self: flex-end; }
 .mk-w3-bubble { margin: 0; padding: 10px 14px; border-radius: 18px; border-end-start-radius: 6px; background: var(--mk-well); color: var(--mk-ink); font-size: 15px; line-height: 1.45; }
 .mk-w3-msg.is-mine .mk-w3-bubble { border-end-start-radius: 18px; border-end-end-radius: 6px; background: var(--mk-green); color: var(--mk-paper); }
+/* the words keep their own direction inside the bubble (an English message on an Arabic page); the bubble keeps the
+   page's, so its small corner stays on its writer's side whatever language the message is in */
+.mk-w3-bubble > .mk-user { display: block; }
 .mk-w3-msg.is-pending .mk-w3-bubble { opacity: .6; }
 .mk-w3-msg.is-failed .mk-w3-bubble { background: var(--mk-red-soft); color: var(--mk-ink); box-shadow: inset 0 0 0 1px var(--mk-red); }
 .mk-w3-when { color: var(--mk-ink-3); font-size: 11px; font-variant-numeric: tabular-nums; }

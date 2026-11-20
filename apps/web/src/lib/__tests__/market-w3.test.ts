@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement, type ReactElement } from "react";
 // @ts-expect-error - @types/react-dom is not installed; the server renderer is plain JavaScript here
@@ -18,11 +21,12 @@ import { GET as unreadGet } from "../../app/api/market/unread/route";
 import { fmtPattern } from "../date-pattern";
 import { MK_REPORT_REASONS, type MkMessage, type MkOther } from "../market/core";
 import {
-  INBOX_POLL_MS, MK_CONTACT_HASH, UNREAD_POLL_MS, bodyProblem, companyWaHref, contactMode, dayStarts, isShopSlug, isToday, lastId, listingMark,
+  INBOX_POLL_MS, MK_CONTACT_HASH, aroundWords, bodyProblem, companyWaHref, contactMode, dayStarts, isShopSlug, isToday, lastId, lastTheirs, listingMark,
   mapHref, mergeMessages, mkReply, nameModes, onSale, otherName, phoneShown, pollDelay, quickReplies, reportBackHref, reportReasons, riyadhDay,
-  sendOutcome, signInHref, telHref, threadListingHref, unreadText,
+  sendOutcome, signInHref, telHref, threadListingHref, writeRefusal,
 } from "../market/w3";
 import { inboxFmt } from "../market/w3-fmt";
+import { UNREAD_POLL_MS, UNREAD_UNKNOWN, unreadAfter, unreadAsksAgain, unreadText } from "../market/w3-unread";
 
 // The Marketplace's contact side (W3): the plain rules of the Contact button, the first message, the inbox, a thread,
 // a report, a shop's contact buttons and the unread number, and its nine routes. Nothing is read or written anywhere:
@@ -40,6 +44,10 @@ const post = (path: string, body: unknown, o: { origin?: string | null; cookie?:
   });
 const get = (path: string, cookie: string | null = `mm_acct=${SESSION}`) => new Request(`${SITE}${path}`, { headers: cookie ? { cookie } : {} });
 const msg = (id: number, at = "2026-11-20T10:00:00+00:00", mine = false, body = `m${id}`): MkMessage => ({ id, mine, body, at });
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const source = (path: string) => readFileSync(resolve(SRC, path), "utf8");
+/** What a source file imports, as written (the paths after `from`, and of a bare `import "..."`). */
+const importsOf = (src: string) => [...src.matchAll(/^\s*import\s+(?:[^"']*?\sfrom\s+)?["']([^"']+)["']/gm)].map((m) => m[1]);
 
 describe("a route's answer in the browser", () => {
   it("passes an ok answer through and reads everything else as a refusal", () => {
@@ -107,6 +115,31 @@ describe("names", () => {
     expect(otherName(o({ kind: "shop", shop }), "en", words)).toBe("Wheel House");
     expect(otherName(o({ kind: "shop", shop }), "ar", words)).toBe("بيت العجلات");
     expect(otherName(o({ kind: "shop", shop: { ...shop, name_ar: null } }), "ar", words)).toBe("Wheel House");
+  });
+  it("tells an account that cannot write why, in place of the form: paused, no birth date, under 18", () => {
+    const ok = { adult: true, seller: { status: "ok" as const, terms_ok: false } };
+    expect(writeRefusal(ok)).toBeNull();
+    expect(writeRefusal({ ...ok, adult: null })).toBe("birth");
+    expect(writeRefusal({ ...ok, adult: false })).toBe("adult");
+    expect(writeRefusal({ ...ok, seller: { status: "suspended", terms_ok: true } })).toBe("suspended");
+    expect(writeRefusal({ adult: null, seller: { status: "suspended", terms_ok: true } })).toBe("suspended");
+    for (const k of ["birth", "adult", "suspended"] as const) expect(S.en.errors[k]).toBeTruthy();
+  });
+});
+
+describe("a person's words inside the page's own", () => {
+  it("takes \"You: ...\" apart so the message can sit in its own direction", () => {
+    expect(aroundWords(W.en.you)).toEqual(["You: ", ""]);
+    expect(aroundWords(W.ar.you)).toEqual(["أنت: ", ""]);
+    expect(aroundWords((t) => `« ${t} » (you)`)).toEqual(["« ", " » (you)"]);
+  });
+  it("keeps a sentence whole when a translation lost the value's place", () => {
+    expect(aroundWords(() => "You")).toEqual(["You", ""]);
+  });
+  it("is how the inbox writes the reader's own last message, never the message inside the sentence", () => {
+    const inbox = source("components/market/w3/Inbox.tsx");
+    expect(inbox).toContain("aroundWords(w.you)");
+    expect(inbox).not.toMatch(/w\.you\(r\./);
   });
 });
 
@@ -179,6 +212,14 @@ describe("a thread's messages", () => {
   it("knows the newest message's number", () => {
     expect(lastId([])).toBe(0);
     expect(lastId([msg(2), msg(9)])).toBe(9);
+  });
+  it("knows the newest message the other person wrote, which the reader's own never change", () => {
+    expect(lastTheirs([])).toBe(0);
+    expect(lastTheirs([msg(1, undefined, true), msg(2, undefined, true)])).toBe(0);
+    const list = [msg(1), msg(2, undefined, true), msg(3), msg(4, undefined, true)];
+    expect(lastTheirs(list)).toBe(3);
+    expect(lastTheirs([...list, msg(5, undefined, true)])).toBe(3); // sending one asks nothing more
+    expect(lastTheirs([...list, msg(6)])).toBe(6);
   });
   it("asks again gently: 15 seconds while the talk goes, 30 after two quiet minutes, a minute after ten", () => {
     expect(pollDelay(0)).toBe(15_000);
@@ -300,6 +341,35 @@ describe("the unread number", () => {
     expect(BADGE.en.unread(3)).toBe("3 unread");
     expect(BADGE.ar.unread(3)).toContain("3");
     expect(W.en.unread(3)).toBe(BADGE.en.unread(3));
+  });
+  it("takes an account's number from the route's answer, as a whole number that is never below none", () => {
+    expect(unreadAfter(UNREAD_UNKNOWN, { ok: true, signedIn: true, n: 4 })).toEqual({ n: 4, signedIn: true });
+    expect(unreadAfter(UNREAD_UNKNOWN, { ok: true, signedIn: true, n: 2.9 })).toEqual({ n: 2, signedIn: true });
+    for (const n of [-3, "7", null, Number.NaN]) expect(unreadAfter(UNREAD_UNKNOWN, { ok: true, signedIn: true, n })).toEqual({ n: 0, signedIn: true });
+  });
+  it("never asks again for a visitor with no account, a session the database refused, or a database without the Marketplace", () => {
+    const had = { n: 5, signedIn: true };
+    for (const raw of [{ ok: true, signedIn: false, n: 0 }, { ok: false, error: "signin" }, { ok: false, error: "absent" }]) {
+      const now = unreadAfter(had, raw);
+      expect(now).toEqual({ n: 0, signedIn: false });
+      expect(unreadAsksAgain(now)).toBe(false);
+    }
+  });
+  it("keeps what it knew, and asks again, when the answer failed", () => {
+    const had = { n: 5, signedIn: true };
+    for (const raw of [null, undefined, "x", [], { ok: false, error: "busy" }, { ok: false, error: "generic" }, { ok: "yes" }]) {
+      expect(unreadAfter(had, raw)).toBe(had);
+      expect(unreadAfter(UNREAD_UNKNOWN, raw)).toBe(UNREAD_UNKNOWN);
+    }
+    expect(unreadAsksAgain(had)).toBe(true);
+    expect(unreadAsksAgain(UNREAD_UNKNOWN)).toBe(true);
+  });
+  it("brings nothing else of the Marketplace to the site's header, which is on every page", () => {
+    // the badge, its store and its rules: no lib/market/w3.ts (and through it the sign-in's lists), no core.ts
+    expect(importsOf(source("lib/market/w3-unread.ts"))).toEqual([]);
+    expect(importsOf(source("components/market/w3/unread.ts")).sort()).toEqual(["@/lib/market/w3-unread", "react"]);
+    expect(importsOf(source("components/market/UnreadBadge.tsx")).sort()).toEqual(["./w3/badge.css", "./w3/badge.text", "./w3/unread", "@/i18n/TxProvider", "@/lib/market/w3-unread"]);
+    expect(importsOf(source("components/market/w3/badge.text.ts"))).toEqual([]);
   });
 });
 

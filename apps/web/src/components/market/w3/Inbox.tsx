@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { useLocalize, useTxLocale } from "@/i18n/TxProvider";
 import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 import { MK_HOME, inboxHref, mkErrorKey, mkHasId, type MkError, type MkThreadRow } from "@/lib/market/core";
-import { INBOX_POLL_MS, isToday, listingMark, otherName } from "@/lib/market/w3";
+import { INBOX_POLL_MS, aroundWords, isToday, listingMark, otherName } from "@/lib/market/w3";
 import { mkGet } from "@/lib/market/w3-client";
 import MkPhoto from "../MkPhoto";
 import { T as S, mkErrorText } from "../Market.text";
@@ -77,6 +77,8 @@ export default function Inbox({ initial, error, fmt }: { initial: MkThreadRow[] 
 
   const both = items.some((r) => r.role === "buyer") && items.some((r) => r.role === "seller");
   const list = both && show !== "all" ? items.filter((r) => r.role === show) : items;
+  // "You: " is the page's, the message after it a person's: the message sits between the two in its own direction
+  const you = aroundWords(w.you);
   return (
     <>
       {both && (
@@ -99,7 +101,9 @@ export default function Inbox({ initial, error, fmt }: { initial: MkThreadRow[] 
                     <time className="mk-w3-row-when" dateTime={r.last_at} suppressHydrationWarning>{fmtPattern(isToday(r.last_at) ? fmt.time : fmt.day, r.last_at)}</time>
                   </span>
                   <span className="mk-w3-row-title mk-user" dir="auto">{r.listing.title}</span>
-                  <span className="mk-w3-row-last mk-user" dir="auto">{r.last_mine ? w.you(r.last_body) : r.last_body}</span>
+                  {r.last_mine
+                    ? <span className="mk-w3-row-last">{you[0]}<bdi dir="auto">{r.last_body}</bdi>{you[1]}</span>
+                    : <span className="mk-w3-row-last mk-user" dir="auto">{r.last_body}</span>}
                   {(both || mark || r.blocked_by_me) && (
                     <span className="mk-w3-row-tags">
                       {both && <span className="mk-tag">{r.role === "buyer" ? w.buying : w.selling}</span>}

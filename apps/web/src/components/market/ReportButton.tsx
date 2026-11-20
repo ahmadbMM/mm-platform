@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import type { MkReportTarget } from "@/lib/market/core";
 import { reportBackHref, signInHref } from "@/lib/market/w3";
 import MkIcon from "./MkIcon";
 import { T as S } from "./Market.text";
+import { useFocusAfter } from "./w3/focus";
 import ReportPop from "./w3/ReportPop";
 import { T } from "./w3.text";
 import "./w3.css";
@@ -25,6 +26,9 @@ export default function ReportButton({ target, refId, signedIn, reported = false
   const w = useLocalize(T);
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
+  const mark = useRef<HTMLSpanElement>(null);
+  // once a report is sent the button that opened the pop-up is gone: the keyboard goes to "Reported" in its place
+  useFocusAfter(open, mark);
   const cls = `mk-link${className ? ` ${className}` : ""}`;
   if (!signedIn) {
     return <a className={cls} href={signInHref(reportBackHref(target, refId))}><MkIcon name="flag" size={16} />{s.report}</a>;
@@ -32,7 +36,7 @@ export default function ReportButton({ target, refId, signedIn, reported = false
   return (
     <>
       {reported || sent
-        ? <span className={`mk-w3-reported${className ? ` ${className}` : ""}`}><MkIcon name="tick" size={16} />{w.reported}</span>
+        ? <span ref={mark} tabIndex={-1} className={`mk-w3-reported${className ? ` ${className}` : ""}`}><MkIcon name="tick" size={16} />{w.reported}</span>
         : <button type="button" className={cls} onClick={() => setOpen(true)} aria-haspopup="dialog"><MkIcon name="flag" size={16} />{s.report}</button>}
       {open && <ReportPop target={target} refId={refId} onClose={() => setOpen(false)} onSent={() => setSent(true)} />}
     </>

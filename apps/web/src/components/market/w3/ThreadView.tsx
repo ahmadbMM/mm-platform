@@ -8,7 +8,8 @@ import {
   MK_INBOX, MK_MESSAGE_MAX, mkCityName, mkClean, mkErrorKey, mkHasId, mkWaHref, type MkMessage, type MkThread, type MkThreadGet,
 } from "@/lib/market/core";
 import {
-  bodyProblem, dayStarts, isToday, lastId, listingMark, mergeMessages, otherName, pollDelay, quickReplies, sendOutcome, threadListingHref, type MkPending,
+  bodyProblem, dayStarts, isToday, lastId, lastTheirs, listingMark, mergeMessages, otherName, pollDelay, quickReplies, sendOutcome, threadListingHref,
+  type MkPending,
 } from "@/lib/market/w3";
 import { mkGet, mkPost } from "@/lib/market/w3-client";
 import MkAmt from "../MkAmt";
@@ -19,6 +20,7 @@ import ReportButton from "../ReportButton";
 import SellerTag from "../SellerTag";
 import { T as S, mkErrorText } from "../Market.text";
 import { T } from "../w3.text";
+import { useFocusAfter } from "./focus";
 import type { InboxFmt } from "./Inbox";
 import { refreshUnread } from "./unread";
 import "../w3.css";
@@ -71,9 +73,15 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
   }, [id]);
 
   const newest = lastId(messages);
-  // something came or went: the asking stays quick, and the header's unread number is asked for again (this page's
-  // readings mark the thread read)
-  useEffect(() => { active.current = Date.now(); refreshUnread(); }, [newest]);
+  const arrived = lastTheirs(messages);
+  // something came or went: the asking stays quick
+  useEffect(() => { active.current = Date.now(); }, [newest]);
+  // the page opened, or the other person wrote: the header's unread number is asked for again (this page's readings
+  // mark the thread read). The reader's own messages do not change that number, so sending one asks nothing more.
+  useEffect(() => { refreshUnread(); }, [arrived]);
+  // a pop-up that closed gives the keyboard back to what opened it; "Share my WhatsApp" is gone once the number is
+  // shared, and the keyboard then goes to the messages (./focus.ts)
+  useFocusAfter(pop !== "", log);
   useEffect(() => {
     let live = true;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -230,7 +238,7 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
       {waHref && <a className="mk-btn mk-btn-wide" href={waHref} target="_blank" rel="noopener noreferrer"><MkIcon name="whatsapp" size={18} />{w.waOpen}</a>}
 
       <section ref={chat} className="mk-w3-chat" aria-label={w.messages}>
-        <div ref={log} className="mk-w3-log" role="log" aria-live="polite" tabIndex={0}
+        <div ref={log} className="mk-w3-log" role="log" aria-label={w.messages} aria-live="polite" tabIndex={0}
           onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>
           {more && (
             <button type="button" className="mk-link mk-w3-older" onClick={() => void older()} disabled={busy === "older"} aria-busy={busy === "older" || undefined}>
@@ -241,14 +249,14 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
             <div key={m.id} className="mk-w3-turn">
               {days.has(m.id) && <p className="mk-w3-day" suppressHydrationWarning>{isToday(m.at) ? w.today : fmtPattern(fmt.day, m.at)}</p>}
               <div className={`mk-w3-msg${m.mine ? " is-mine" : ""}`}>
-                <p className="mk-w3-bubble mk-user" dir="auto">{m.body}</p>
+                <p className="mk-w3-bubble"><span className="mk-user" dir="auto">{m.body}</span></p>
                 <time className="mk-w3-when" dateTime={m.at}>{fmtPattern(fmt.time, m.at)}</time>
               </div>
             </div>
           ))}
           {pending.map((p) => (
             <div key={p.key} className={`mk-w3-msg is-mine ${p.state === "failed" ? "is-failed" : "is-pending"}`}>
-              <p className="mk-w3-bubble mk-user" dir="auto">{p.body}</p>
+              <p className="mk-w3-bubble"><span className="mk-user" dir="auto">{p.body}</span></p>
               {p.state === "sending"
                 ? <span className="mk-w3-when" role="status">{w.sending}</span>
                 : (
