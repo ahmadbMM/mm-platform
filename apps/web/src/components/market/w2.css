@@ -1,2 +1,197 @@
 /* The Marketplace: selling, the photo upload and My listings (W2). This builder's own classes only, prefixed mk-w2-; the shared
-   tokens (--mk-*) and base classes are in market.css. Logical properties throughout, so Arabic and Urdu mirror it. */
+   tokens (--mk-*) and base classes are in market.css. Logical properties throughout, so Arabic and Urdu mirror it.
+   Built for a thumb first: one column on a phone, every control 44px or more, the step's own button at its end (never
+   pinned to the screen), and nothing that needs a second hand. From 600px the short fields sit two to a row. */
+
+/* ── The selling form's frame ── */
+.mk-w2-wrap { display: flex; flex-direction: column; gap: 20px; }
+.mk-w2-wrap h1 { font-size: clamp(28px, 6.4vw, 40px); letter-spacing: -1px; margin: 0; }
+.mk-w2-wrap :is(h1, h2):focus { outline: none; }
+/* a card or the list takes the focus only from the script, when the pop-up that closed has no opener left to give it to */
+.mk-w2-spot:focus { outline: none; }
+.mk-w2-wrap h2 { font-size: 18px; letter-spacing: -.2px; margin: 0; }
+html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk-w2-wrap :is(h1, h2) { letter-spacing: 0; }
+.mk-w2-form { display: flex; flex-direction: column; gap: 20px; }
+.mk-w2-top { display: flex; flex-direction: column; gap: 10px; }
+/* a step change brings its heading into view under the site's own header, with the bar above it */
+.mk-w2-top h1 { scroll-margin-block-start: 140px; }
+.mk-w2-done h1 { scroll-margin-block-start: 220px; }
+/* how far along: one short bar a step */
+.mk-w2-bar { display: flex; gap: 6px; }
+.mk-w2-bar span { flex: 1; height: 4px; border-radius: 999px; background: var(--mk-line-2); transition: background-color .3s var(--mk-ease); }
+.mk-w2-bar span.on { background: var(--mk-green); }
+.mk-w2-where { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; }
+.mk-w2-count { margin: 0; font-size: 13px; font-weight: 700; color: var(--mk-ink-3); }
+.mk-w2-save { font-size: 13px; font-weight: 600; color: var(--mk-ink-3); }
+button.mk-w2-save { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-block: -10px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.mk-w2-save-bad { color: var(--mk-red); }
+/* the step's own buttons, at its end: Back, and the way on taking the rest of the row */
+.mk-w2-nav { display: flex; gap: 10px; margin-block-start: 4px; }
+.mk-w2-nav .mk-btn { flex: 1; min-height: 52px; font-size: 16px; }
+.mk-w2-nav .mk-btn2 { min-height: 52px; }
+.mk-w2-wrap :is(.mk-btn, .mk-btn2)[aria-busy="true"] { opacity: .6; cursor: progress; }
+/* what stands in the way, said at its control (and, for a missing birth date, the way to where it is added) */
+.mk-w2-said { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+
+/* ── Fields ── */
+.mk-w2-two { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.mk-w2-fs { display: flex; flex-direction: column; gap: 10px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.mk-w2-fs > legend { padding: 0; margin-block-end: 8px; font-size: 13px; font-weight: 700; color: var(--mk-ink-2); }
+.mk-w2-wrap .mk-field textarea.mk-w2-short { min-height: 88px; }
+.mk-w2-wrap .mk-field textarea { min-height: 168px; }
+.mk-w2-val { margin: 0; font-size: 16px; line-height: 1.5; color: var(--mk-ink); overflow-wrap: anywhere; }
+/* the price: the riyal sign inside the box, left of the number in every language (the box itself is left to right, so
+   its logical sides are the same sides on an Arabic page) */
+.mk-w2-money { position: relative; display: block; direction: ltr; }
+.mk-w2-money > .mk-amt { position: absolute; inset-block: 0; inset-inline-start: 14px; display: flex; align-items: center; color: var(--mk-ink-3); font-size: 17px; pointer-events: none; }
+.mk-field .mk-w2-money input { padding-inline-start: 38px; font-variant-numeric: tabular-nums; font-weight: 600; text-align: start; }
+/* a choice with its meaning written inside it: the condition, how the seller is named */
+.mk-w2-opts { display: flex; flex-direction: column; gap: 8px; }
+.mk-w2-opt { display: flex; align-items: flex-start; gap: 12px; min-height: 48px; box-sizing: border-box; padding: 13px 14px; border: 1px solid var(--mk-ctl); border-radius: var(--mk-r-ctl); background: #fff; cursor: pointer; transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
+.mk-w2-opt:hover { border-color: rgba(26, 25, 25, .32); }
+.mk-w2-opt:has(input:checked) { border-color: var(--mk-green); background: var(--mk-green-soft); }
+.mk-w2-opt:has(input:focus-visible) { box-shadow: 0 0 0 3px var(--mk-green-soft); border-color: var(--mk-green); }
+.mk-w2-opt input { appearance: none; -webkit-appearance: none; flex: none; width: 22px; height: 22px; margin: 0; border: 1px solid var(--mk-ctl); border-radius: 50%; background: #fff; cursor: pointer; }
+.mk-w2-opt input:checked { border: 7px solid var(--mk-green); }
+.mk-w2-opt input:focus-visible { outline: none; }
+.mk-w2-opt > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mk-w2-opt b { font-size: 15px; font-weight: 700; line-height: 1.45; }
+.mk-w2-def { font-size: 14px; line-height: 1.45; color: var(--mk-ink-2); }
+.mk-w2-wrap .mk-check + .mk-link { margin-inline-start: 32px; }
+
+/* ── Photos ── */
+.mk-w2-photos { display: flex; flex-direction: column; gap: 12px; }
+.mk-w2-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.mk-w2-grid:empty { display: none; }
+.mk-w2-tile { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--mk-line-2); border-radius: var(--mk-r-card); background: #fff; overflow: hidden; transition: box-shadow .2s ease, transform .2s var(--mk-ease); }
+.mk-w2-bad .mk-w2-tile-empty { border-color: var(--mk-red); }
+.mk-w2-lift { z-index: 1; box-shadow: var(--mk-sh-2); transform: scale(1.03); }
+.mk-w2-pic { position: relative; display: block; aspect-ratio: 1 / 1; background: var(--mk-well); }
+.mk-w2-pic img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; -webkit-user-drag: none; user-select: none; }
+.mk-w2-cover { position: absolute; inset-block-end: 8px; inset-inline-start: 8px; padding: 3px 10px; border-radius: 999px; background: var(--mk-ink); color: var(--mk-paper); font-size: 12px; font-weight: 700; line-height: 1.3; }
+/* the grip holds the touch itself, so a thumb anywhere else on the grid still scrolls the page */
+.mk-w2-grip { position: absolute; inset-block-start: 6px; inset-inline-start: 6px; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .92); color: var(--mk-ink); box-shadow: var(--mk-sh-1); cursor: grab; touch-action: none; }
+.mk-w2-lift .mk-w2-grip { cursor: grabbing; }
+.mk-w2-tile-acts { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+/* a round button that is only a mark (its name is its label) */
+.mk-w2-ib { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; height: 44px; padding: 0; border: 0; border-radius: 999px; background: none; color: var(--mk-ink-2); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.mk-w2-ib:hover:not(:disabled) { background: var(--mk-well); color: var(--mk-ink); }
+.mk-w2-ib:disabled { opacity: .3; cursor: default; }
+.mk-w2-ib-red:hover:not(:disabled) { background: var(--mk-red-soft); color: var(--mk-red); }
+.mk-w2-ib-text { padding-inline: 12px; color: var(--mk-green); }
+.mk-w2-push { margin-inline-start: auto; }
+:is(.mk-w2-ib, .mk-w2-grip, .mk-w2-slot):focus-visible { outline: none; box-shadow: 0 0 0 3px var(--mk-green-soft), 0 0 0 1px var(--mk-green); }
+/* an empty place: for a bike, the shot it is for */
+.mk-w2-tile-empty { border: 1.5px dashed var(--mk-ctl); background: none; }
+.mk-w2-slot { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 132px; padding: 12px 8px; border: 0; border-radius: inherit; background: none; color: var(--mk-ink-3); font: inherit; font-size: 13px; font-weight: 700; line-height: 1.3; text-align: center; cursor: pointer; }
+.mk-w2-slot:hover { background: var(--mk-well); color: var(--mk-ink-2); }
+/* the shots a bike still needs: small outlines under its photos, three to a row on a phone */
+.mk-w2-shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mk-w2-shots .mk-w2-tile-empty { border-radius: var(--mk-r-ctl); }
+.mk-w2-shots .mk-w2-slot { min-height: 96px; gap: 6px; padding: 10px 6px; font-size: 12px; }
+.mk-w2-bad .mk-w2-shots .mk-w2-tile-empty { border-color: var(--mk-red); }
+/* a photo on its way, and one that did not arrive */
+.mk-w2-tile-work img, .mk-w2-tile-fail img { opacity: .5; }
+.mk-w2-wait, .mk-w2-failed { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.mk-w2-spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .7); border-block-start-color: var(--mk-green); animation: mk-w2-spin .8s linear infinite; }
+.mk-w2-failed { padding: 8px; color: var(--mk-red); font-size: 13px; font-weight: 700; text-align: center; background: rgba(255, 255, 255, .6); }
+@keyframes mk-w2-spin { to { transform: rotate(360deg); } }
+.mk-w2-add { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mk-w2-add .mk-btn2 { gap: 6px; padding-inline: 10px; font-size: 14px; line-height: 1.2; }
+/* a mouse has no camera to open: one way in is enough */
+@media (hover: hover) and (pointer: fine) { .mk-w2-add { grid-template-columns: minmax(0, 1fr); } .mk-w2-cam { display: none; } }
+
+/* ── The review ── */
+.mk-w2-sum { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--mk-line); border-radius: var(--mk-r-panel); box-shadow: var(--mk-sh-1); padding-inline: clamp(16px, 3.4vw, 24px); }
+.mk-w2-sum > section { display: flex; flex-direction: column; gap: 10px; padding-block: 14px 18px; border-block-end: 1px solid var(--mk-line-2); }
+.mk-w2-sum > section:last-child { border-block-end: 0; }
+.mk-w2-sum header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* a short word is still a whole tap target */
+.mk-w2-sum header .mk-link, .mk-w2-soldfor .mk-link { min-width: 44px; justify-content: flex-end; }
+.mk-w2-sum dl { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+.mk-w2-sum dl > div { display: grid; grid-template-columns: minmax(96px, 34%) minmax(0, 1fr); gap: 12px; }
+.mk-w2-sum dt { font-size: 13px; font-weight: 700; color: var(--mk-ink-3); line-height: 1.6; }
+.mk-w2-sum dd { margin: 0; font-size: 15px; line-height: 1.5; min-width: 0; overflow-wrap: anywhere; }
+.mk-w2-val-title { font-weight: 700; }
+.mk-w2-neg { margin-inline-start: 8px; }
+.mk-w2-strip { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; overflow-x: auto; scrollbar-width: none; }
+.mk-w2-strip::-webkit-scrollbar { display: none; }
+.mk-w2-strip li { flex: none; width: 64px; height: 64px; border-radius: var(--mk-r-ctl); overflow: hidden; background: var(--mk-well); }
+.mk-w2-strip img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mk-w2-ticks { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 14px; line-height: 1.45; color: var(--mk-ink-2); }
+.mk-w2-ticks li { display: flex; align-items: flex-start; gap: 8px; }
+.mk-w2-ticks .mk-ic { margin-block-start: 2px; color: var(--mk-green); }
+
+/* ── Published, held, saved ── */
+.mk-w2-done { align-items: flex-start; }
+.mk-w2-done p { margin: 0; font-size: 16px; line-height: 1.5; color: var(--mk-ink-2); }
+.mk-w2-done-mark { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%; background: var(--mk-green-soft); color: var(--mk-green); }
+.mk-w2-done-held { background: var(--mk-amber-soft); color: var(--mk-amber); }
+.mk-w2-done-acts { display: flex; flex-wrap: wrap; gap: 10px; align-self: stretch; }
+.mk-w2-done-acts > * { flex: 1 1 150px; }
+
+/* ── What stands in the way, and waiting ── */
+.mk-w2-plain { margin: 0; font-size: 17px; line-height: 1.5; color: var(--mk-ink); }
+.mk-w2-skel { display: flex; flex-direction: column; gap: 12px; }
+.mk-w2-skel span { height: 92px; border-radius: var(--mk-r-card); background: linear-gradient(100deg, var(--mk-well) 30%, var(--mk-line) 50%, var(--mk-well) 70%); background-size: 300% 100%; animation: mk-w2-wait 1.4s ease-in-out infinite; }
+@keyframes mk-w2-wait { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+/* ── My listings, and the drafts to carry on with ── */
+.mk-w2-mine { max-width: 1040px; margin-inline: auto; }
+.mk-w2-mine-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+.mk-w2-drafts { display: flex; flex-direction: column; gap: 14px; }
+.mk-w2-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.mk-w2-item { gap: 12px; padding: 14px; overflow: visible; }
+.mk-w2-item-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
+.mk-w2-msgs { min-height: 44px; margin-block: -8px; }
+.mk-w2-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: var(--mk-green); color: var(--mk-paper); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mk-w2-item-top { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 44px; color: var(--mk-ink) !important; text-decoration: none; }
+a.mk-w2-item-top:hover .mk-w2-item-title { text-decoration: underline; }
+.mk-w2-thumb { flex: none; width: 76px; border-radius: var(--mk-r-ctl); }
+.mk-w2-item-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mk-w2-item-title { margin: 0; overflow-wrap: anywhere; font-size: 16px; font-weight: 700; line-height: 1.35; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.mk-w2-item-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 14px; color: var(--mk-ink-2); }
+.mk-w2-item-meta .mk-amt { font-size: 16px; font-weight: 700; color: var(--mk-ink); }
+.mk-w2-item-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mk-w2-act { min-height: 44px; padding-inline: 16px; font-size: 14px; }
+.mk-w2-mine .mk-w2-item-acts .mk-w2-act { flex: 1 1 auto; }
+.mk-w2-note { margin: 0; font-size: 15px; line-height: 1.5; color: var(--mk-ink-2); }
+.mk-w2-reason { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 10px 12px; border-radius: var(--mk-r-ctl); background: var(--mk-red-soft); font-size: 14px; line-height: 1.5; color: var(--mk-ink); }
+.mk-w2-reason b { font-size: 12px; font-weight: 700; color: var(--mk-red); }
+.mk-w2-soldfor { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; margin: 0; font-size: 14px; color: var(--mk-ink-2); }
+.mk-w2-soldfor .mk-amt { font-weight: 700; color: var(--mk-ink); }
+/* the renew card of a listing's last week */
+.mk-w2-renew { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding-block: 8px; padding-inline: 12px 8px; border-radius: var(--mk-r-ctl); background: var(--mk-amber-soft); color: var(--mk-amber); font-size: 14px; font-weight: 700; }
+.mk-w2-renew > span { display: inline-flex; align-items: center; gap: 6px; }
+.mk-w2-groups { margin-block-end: -4px; }
+/* inside the sold and the commission pop-ups */
+.mk-pop .mk-w2-money input { min-height: 52px; font-size: 18px; }
+.mk-w2-soldform .mk-field { margin-block-end: 4px; }
+.mk-pop .mk-w2-about { font-weight: 700; color: var(--mk-ink); overflow-wrap: anywhere; }
+/* what a refusal says inside a pop-up keeps its own colour and weight there */
+.mk-pop .mk-w2-poperr { margin-block: 10px 0; color: var(--mk-red); font-size: 14px; }
+.mk-pop .mk-w2-due { margin: 4px 0 2px; font-size: 34px; font-weight: 700; line-height: 1.1; color: var(--mk-ink); }
+.mk-pop .mk-w2-of { margin: 0 0 14px; color: var(--mk-ink-3); }
+.mk-pop .mk-w2-how { margin: 0; padding: 12px 14px; border-radius: var(--mk-r-ctl); background: var(--mk-well); color: var(--mk-ink); white-space: pre-line; }
+
+@media (min-width: 480px) {
+  .mk-w2-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 600px) {
+  .mk-w2-wrap { gap: 24px; }
+  .mk-w2-shots { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .mk-w2-mine .mk-w2-item-acts .mk-w2-act { flex: 0 0 auto; }
+  .mk-w2-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mk-w2-nav { justify-content: flex-end; }
+  .mk-w2-nav .mk-btn { flex: 0 1 260px; }
+  .mk-w2-drafts .mk-w2-item { flex-direction: row; align-items: center; justify-content: space-between; }
+  .mk-w2-drafts .mk-w2-item-acts { flex: none; }
+}
+@media (min-width: 900px) {
+  .mk-w2-mine .mk-w2-list { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-w2-spin, .mk-w2-skel span { animation: none; }
+  .mk-w2-tile, .mk-w2-bar span { transition: none; }
+  .mk-w2-lift { transform: none; }
+}
