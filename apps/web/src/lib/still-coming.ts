@@ -7,8 +7,9 @@ import { SESSION_ID } from "./waiver";
 // _stcYes; rentals migration 20261114080200). From 24 hours before the time to turn up until the session starts, a booking
 // that holds a place shows two buttons: "I'm coming" stamps it (booking_coming, through app/api/account/coming: the
 // rider's own seated rows on that session, every rider of the booking at once, the first answer for the date stands) and
-// "Can't come" opens the booking app's My Bookings at that ticket (/my-bookings?tk=<booking>, the evening-before
-// reminder's own link), where Cancel is. After a yes one quiet chip stands where the buttons were; no line goes with them
+// "Can't come" opens the booking app's My Bookings at that ticket (/my-bookings?tk=<booking>&no=1: the evening-before
+// reminder's own link, and no=1 answers the ticket's own Can't come there, 2026-11-20: on a Saturday Social Ride one box,
+// "Not coming?", whose red button cancels the booking; on any other session the cancel dialog). After a yes one quiet chip stands where the buttons were; no line goes with them
 // (the owner: no hint lines), never on a waitlisted booking, nor on one staff have not confirmed yet (an approval ride only
 // once its list is out), nor on a session called off. A read without the column asks nothing.
 
@@ -93,13 +94,15 @@ export function stillComing(rows: TicketRow[], s: TicketSession | undefined, now
   return { ask, ok: ask && L.every((r) => comingCounts(r.comingAt, m)), late: rlOn ? lateSaid(L[0], m) : 0, lateOn, sessionId: L[0].sessionId, bookingId: L[0].id };
 }
 
-/** The booking app's My Bookings at this booking's ticket (its reminder's link, read by _readStcTk), in the page's
- *  language; null when the app's address cannot be read. */
+/** The booking app's My Bookings at this booking's ticket (its reminder's link, read by _readStcTk), with no=1 so the
+ *  app answers that ticket's own Can't come (_stcNo: the "Not coming?" box on a Saturday Social Ride, the cancel dialog
+ *  elsewhere), in the page's language; null when the app's address cannot be read. */
 export function comingCancelLink(bookings: string | null | undefined, bookingId: string, locale: string): string | null {
   if (!bookings || !ENTRY_ID.test(bookingId)) return null;
   try {
     const u = new URL(bookings);
     u.searchParams.set("tk", bookingId);
+    u.searchParams.set("no", "1");
     return bookingLink(u.toString(), locale);
   } catch { return null; }
 }

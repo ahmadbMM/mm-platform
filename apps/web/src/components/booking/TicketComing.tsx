@@ -7,7 +7,8 @@ import type { ComingWords } from "./Coming.words";
 
 // "Still coming?" on My Account's ticket (lib/still-coming.ts; the booking app's _stcHtml and _stcYes, 2026-11-13): "I'm
 // coming" saves the answer through /api/account/coming and turns into one quiet "Coming" chip, with no line and no toast
-// (the owner: no bar after an action); "Can't come" opens the booking app's My Bookings at this ticket, where Cancel is.
+// (the owner: no bar after an action); "Can't come" opens the booking app's My Bookings at this ticket with no=1, where the
+// app asks as its own Can't come does (a Saturday Social Ride: "Not coming?", then the booking is cancelled; 2026-11-20).
 // A session called off, not yet asked or already started, or a booking no longer seated, draws the page again (what the
 // server knows wins); a database without the function takes the buttons away; a failure says so under them. Its words
 // come ready in the page's language from the ticket (Coming.words.ts; failed is the ticket's rrFailed).

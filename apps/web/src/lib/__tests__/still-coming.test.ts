@@ -134,9 +134,9 @@ describe("the booking and session as the ticket reads them", () => {
 });
 
 describe("Can't come", () => {
-  it("opens the booking app's My Bookings at this booking's ticket, in the page's language", () => {
-    expect(comingCancelLink("https://experiences.micromobility.sa/my-bookings", "q1abcdef", "fr")).toBe("https://experiences.micromobility.sa/my-bookings?tk=q1abcdef&lang=fr");
-    expect(comingCancelLink("https://experiences.micromobility.sa/my-bookings?lang=ar", "q1abcdef", "fr")).toBe("https://experiences.micromobility.sa/my-bookings?lang=ar&tk=q1abcdef");
+  it("opens the booking app's My Bookings at this booking's ticket, answering its Can't come (no=1), in the page's language", () => {
+    expect(comingCancelLink("https://experiences.micromobility.sa/my-bookings", "q1abcdef", "fr")).toBe("https://experiences.micromobility.sa/my-bookings?tk=q1abcdef&no=1&lang=fr");
+    expect(comingCancelLink("https://experiences.micromobility.sa/my-bookings?lang=ar", "q1abcdef", "fr")).toBe("https://experiences.micromobility.sa/my-bookings?lang=ar&tk=q1abcdef&no=1");
     expect(comingCancelLink(null, "q1abcdef", "en")).toBeNull();
     expect(comingCancelLink("not a url", "q1abcdef", "en")).toBeNull();
     expect(comingCancelLink("https://experiences.micromobility.sa/my-bookings", "a b", "en")).toBeNull();
@@ -162,7 +162,7 @@ describe("on the ticket", () => {
     const html = card([entry(jcc)], GO - H);
     expect(html).toContain('class="tk-stc" role="group" aria-label="Are you still coming?"');
     expect(html).toMatch(/<button type="button" class="tk-btn solid">I’m coming<\/button>/);
-    expect(html).toContain('<a class="tk-btn" href="https://book.example.test/my-bookings?tk=q1abcdef&amp;lang=en">Can’t come</a>');
+    expect(html).toContain('<a class="tk-btn" href="https://book.example.test/my-bookings?tk=q1abcdef&amp;no=1&amp;lang=en">Can’t come</a>');
     // without the app's address, Can't come opens My Bookings as Cancel does
     expect(card([entry(jcc)], GO - H, { bookings: null })).toContain('<a class="tk-btn" href="https://book.example.test/?tab=bookings">Can’t come</a>');
   });
