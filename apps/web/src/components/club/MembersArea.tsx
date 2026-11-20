@@ -32,7 +32,7 @@ import type { MtFeed } from "@/lib/mentorship";
 import { fill } from "@/i18n/tx";
 import { ratingFinWords } from "@/components/account/RatingFin.words";
 import { CHALLENGE_KEYS, communityWords, mentorWords, pickWords, YEAR_KEYS } from "./Community.words";
-import { ClubGoalCard, FirstFiveCard, ReportCard, SeasonGoalCard, TipCard, VolunteerCallCard } from "./HubCards";
+import { ChatCard, ClubGoalCard, FirstFiveCard, ReportCard, SeasonGoalCard, TipCard, VolunteerCallCard } from "./HubCards";
 import ChallengeCard from "./ChallengeCard";
 import YearCard from "./YearCard";
 import Mentorship from "./Mentorship";
@@ -66,7 +66,7 @@ import ClubParts from "./ClubParts";
 // code). hub_feed's club numbers and each session's riders are never read (no head counts for customers, 2026-11-13).
 // Since 2026-11-20 the area is in three parts behind a switch, as the app's tab (ClubParts.tsx): Sessions (the Ramadan card,
 // the recap, the Build-up plan, My interests, the upcoming sessions, the member's rides, the staff card), Challenges (the
-// year, My month, the challenge, Plan my Saturdays, the season challenges, the club goal) and Club (the title, Ask,
+// year, My month, the challenge, Plan my Saturdays, the season challenges, the club goal) and Club (the Community chat's card, the title, Ask,
 // Mentorship, Volunteers needed, Suggest a ride, the invitation); the card, its tier bar and the birthday stay above them.
 type Props = {
   locale: string;
@@ -98,6 +98,8 @@ type Props = {
    *  chosen; absent on a database without it. The list of members itself lives in the booking app. */
   title?: MemberTitle | null;
   communityHref?: string;
+  /** The booking app's Community chat (/members?hv=chat there): the card that opens it; none: no card. */
+  chatHref?: string;
   accountHref?: string;
   /** The open Ask pages this member may answer (lib/ask-server.ts readAskList); none: no section. */
   asks?: AskCard[];
@@ -126,7 +128,7 @@ type Props = {
   invite?: string | null;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions, season, hub, recap, yearKinds, p5, mentor, invite }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, chatHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions, season, hub, recap, yearKinds, p5, mentor, invite }: Props) {
   const t = serverLocalize(T, locale);
   const ask = serverLocalize(ASK_T, locale);
   const N = (n: number) => fmtNum(n, locale);
@@ -211,8 +213,9 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
       {hub?.club && <ClubGoalCard g={hub.club} locale={locale} w={cw} />}
     </>
   ) : null;
-  const club = (title || (asks && asks.length > 0) || mentor || hub?.volunteer || suggestions || invite) ? (
+  const club = (chatHref || title || (asks && asks.length > 0) || mentor || hub?.volunteer || suggestions || invite) ? (
     <>
+      {chatHref && <ChatCard href={chatHref} title={memberHubWords(locale).chtTitle} open={memberHubWords(locale).chtOpen} />}
       {title && (
         <section className="club-comm" aria-labelledby="club-comm-h">
           <h3 id="club-comm-h">{t.community}</h3>

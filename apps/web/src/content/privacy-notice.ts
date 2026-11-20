@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-19";
+export const PRIVACY_VERSION = "2026-11-20";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -128,6 +128,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Planning rides and sessions around what our members suggest, and telling you in your Updates list when yours is planned or happens"
      ],
      [
+      "The Community chat (Community members only): the messages you write and when you sent them; that you agreed to your full name being shown; and which messages you reported to our team",
+      "Always optional: only if you write. Each message is shown with your full name to the other Community members for 6 hours, and to our staff; nothing else about you is shown. We ask you to agree to this with your first message. You can take any message of yours off the chat at any time, and our staff can remove a message or stop an account writing. Our staff keep every message, also after the 6 hours and after it is removed. A report is seen by our staff only.",
+      "So Community members can talk to each other and to our team, and to keep the chat suitable for everyone"
+     ],
+     [
       "Testimonials: the words you write about our rides and services, your star rating, what it is about, your name as you choose to show it (your full name, your first name and last initial, or none), a photo if you add one, and, beside a name, the year you started riding with us and how many rides you have done",
       "Always optional: only if you write one and tick that MicroMobility may publish it. Seen by our staff; once our staff publish it, by anyone on micromobility.sa. You can delete yours at any time in Account.",
       "Publishing what riders say about us on our website, with your consent. A photo is deleted as soon as our team decides not to publish it."
@@ -248,7 +253,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>To share an athlete’s details with WeSportify, Mile and Gymnation for the Arena Heros Hybrid Race:</strong> your consent, which we ask for before you can take part in the race.",
     "<strong>To share a donor’s details with the partners and third parties of a blood donation event:</strong> your consent, which we ask for before you can register.",
     "<strong>To share a mentor’s or a mentee’s first name and WhatsApp number with their match:</strong> your consent, which we ask for when you register and which you withdraw by stepping back.",
-    "<strong>To publish your testimonial on our website:</strong> your consent, the box you tick when you send it, which you withdraw by deleting it."
+    "<strong>To publish your testimonial on our website:</strong> your consent, the box you tick when you send it, which you withdraw by deleting it.",
+    "<strong>To show your full name with your messages in the Community chat:</strong> your consent, which we ask for with your first message; you withdraw it by taking your messages off the chat or by asking us to."
    ]
   },
   {
@@ -400,7 +406,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>Booking reminders:</strong> kept until 30 days after we tell you, or after the reminder ends because the date can no longer be booked by you; deleted at once if you remove it, or when its date passes before booking opens.",
     "<strong>The Saturdays you plan to come:</strong> deleted when the month ends.",
     "<strong>Your interests:</strong> kept until you change them or your account is deleted.",
-    "<strong>Testimonials:</strong> kept until you delete yours or our staff remove it; a photo is deleted as soon as our team decides not to publish it."
+    "<strong>Testimonials:</strong> kept until you delete yours or our staff remove it; a photo is deleted as soon as our team decides not to publish it.",
+    "<strong>Community chat messages:</strong> shown to members for 6 hours. After that, and from the moment you remove one, only our staff can see it; we keep these messages and do not delete them."
    ]
   },
   {
@@ -566,6 +573,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "لتخطيط الجولات والفعاليات وفق ما يقترحه أعضاؤنا، ولإبلاغك في قائمة التحديثات عندما نخطط لاقتراحك أو ننفّذه"
      ],
      [
+      "دردشة المجتمع (لأعضاء المجتمع فقط): الرسائل التي تكتبها ووقت إرسالها، وموافقتك على إظهار اسمك الكامل، والرسائل التي أبلغت فريقنا عنها",
+      "اختياري دائماً: فقط إن كتبت. تظهر كل رسالة مع اسمك الكامل لأعضاء المجتمع الآخرين لمدة 6 ساعات، ولموظفينا، ولا يظهر عنك أي شيء آخر. نطلب موافقتك على ذلك مع أول رسالة ترسلها. يمكنك إزالة أي رسالة لك من الدردشة في أي وقت، ويمكن لموظفينا حذف رسالة أو إيقاف حساب عن الكتابة. يحتفظ موظفونا بكل رسالة، حتى بعد مرور 6 ساعات وبعد إزالتها. البلاغ لا يراه إلا موظفونا.",
+      "ليتمكن أعضاء المجتمع من التحدث مع بعضهم ومع فريقنا، وللحفاظ على الدردشة مناسبة للجميع"
+     ],
+     [
       "الشهادات: الكلمات التي تكتبها عن جولاتنا وخدماتنا، وتقييمك بالنجوم، وموضوعها، واسمك كما تختار أن يظهر (اسمك الكامل، أو اسمك الأول والحرف الأول من اسم العائلة، أو دون اسم)، وصورة إن أضفتها، وإلى جانب الاسم السنة التي بدأت فيها الركوب معنا وعدد جولاتك",
       "اختياري دائماً: فقط إن كتبت شهادة ووافقت على أن تنشرها MicroMobility. يراها موظفونا، وبعد أن ينشرها موظفونا يراها أي زائر لموقع micromobility.sa. يمكنك حذف شهادتك في أي وقت من «الحساب».",
       "لنشر ما يقوله الراكبون عنا على موقعنا الإلكتروني، بموافقتك. تُحذف الصورة فور أن يقرر فريقنا عدم نشر الشهادة."
@@ -686,7 +698,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>لمشاركة بيانات الرياضي مع WeSportify وMile وGymnation لسباق أرينا هيروز الهجين:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
     "<strong>لمشاركة بيانات المتبرع مع الشركاء والأطراف الثالثة لفعالية تبرع بالدم:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من التسجيل.",
     "<strong>لمشاركة الاسم الأول ورقم واتساب للمرشد أو المسترشد مع من تتم مطابقته معه:</strong> موافقتك، ونطلبها عند تسجيلك، وتسحبها بالانسحاب.",
-    "<strong>لنشر شهادتك على موقعنا الإلكتروني:</strong> موافقتك، أي المربع الذي تضع عليه علامة عند إرسالها، وتسحبها بحذف الشهادة."
+    "<strong>لنشر شهادتك على موقعنا الإلكتروني:</strong> موافقتك، أي المربع الذي تضع عليه علامة عند إرسالها، وتسحبها بحذف الشهادة.",
+    "<strong>لإظهار اسمك الكامل مع رسائلك في دردشة المجتمع:</strong> موافقتك، ونطلبها مع أول رسالة ترسلها؛ وتسحبها بحذف رسائلك أو بطلب ذلك منا."
    ]
   },
   {
@@ -838,7 +851,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>تذكيرات الحجز:</strong> تُحفظ حتى 30 يومًا بعد إخبارك، أو بعد انتهاء التذكير لأن الموعد لم يعد متاحًا لك؛ وتُحذف فورًا إن أزلتها، أو عند مرور الموعد قبل فتح الحجز.",
     "<strong>أيام السبت التي تنوي الحضور فيها:</strong> تُحذف بانتهاء الشهر.",
     "<strong>اهتماماتك:</strong> نحتفظ بها حتى تغيّرها أو يُحذف حسابك.",
-    "<strong>الشهادات:</strong> نحتفظ بها حتى تحذف شهادتك أو يزيلها موظفونا؛ وتُحذف الصورة فور أن يقرر فريقنا عدم نشر الشهادة."
+    "<strong>الشهادات:</strong> نحتفظ بها حتى تحذف شهادتك أو يزيلها موظفونا؛ وتُحذف الصورة فور أن يقرر فريقنا عدم نشر الشهادة.",
+    "<strong>رسائل دردشة المجتمع:</strong> تظهر للأعضاء لمدة 6 ساعات. بعد ذلك، ومنذ لحظة إزالتك لرسالة، لا يراها إلا موظفونا؛ ونحتفظ بهذه الرسائل ولا نحذفها."
    ]
   },
   {

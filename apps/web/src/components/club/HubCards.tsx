@@ -107,6 +107,18 @@ export function VolunteerCallCard({ id, w }: { id: string; w: CommunityWords }) 
   );
 }
 
+/** The Community chat (the booking app's chat card, 2026-11-20): members talk in the booking app, where each message
+ *  carries its writer's full name; the site keeps no copy of it, so this card only opens the chat there. */
+export const CHAT = "M20.4 11.6a8.2 8.2 0 0 1-12.1 7.2L3.6 20.4l1.6-4.5a8.2 8.2 0 1 1 15.2-4.3z";
+export function ChatCard({ href, title, open }: { href: string; title: string; open: string }) {
+  return (
+    <section className="club-hub club-hub-chat" aria-labelledby="club-hub-chat-h">
+      <HubHead id="club-hub-chat-h" mark={CHAT}>{title}</HubHead>
+      <a className="club-hub-btn" href={href}>{open}</a>
+    </section>
+  );
+}
+
 /** The first five rides in the challenge's place (the app's _p5Html, new features F1): its name, the five marks, "2 of 5". */
 export function FirstFiveCard({ n, tg, name, of, w }: { n: number; tg: number; name: string; of: string; w: CommunityWords }) {
   return (
