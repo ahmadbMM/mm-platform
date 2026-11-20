@@ -372,3 +372,14 @@ html:is([lang="ar"], [lang="ur"]) .club-rsg-k { text-transform: none; letter-spa
 .club-mt-rules ul { margin: 6px 0 0; padding-inline-start: 20px; line-height: 1.5; }
 .club-mt-tick { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.45; color: #1a1919; cursor: pointer; }
 .club-mt-tick input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: #077a4b; }
+/* The Community chat's button (HubCards.tsx ChatButton; the booking app's corner button, 2026-11-20): round, at the bottom
+   end corner of the members' area, the app's mark on the club's green; the footer's last line clears it. */
+.club-chat-fab { position: fixed; inset-inline-end: 16px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 55; display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: #077a4b; color: #fff; text-decoration: none; box-shadow: 0 2px 4px rgba(64, 52, 44, .08), 0 8px 16px rgba(64, 52, 44, .1), 0 16px 32px rgba(64, 52, 44, .12); transition: transform .18s ease, background-color .18s ease; -webkit-tap-highlight-color: transparent; }
+.club-chat-fab:hover { background: #06603b; }
+.club-chat-fab:active { transform: scale(.94); }
+.club-chat-fab:focus-visible { outline: 3px solid #077a4b; outline-offset: 3px; }
+.club-chat-fab svg { display: block; }
+body:has(.club-chat-fab) .mm-foot { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+@media (prefers-reduced-motion: reduce) { .club-chat-fab { transition: none; } .club-chat-fab:active { transform: none; } }
+@media (forced-colors: active) { .club-chat-fab { border: 2px solid LinkText; } }
+@media print { .club-chat-fab { display: none; } }
