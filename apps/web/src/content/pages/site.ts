@@ -136,6 +136,9 @@ export const siteSchema = {
             [["About Us", "من نحن"], "/about"], [["Account", "الحساب"], "/account"], [["Help Center", "مركز المساعدة"], "/help"],
             [["Returns + Exchanges", "الإرجاع والاستبدال"], "/help#returns"], [["Shipping", "الشحن"], "/help#delivery"],
             [["Privacy Policy", "سياسة الخصوصية"], "/privacy"], [["Terms & Conditions", "الشروط والأحكام"], "/terms"],
+            // the Marketplace's rules (2026-11-20): left out while the Marketplace is switched off, like every link to a
+            // page that is off (SiteFooter)
+            [["Marketplace rules", "قواعد السوق"], "/marketplace/rules"],
           ].map(([[e, a], h]) => ({ label: bi(e as string, a as string), href: { href: h as string } })),
         },
       ],
