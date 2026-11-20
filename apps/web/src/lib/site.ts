@@ -1,4 +1,5 @@
 import { edgeStore, memo, resetMemo } from "./memo";
+import { marketSwitch } from "./market/core";
 import { testimonialsOn } from "./testimonials";
 
 // The public website's launch state. micromobility.sa is controlled from the staff page
@@ -18,6 +19,12 @@ export const HOME_BUILT = true;
 // every page as switched on, whatever staff have set, so pages can be checked while the real site
 // is Coming Soon. It is a server setting that is never set on the Worker.
 export const TEST_OPEN = process.env.MM_TEST_SITE_OPEN === "1";
+
+// Tests only: MM_TEST_MARKET_ON=1 treats the Marketplace's launch switch as on, whatever staff have set, so its header
+// link, its menu entries and its sitemap and search entries can be checked while the real switch is off. Like
+// MM_TEST_SITE_OPEN it is a server setting that is never set on the Worker; it is a setting of its own because the
+// site's page checks (MM_TEST_SITE_OPEN) are written for the header as visitors have it today.
+export const MARKET_TEST_ON = process.env.MM_TEST_MARKET_ON === "1";
 
 /** Whether the site's state has to be read at all: not while it is closed whatever staff say. */
 export const siteCanOpen = () => HOME_BUILT || TEST_OPEN;
@@ -95,13 +102,20 @@ export function hiddenPageTarget(pathname: string, content: SiteContent | null):
   return pathname.match(/^\/(?:en|ar)(?=\/)/)?.[0] ?? "/";
 }
 
+/** The Marketplace's launch switch (site_content 'marketplace.on', an explicit true; lib/market/core.ts), or the tests'
+ *  own (MARKET_TEST_ON). While it is off every Marketplace address still opens; nothing on the site leads there. */
+export const marketplaceOn = (content: SiteContent | null | undefined): boolean => MARKET_TEST_ON || marketSwitch(content);
+
 /** The switched pages a visitor does not see, for the menus. Testimonials too, while their launch switch is off
  *  (site_content 'testimonials.on', lib/testimonials.ts): left out of the header, the search, the footer and My
  *  Account's shortcuts like a page staff have not switched on - but never sent to Home, since the page opens by its
- *  link whatever the switch says (it is not one of SWITCHED_PAGES). */
+ *  link whatever the switch says (it is not one of SWITCHED_PAGES). The Marketplace the same way, while its own
+ *  launch switch is off ('marketplace.on'). */
 export function hiddenPages(content: SiteContent | null): string[] {
   const off: string[] = SWITCHED_PAGES.filter((p) => !pageOn(content, p));
-  return testimonialsOn(content) ? off : [...off, "testimonials"];
+  if (!testimonialsOn(content)) off.push("testimonials");
+  if (!marketplaceOn(content)) off.push("marketplace");
+  return off;
 }
 
 /** Closed unless Home exists AND staff have explicitly switched Coming Soon off. */

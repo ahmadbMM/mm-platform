@@ -9,6 +9,7 @@ import { siteSchema } from "@/content/pages/site";
 import { termsSchema } from "@/content/pages/terms";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
+import { marketSearch } from "@/lib/market/hooks";
 import { pageState } from "@/lib/page-state";
 
 // What the header's search looks through besides the pages' names (components/site/SiteSearch.tsx):
@@ -62,6 +63,8 @@ export async function searchIndex(locale: string): Promise<SearchItem[]> {
   if (on("terms")) {
     for (const c of list(resolvePage(termsSchema, content, L).clauses.items)) if (S(c.title)) items.push({ title: S(c.title), text: S(c.body).replace(/^- /gm, ""), href: "/terms" });
   }
+  // the Marketplace's listings and shops, while its launch switch is on (lib/market/hooks.ts)
+  if (on("marketplace")) items.push(...(await marketSearch(L)));
   kept.set(key, { at: Date.now(), items });
   return items;
 }

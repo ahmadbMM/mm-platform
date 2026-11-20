@@ -5,7 +5,8 @@ import { resolvePage } from "@/lib/content-core";
 import { toPosts } from "@/lib/journal";
 import { LOCALES } from "@/i18n/locales";
 import { SITE_URL, langPath, languageAlternates } from "@/lib/seo";
-import { SWITCHED_PAGES, loadJournalContent, pageOn } from "@/lib/site";
+import { SWITCHED_PAGES, loadJournalContent, marketplaceOn, pageOn } from "@/lib/site";
+import { marketPaths } from "@/lib/market/hooks";
 import { pageState } from "@/lib/page-state";
 import { tmSitemapPaths } from "@/lib/testimonials";
 import { loadCatalog, modelPath, subtypesOf, topCategories } from "@/lib/catalog";
@@ -17,7 +18,8 @@ import { loadCatalog, modelPath, subtypesOf, topCategories } from "@/lib/catalog
 // staff have switched on (not the account page, which is private), the Learn to ride sign-up
 // while Experiences is on and staff offer lessons, the Journal's articles and the bike
 // catalogue's categories, sub-types and models (never the fleet's tag pages), and the published testimonials once their
-// launch switch is on (lib/testimonials.ts; never the page where one is written).
+// launch switch is on (lib/testimonials.ts; never the page where one is written), and the Marketplace's own once its
+// launch switch is on (lib/market/hooks.ts marketPaths).
 const PRIVATE = new Set(["account"]);
 // Read on every request, as robots.ts is: a sitemap built once kept the build's pages, articles and
 // models (or the Coming Soon empty list) until the next deploy.
@@ -29,6 +31,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const paths = ["/", "/privacy", ...SWITCHED_PAGES.filter((p) => !PRIVATE.has(p) && pageOn(content, p)).map((p) => `/${p}`)];
   if (pageOn(content, "experiences") && resolvePage(experiencesSchema, content, "en").learn.on) paths.push("/experiences/learn");
   paths.push(...tmSitemapPaths(content));
+  // the Marketplace's pages, once its launch switch is on (lib/market/hooks.ts)
+  if (marketplaceOn(content)) paths.push(...(await marketPaths(content)));
   // Addresses that exist in some languages only: an article staff wrote in English alone is not on
   // the Arabic Journal (lib/journal.ts toPosts), so its Arabic address is neither listed nor named.
   const missing = new Map<string, string[]>();

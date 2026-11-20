@@ -38,6 +38,9 @@ import { spName, spOf, spOptionsOf } from "@/lib/sport";
 import { emAbsent, emState } from "@/lib/emergency";
 import { asLocale, resolvePage } from "@/lib/content";
 import { bookingLink, localHref } from "@/lib/links";
+import { MK_INBOX, MK_MINE } from "@/lib/market/core";
+import { T as MARKET } from "@/components/market/Market.text";
+import UnreadBadge from "@/components/market/UnreadBadge";
 import { pageState } from "@/lib/page-state";
 import { kindNames, type RideKind } from "@/lib/rides";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
@@ -227,6 +230,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const row = (p: AccPage, icon: MenuRow["icon"], value?: MenuRow["value"]): MenuRow => ({ id: p, label: pageTitle(p, w, titles), icon, href: go(p), value: value ?? null });
     const cityVal = !dv.residence.add && S(prof.city)
       ? { ...dv.residence, node: <CityLabel city={S(prof.city)} country={S(prof.country)} locale={locale} /> } : dv.residence;
+    const market = serverLocalize(MARKET, locale);
     const groups: MenuGroup[] = [
       { id: "details", title: w.grpDetails, rows: [
         row("personal", "person", v(dv.personal)), row("contact", "phone", v(dv.contact)), row("residence", "pin", v(cityVal)),
@@ -244,6 +248,12 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         ...(cochOn ? [row("company", "briefcase", cochRows.length ? { text: cochRows.map((r) => r.company).join(" · "), add: false } : null)] : []),
         ...(!hidden.includes("club") ? [{ id: "club", label: w.clubCard, icon: "card" as const, href: localHref("/club#card", locale), out: true }] : []),
         ...(!hidden.includes("testimonials") ? [{ id: "testimonial", label: w.testimonial, icon: "star" as const, href: localHref("/testimonials/write", locale), out: true }] : []),
+        // the Marketplace (2026-11-20), while its launch switch is on: the account's own listings, and its inbox with
+        // the unread number (components/market/UnreadBadge.tsx)
+        ...(!hidden.includes("marketplace") ? [
+          { id: "mk-listings", label: market.myListings, icon: "tag" as const, href: localHref(MK_MINE, locale), out: true },
+          { id: "mk-inbox", label: market.inbox, icon: "chat" as const, href: localHref(MK_INBOX, locale), out: true, value: { text: "", add: false, node: <UnreadBadge where="account" /> } },
+        ] : []),
         ...(learnOn ? [row("learn", "bike")] : []),
       ] },
       { id: "settings", title: w.grpSettings, rows: [

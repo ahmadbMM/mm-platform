@@ -8,6 +8,7 @@ import { LOCALES, localeInfo } from "@/i18n/locales";
 import { BOOKING_URL, COMMUNITY, HEADER, NAV_LINKS, STORE_CART_URL, bookingLink, type NavLink } from "@/lib/links";
 import { ArrowIcon } from "@/components/site/Icons";
 import { bookingsWord } from "@/components/site/Bookings.words";
+import UnreadBadge from "@/components/market/UnreadBadge";
 
 type NavProps = {
   locale: string;
@@ -94,9 +95,10 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
         <Link href="/" className="mm-nav-logo" aria-label="Micromobility">
           <img src="/site/logo-mark-dark.png" alt="Micromobility" width={40} height={26} />
         </Link>
-        <nav className="mm-nav-links" aria-label={tx("Sections", "الأقسام")}>
+        <nav className={`mm-nav-links${byKey("marketplace") ? " mm-nav-links-8" : ""}`} aria-label={tx("Sections", "الأقسام")}>
           {HEADER.map((k) => {
-            if (k !== COMMUNITY.key) { const l = byKey(k); return l ? item(l) : null; }
+            // the Marketplace's link carries its inbox's unread number (components/market/UnreadBadge.tsx)
+            if (k !== COMMUNITY.key) { const l = byKey(k); return l ? item(l, undefined, k === "marketplace" ? <UnreadBadge where="header" /> : undefined) : null; }
             if (!community.length) return null;
             return (
               <div key={k} className={`mm-nav-drop${menu === "community" ? " open" : ""}`}
@@ -171,7 +173,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
           {HEADER.map((k) => {
             const close = () => setOpen(false);
             const tail = arrow;
-            if (k !== COMMUNITY.key) { const l = byKey(k); return l ? item(l, close, tail) : null; }
+            if (k !== COMMUNITY.key) { const l = byKey(k); return l ? item(l, close, k === "marketplace" ? <><UnreadBadge where="sheet" />{tail}</> : tail) : null; }
             if (!community.length) return null;
             return (
               <div key={k} className="mm-nav-sheet-group">
