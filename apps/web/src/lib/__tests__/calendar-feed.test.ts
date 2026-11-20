@@ -17,10 +17,10 @@ const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 const KEYS = ["a1", "b2", "c3"].map((x) => x.repeat(32));
 
 describe("the helpers", () => {
-  it("speaks the booking app's ten languages to calendar_link, and keeps the stored one for the site's six others", () => {
-    expect(CALF_LANGS).toEqual(["en", "ar", "fr", "es", "pt", "ur", "hi", "tl", "ne", "bn"]);
+  it("speaks the booking app's eleven languages to calendar_link, and keeps the stored one for the site's five others", () => {
+    expect(CALF_LANGS).toEqual(["en", "ar", "fr", "es", "pt", "ur", "hi", "tl", "ne", "bn", "ms"]);
     for (const l of CALF_LANGS) expect(calfLang(l)).toBe(l);
-    for (const l of ["id", "ms", "de", "ru", "zh", "ja", "xx", "", null, undefined, 5]) expect(calfLang(l), String(l)).toBeNull();
+    for (const l of ["id", "de", "ru", "zh", "ja", "xx", "", null, undefined, 5]) expect(calfLang(l), String(l)).toBeNull();
   });
   it("shows the section only once peek answered ok", () => {
     expect(calfPeekOn({ status: 200, data: { ok: true, has: false } })).toBe(true);

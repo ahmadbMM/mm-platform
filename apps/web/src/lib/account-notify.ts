@@ -67,5 +67,5 @@ export function updateWhere(url: string, o: { club: boolean }): UpdWhere {
   return null;
 }
 
-/** The app's language for a list said in the page's language: the ten it speaks, else English (as _updates_text). */
-export const updLang = (locale: string): string => (["en", "ar", "fr", "es", "pt", "ur", "hi", "tl", "ne", "bn"].includes(locale) ? locale : "en");
+/** The app's language for a list said in the page's language: the eleven it speaks, else English (as _updates_text). */
+export const updLang = (locale: string): string => (["en", "ar", "fr", "es", "pt", "ur", "hi", "tl", "ne", "bn", "ms"].includes(locale) ? locale : "en");
