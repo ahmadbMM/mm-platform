@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore, useTransition, type FormEvent, type MouseEvent, type ReactNode } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
-import { MK_SELLER_KINDS, MK_SORTS, SA_CITIES, isMkCity, isMkSort, mkCityName, mkErrorKey, type MkCard } from "@/lib/market/core";
+import { MK_SELLER_KINDS, MK_SORTS, SA_CITIES, isMkCity, isMkSort, mkCityName, mkErrorKey, type MkCard, type MkShopRow } from "@/lib/market/core";
 import { W1_NONE, w1Further, w1Href, w1Key, w1Narrowed, w1Q, type W1Filters } from "@/lib/market/w1";
 import MkIcon from "../MkIcon";
 import MkModal from "../MkModal";
@@ -12,6 +12,7 @@ import { T as W } from "../w1.text";
 import Filters from "./Filters";
 import ListingCard from "./ListingCard";
 import Results from "./Results";
+import ShopsStrip from "./ShopsStrip";
 
 // The Marketplace's browse page (micromobility.sa/marketplace), under the page's heading: the keyword search, the
 // sport chips (only the sports with something on sale), who is selling (All / Private / Shops / MicroMobility), the
@@ -42,6 +43,8 @@ export type BrowseProps = {
   /** For a search that found nothing: where to look next (a sport's name, or null for everything), and the newest listings. */
   near: { key: string; name: string | null; filters: W1Filters }[];
   newest: MkCard[];
+  /** The approved shops, by name: listed under the grid of the plain page (nothing picked). */
+  shops: MkShopRow[];
   /** The "Sell an item" button, drawn on the server. */
   sell: ReactNode;
 };
@@ -53,7 +56,7 @@ const watchWide = (cb: () => void) => {
   return () => m.removeEventListener("change", cb);
 };
 
-export default function Browse({ locale, base, filters, sports, types, result, fail, near, newest, sell }: BrowseProps) {
+export default function Browse({ locale, base, filters, sports, types, result, fail, near, newest, shops, sell }: BrowseProps) {
   const t = useLocalize(T);
   const w = useLocalize(W);
   const router = useRouter();
@@ -194,6 +197,8 @@ export default function Browse({ locale, base, filters, sports, types, result, f
           )}
         </section>
       </div>
+
+      {!narrowed && <ShopsStrip shops={shops} locale={locale} heading={w.sellers.shop} />}
 
       {popup && (
         <MkModal title={w.filters} onClose={close}>

@@ -506,7 +506,7 @@ describe("what a route takes", () => {
 });
 
 describe("the selling routes", () => {
-  type Call = { url: string; body: unknown; method: string; type: string; bytes: Uint8Array | null };
+  type Call = { url: string; body: unknown; method: string; type: string; bytes: Uint8Array | null; auth: string };
   let calls: Call[] = [];
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
   const stub = (answer: (c: Call) => Response) => {
@@ -515,7 +515,7 @@ describe("the selling routes", () => {
       const raw = init?.body;
       const headers = new Headers(init?.headers);
       const c: Call = {
-        url: String(url), method: init?.method ?? "GET", type: headers.get("content-type") ?? "",
+        url: String(url), method: init?.method ?? "GET", type: headers.get("content-type") ?? "", auth: headers.get("authorization") ?? "",
         body: typeof raw === "string" ? JSON.parse(raw) : null, bytes: raw instanceof Uint8Array ? raw : null,
       };
       calls.push(c);
@@ -534,6 +534,7 @@ describe("the selling routes", () => {
   beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service");
   });
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
@@ -659,6 +660,9 @@ describe("the selling routes", () => {
     ]);
     expect(calls[0].body).toEqual({ ...WHO, p_for: "listing", p_ref: 7, p_ext: "jpg" });
     expect(calls[1].type).toBe("image/jpeg");
+    // the slot is asked for with the public key, the files are stored with the storage's secret one (the bucket has
+    // no insert policy for the public key: only this route, after its checks, writes there)
+    expect(calls.map((c) => c.auth)).toEqual(["Bearer anon", "Bearer service", "Bearer service"]);
     // what is stored is the picture without what described it
     const stored = calls[1].bytes ?? new Uint8Array();
     for (const gone of ["xmpmeta", "home address", "IPTC", "taken on my phone", "hidden after the end"]) expect(has(stored, gone), gone).toBe(false);

@@ -1,9 +1,9 @@
 import { edgeScope, memo } from "../memo";
-import type { MkBrowse, MkBrowseQuery, MkIndex } from "./core";
-import { mkBrowse, mkIndex, type MkResult } from "./server";
+import type { MkBrowse, MkBrowseQuery, MkIndex, MkShopRow } from "./core";
+import { mkBrowse, mkIndex, mkShops, type MkResult } from "./server";
 import { w1KeptKey, w1MayKeep } from "./w1";
 
-// Browsing the Marketplace on the server (W1): the public reads the browse page, a shop's page, the sitemap and the
+// Browsing the Marketplace on the server (W1): the public reads the browse page (its grid and its list of shops), a shop's page, the sitemap and the
 // site's search share, kept a minute in the Worker as the site's other public reads are (lib/memo.ts). market_browse
 // and market_index take no account and answer everyone the same, so a kept copy can never show one person what is
 // another's. What is NOT kept: a listing's own page (market_listing_get: once it is sold, removed or deleted it must
@@ -39,6 +39,19 @@ export async function browseKept(q: MkBrowseQuery = {}, vouched = true): Promise
     },
   });
   return data ? { ok: true, data } : fails.get(key) ?? GENERIC;
+}
+
+/** The approved shops, by name (market_shops), for the browse page's list of shops: kept a minute like the grid; the
+ *  empty list when the database has not answered or has no marketplace yet. */
+export async function shopsKept(): Promise<MkShopRow[]> {
+  const list = await memo<MkShopRow[]>(`market:shops:${edgeScope()}`, {
+    ttl: TTL_MS,
+    read: async () => {
+      const r = await mkShops();
+      return r.ok ? r.data.items.filter((s) => typeof s?.slug === "string" && typeof s.name_en === "string") : null;
+    },
+  });
+  return list ?? [];
 }
 
 /** Every listing on sale and every approved shop (market_index), for the sitemap and the site's search; null when the

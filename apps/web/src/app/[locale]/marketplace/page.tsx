@@ -9,7 +9,7 @@ import { serverLocalize } from "@/i18n/dicts";
 import { MK_HOME, mkCatName } from "@/lib/market/core";
 import { loadMarketCategories } from "@/lib/market/server";
 import { w1FiltersOf, w1Narrowed, w1Nearby, w1QueryOf, w1SportChips, w1TypeOptions, type W1Search } from "@/lib/market/w1";
-import { browseKept } from "@/lib/market/w1-server";
+import { browseKept, shopsKept } from "@/lib/market/w1-server";
 import { pageMeta } from "@/lib/seo";
 import { isComingSoon, loadSiteContent, marketplaceOn, siteCanOpen } from "@/lib/site";
 
@@ -20,7 +20,8 @@ import { isComingSoon, loadSiteContent, marketplaceOn, siteCanOpen } from "@/lib
 // market_browse; the answer also says which sports and product types have something to show, which is what the chips
 // and the type picker offer - an empty sport is never a chip. A search that finds nothing is answered with where to
 // look next and the newest listings. The first page of the common searches is kept a minute (lib/market/w1-server.ts);
-// the plain address is kept at the edge like any page (lib/page-cache.ts).
+// the plain address is kept at the edge like any page (lib/page-cache.ts). Under the grid of the plain page, the
+// approved shops (market_shops, kept a minute): the way to a shop's page that is not one of its listings.
 //   The page opens by its address whatever the launch switch says (site_content 'marketplace.on'); while it is off it
 // is kept out of search engines, as every Marketplace page is.
 type Params = Promise<{ locale: string }>;
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function MarketplacePage({ params, searchParams }: { params: Params; searchParams: Promise<W1Search> }) {
   const { locale } = await params;
-  const [sp, at, cats] = await Promise.all([searchParams, marketSite(locale), loadMarketCategories()]);
+  const [sp, at, cats, shops] = await Promise.all([searchParams, marketSite(locale), loadMarketCategories(), shopsKept()]);
   const t = serverLocalize(T, locale);
   const filters = w1FiltersOf(sp, cats);
   // with no categories to check the address against, its sport and type are as written: asked for, never kept
@@ -57,6 +58,7 @@ export default async function MarketplacePage({ params, searchParams }: { params
         fail={r.ok ? null : { error: r.error, detail: r.detail }}
         near={nothing ? w1Nearby(cats, filters, data.sports).map((n) => ({ key: n.key, name: n.sport ? mkCatName(n.sport, locale) : null, filters: n.filters })) : []}
         newest={newest?.ok ? newest.data.items.slice(0, 8) : []}
+        shops={shops}
         sell={<SellLink t={t} />}
       />
     </MkFrame>

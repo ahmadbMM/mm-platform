@@ -52,13 +52,13 @@ describe("the rules' sections", () => {
     const off = input({}, { "marketplace.commission_pct": 0 });
     expect(shape(w4Rules("ar", off))).toEqual(shape(w4Rules("en", off)));
   });
-  it("are English everywhere but on the Arabic page, and the other languages are told so", () => {
+  it("are English everywhere but on the Arabic page, with no extra line telling the other languages so", () => {
     expect(w4RulesLang("ar")).toBe("ar");
     for (const l of ["en", "ur", "fr", "hi"]) expect(w4RulesLang(l)).toBe("en");
     expect(w4RulesOwn("en")).toBe(true);
     expect(w4RulesOwn("ar")).toBe(true);
     expect(w4RulesOwn("ur")).toBe(false);
-    expect(T.en.rulesNote).toBe("These rules are available in English and Arabic.");
+    expect("rulesNote" in T.en || "rulesNote" in T.ar).toBe(false);
     expect(/[؀-ۿ]/.test(all(en()))).toBe(false);
     expect(/[؀-ۿ]/.test(all(ar()))).toBe(true);
   });
@@ -246,7 +246,7 @@ describe("the rules as the page draws them", () => {
     expect(toc).toContain('<a href="#not-allowed">What may not be sold</a>');
   });
   it("has the words around the rules in both languages", () => {
-    for (const k of ["rulesNote", "rulesMeta", "onThisPage"] as const) { expect(T.en[k]).toBeTruthy(); expect(T.ar[k]).toBeTruthy(); }
+    for (const k of ["rulesMeta", "onThisPage"] as const) { expect(T.en[k]).toBeTruthy(); expect(T.ar[k]).toBeTruthy(); }
     expect(T.en.version("v2")).toBe("Version v2");
     expect(M.en.rules).toBe("Marketplace rules");
   });

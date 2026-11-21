@@ -258,3 +258,13 @@
   .mk-w1-card:hover { transform: none; }
   .mk-w1-gal-track { scroll-behavior: auto; }
 }
+
+/* ── The approved shops, under the grid of the plain browse page ── */
+.mk-w1-shops { margin-block-start: 40px; }
+.mk .mk-w1-shops h2 { margin-block-end: 16px; }
+.mk-w1-shops-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.mk .mk-w1-shops-a { display: flex; flex-direction: row; align-items: center; gap: 12px; min-height: 48px; padding: 12px 14px; color: var(--mk-ink) !important; text-decoration: none; }
+.mk-w1-shops-a:hover .mk-w1-shops-name { text-decoration: underline; }
+.mk-w1-shops-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mk-w1-shops-name { font-size: 16px; font-weight: 700; }
+.mk-w1-shops-city { font-size: 13px; color: var(--mk-ink-3); }

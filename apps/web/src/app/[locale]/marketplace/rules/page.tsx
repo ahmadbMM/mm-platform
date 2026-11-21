@@ -55,7 +55,6 @@ export default async function RulesPage({ params }: { params: Promise<{ locale: 
         <header className="mk-w4-rules-head">
           <h1>{t.rules}</h1>
           <p className="mk-w4-rules-date">{updated}</p>
-          {!own && <p className="mk-w4-rules-date">{w.rulesNote}</p>}
         </header>
         <div className="mk-w4-rules-cols">
           <nav className="mk-w4-toc" aria-labelledby="mk-w4-toc-h">

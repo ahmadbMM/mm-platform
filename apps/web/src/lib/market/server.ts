@@ -152,16 +152,27 @@ const storage = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   return url && key ? { url, key } : null;
 };
+/** The storage's own secret key (a Worker secret, never a NEXT_PUBLIC_ one): the website is the only writer to the
+ *  `market` bucket, so a photo is stored only after the photo route has read its type from its first bytes, refused
+ *  GPS, stripped its metadata and paired its two copies. The bucket has no insert policy for the public key. */
+const writer = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  let key = "";
+  try { key = getCloudflareContext().env.SUPABASE_SERVICE_ROLE_KEY ?? ""; } catch { /* not on Cloudflare */ }
+  key ||= process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  return url && key ? { url, key } : null;
+};
 const later = (p: Promise<unknown>) => {
   const quiet = p.catch(() => undefined);
   try { getCloudflareContext().ctx.waitUntil(quiet); } catch { /* not on Cloudflare: it runs on */ }
 };
 
 /** One file stored in the `market` bucket at a name the database issued (mkPhotoSlot's `name`, or its `small`), with
- *  the public key: the bucket takes an insert only at an issued, unused name, never over a file it already holds.
- *  `type`: "image/jpeg" or "image/webp". Answers whether the storage kept it. */
+ *  the storage's secret key (writer above; none set: nothing is stored), never over a file it already holds
+ *  (x-upsert false). Only the photo route calls it, after its own checks. `type`: "image/jpeg" or "image/webp".
+ *  Answers whether the storage kept it. */
 export async function mkStorePut(name: string, bytes: Uint8Array<ArrayBuffer>, type: "image/jpeg" | "image/webp"): Promise<boolean> {
-  const st = storage();
+  const st = writer();
   // the photo itself, or its small copy (<name>.w480.<ext>)
   if (!st || !isMkPhotoName(name.replace(".w480.", "."))) return false;
   try {

@@ -60,7 +60,6 @@ export const T = {
     openPage: "Open the shop's page",
     onSale: "Listings on sale", onSaleOf: (used: number, cap: number) => `${used} of ${cap}`,
     // the rules page
-    rulesNote: "These rules are available in English and Arabic.",
     rulesMeta: "How the Marketplace works, what may not be sold, staying safe, complaints, and how your data is used.",
     onThisPage: "On this page",
     version: (v: string) => `Version ${v}`,
@@ -115,7 +114,6 @@ export const T = {
     shopDetails: "بيانات المتجر",
     openPage: "افتح صفحة المتجر",
     onSale: "الإعلانات المعروضة للبيع", onSaleOf: (used: number, cap: number) => `${used} من ${cap}`,
-    rulesNote: "هذه القواعد متاحة بالإنجليزية والعربية.",
     rulesMeta: "كيف يعمل السوق، وما لا يجوز بيعه، وكيف تحافظ على سلامتك، والشكاوى، وكيف تُستخدم بياناتك.",
     onThisPage: "في هذه الصفحة",
     version: (v: string) => `الإصدار ${v}`,

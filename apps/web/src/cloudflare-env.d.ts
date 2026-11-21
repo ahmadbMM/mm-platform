@@ -11,6 +11,8 @@ declare global {
     API_LIMIT?: SignInLimiter;
     /** Cloudflare Turnstile's secret key (a Worker secret); the sign-in check is on once it is set. */
     TURNSTILE_SECRET_KEY?: string;
+    /** The storage's secret key (a Worker secret): the Marketplace's photo route alone writes to the `market` bucket. */
+    SUPABASE_SERVICE_ROLE_KEY?: string;
   }
 }
 

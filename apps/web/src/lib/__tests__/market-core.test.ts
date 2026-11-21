@@ -496,14 +496,26 @@ describe("the database calls", () => {
     stub(() => json({ code: "PGRST205", message: "Could not find the table" }, 404));
     expect(await loadMarketCategories()).toEqual([]);
   });
-  it("store a photo only at a name the database could have issued, never over another", async () => {
+  it("store a photo only at a name the database could have issued, never over another, with the storage's secret key", async () => {
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service");
+    const auths: string[] = [];
     stub(() => json({ Key: "ok" }));
+    const recorded = vi.mocked(fetch);
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      auths.push(new Headers(init?.headers).get("authorization") ?? "");
+      return recorded(url, init);
+    }));
     const hex = "0123456789abcdef0123456789abcdef";
     const bytes = new Uint8Array([0xff, 0xd8, 0xff]);
     expect(await mkStorePut(`l4/${hex}.jpg`, bytes, "image/jpeg")).toBe(true);
     expect(await mkStorePut(`l4/${hex}.w480.jpg`, bytes, "image/jpeg")).toBe(true);
     expect(calls.map((c) => c.url)).toEqual([`https://example.supabase.co/storage/v1/object/market/l4/${hex}.jpg`, `https://example.supabase.co/storage/v1/object/market/l4/${hex}.w480.jpg`]);
     expect(await mkStorePut("p/anything.jpg", bytes, "image/jpeg")).toBe(false);
+    expect(calls.length).toBe(2);
+    expect(auths).toEqual(["Bearer service", "Bearer service"]);
+    // never with the public key: without the storage's secret key nothing is stored
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+    expect(await mkStorePut(`l4/${hex}.jpg`, bytes, "image/jpeg")).toBe(false);
     expect(calls.length).toBe(2);
   });
   it("remove from the storage only the photos the database named, both copies of each", async () => {

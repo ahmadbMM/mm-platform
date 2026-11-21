@@ -22,11 +22,12 @@ import Crumbs from "@/components/market/w1/Crumbs";
 import ListingCard from "@/components/market/w1/ListingCard";
 import ListingView from "@/components/market/w1/ListingView";
 import ShopView from "@/components/market/w1/ShopView";
+import ShopsStrip from "@/components/market/w1/ShopsStrip";
 import { moreListings } from "@/components/market/w1/more";
 import { mkCategory, type MkBrowse, type MkCard, type MkCategory, type MkListing, type MkListingMine, type MkShop } from "../market/core";
 import { marketPaths, marketSearch } from "../market/hooks";
 import { W1_NONE, w1Own } from "../market/w1";
-import { browseKept, indexKept } from "../market/w1-server";
+import { browseKept, indexKept, shopsKept } from "../market/w1-server";
 import { resetMemo } from "../memo";
 
 // Browsing the Marketplace (W1): the reads kept a minute, the sitemap's and the search's entries, "Show more", and
@@ -83,6 +84,20 @@ describe("the reads the pages share", () => {
   });
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); resetMemo("market:"); });
 
+  it("keep the approved shops a minute, and list none when the database has no marketplace or does not answer", async () => {
+    const row = { slug: "wheel-house", name_en: "Wheel House Cycles", name_ar: null, logo: null, city: "jeddah", sells: null };
+    stub(() => json({ items: [row, { name_en: "no slug" }] }));
+    expect(await shopsKept()).toEqual([row]);
+    await shopsKept();
+    expect(rpc("market_shops")).toHaveLength(1);
+    expect(rpc("market_shops")[0].body).toEqual({});
+    resetMemo("market:");
+    stub(() => json({ code: "PGRST202", message: "Could not find the function public.market_shops" }, 404));
+    expect(await shopsKept()).toEqual([]);
+    resetMemo("market:");
+    stub(() => new Response("upstream", { status: 503 }));
+    expect(await shopsKept()).toEqual([]);
+  });
   it("keep the first page of a common search a minute, and never a search someone typed", async () => {
     stub(() => json(page));
     expect(await browseKept({ sport: "cycling" })).toMatchObject({ ok: true, data: { next: "c_24" } });
@@ -387,5 +402,27 @@ describe("the house rules, read from the files", () => {
     expect(W.en.photoOf(2, 5)).toBe("Photo 2 of 5");
     expect(W.ar.photoOf(2, 5)).toBe("الصورة 2 من 5");
     expect(W.ar.filtersOn(3)).toContain("3");
+  });
+});
+
+describe("the list of shops on the browse page", () => {
+  const row = { slug: "wheel-house", name_en: "Wheel House Cycles", name_ar: "بيت العجلات", logo: null, city: "jeddah", sells: "Road bikes" };
+  it("links each approved shop's page with its logo, its name in the page's language and its city, and nothing more", () => {
+    const en = render(createElement(ShopsStrip, { shops: [row, { ...row, slug: "pedal-co", name_en: "Pedal Co", name_ar: null, logo: "s4/0123456789abcdef0123456789abcdef.jpg" }], locale: "en", heading: W.en.sellers.shop }));
+    expect(en).toContain(">Shops</h2>");
+    expect(en).toContain('href="/marketplace/shop/wheel-house"');
+    expect(en).toContain('href="/marketplace/shop/pedal-co"');
+    expect(en).toContain("Wheel House Cycles");
+    expect(en).toContain("Jeddah");
+    expect(en).toContain("/mkt/s4/0123456789abcdef0123456789abcdef.jpg");
+    expect(en).not.toContain("Road bikes");
+    expect(en).not.toContain("4030");
+    const ar = render(createElement(ShopsStrip, { shops: [row], locale: "ar", heading: W.ar.sellers.shop }));
+    expect(ar).toContain("بيت العجلات");
+    expect(render(createElement(ShopsStrip, { shops: [], locale: "en", heading: "Shops" }))).toBe("");
+  });
+  it("is drawn on the plain browse page only, from the kept read", () => {
+    expect(read("components/market/w1/Browse.tsx")).toContain("{!narrowed && <ShopsStrip shops={shops}");
+    expect(read("app/[locale]/marketplace/page.tsx")).toContain("shopsKept()");
   });
 });
