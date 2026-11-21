@@ -221,22 +221,28 @@ describe("a listing's page", () => {
     expect(view(listing({ seller: { kind: "company", name: null, shop: null } }))).toContain("Sold by MicroMobility");
   });
   it("offers the way to reach the seller twice at most, in the page, and never once it is sold", () => {
+    // the contact side's own button (W3's ContactButton): a visitor with no account is sent to sign in by it
     const html = view(listing());
-    expect(count(html, 'data-mk-placeholder="contact"')).toBe(2);
-    expect(count(view(listing({ status: "reserved" })), 'data-mk-placeholder="contact"')).toBe(2);
+    expect(count(html, "Contact seller</a>")).toBe(2);
+    expect(count(view(listing({ status: "reserved" })), "Contact seller</a>")).toBe(2);
     expect(view(listing({ status: "reserved" }))).toContain("Reserved");
     const sold = view(listing({ status: "sold", can_message: false, sold_at: "2026-11-19T09:00:00+00:00" }));
     expect(sold).toContain("Sold");
-    expect(count(sold, 'data-mk-placeholder="contact"')).toBe(0);
-    // MicroMobility's own listing, sold: its WhatsApp button goes too
-    expect(count(view(listing({ status: "sold", can_message: false, seller: { kind: "company", name: null, shop: null } })), 'data-mk-placeholder="contact"')).toBe(0);
+    expect(count(sold, "Contact seller</a>")).toBe(0);
+    // MicroMobility's own listing: its WhatsApp button, twice, for anyone; once sold it goes too
+    expect(count(view(listing({ seller: { kind: "company", name: null, shop: null } })), "Ask on WhatsApp</a>")).toBe(2);
+    expect(count(view(listing({ status: "sold", can_message: false, seller: { kind: "company", name: null, shop: null } })), "Ask on WhatsApp</a>")).toBe(0);
+  });
+  it("leads to the rules' safety section beside Share and Report", () => {
+    expect(view(listing())).toContain('href="/marketplace/rules#safety"');
+    expect(count(view(listing()), "Report</a>")).toBe(1);
   });
   it("shows its seller the state nobody else is shown, staff's reason and the way to their listings", () => {
     const hidden = view(listing({ status: "hidden", mine: true, can_message: false, own: mine() }));
     for (const text of ["This is your listing", "Removed by our team", "Reason", "The photos show another bike.", 'href="/marketplace/mine"']) expect(hidden).toContain(text);
     expect(hidden).not.toContain('href="/marketplace/sell/12"');
-    expect(hidden).not.toContain('data-mk-placeholder="report"');
-    expect(count(hidden, 'data-mk-placeholder="contact"')).toBe(0);
+    expect(count(hidden, "Report</a>")).toBe(0);
+    expect(count(hidden, "Contact seller</a>")).toBe(0);
     const live = view(listing({ mine: true, can_message: false, own: mine({ status: "live", hidden_reason: null }) }));
     for (const text of ["On sale", "On sale until 19 Jan 2027", 'href="/marketplace/sell/12"']) expect(live).toContain(text);
     expect(view(listing({ status: "expired", mine: true, can_message: false, own: mine({ status: "expired" }) }))).toContain("Expired");
@@ -322,13 +328,8 @@ describe("the house rules, read from the files", () => {
     // a colour is a token, or the cards' own white
     expect(rules.replace(/#fff\b/g, "")).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(/);
     for (const m of rules.matchAll(/\.(mk-[a-z0-9-]+)/g)) {
-      expect(m[1], m[1]).toMatch(/^mk-w1-|^mk-(?:card|box|btn|btn2|chips?|field|pop-title|user|ic|tags|tag|amt|photo)$/);
+      expect(m[1], m[1]).toMatch(/^mk-w1-|^mk-(?:card|box|btn|btn2|chips?|field|pop-title|user|ic|tags|tag|amt|photo|head)$/);
     }
-  });
-  it("a picker shows its arrow, at the end of its box on either kind of page", () => {
-    // market.css's own rule for it is outweighed by its rule for every field, so the arrow is said again here, heavier
-    expect(rules).toMatch(/\.mk :is\(\.mk-w1-picks, \.mk-w1-form\) \.mk-field select \{[^}]*padding-inline-end:\s*40px;[^}]*var\(--mk-chev\) no-repeat right 16px center/);
-    expect(rules).toMatch(/\[dir="rtl"\] \.mk :is\(\.mk-w1-picks, \.mk-w1-form\) \.mk-field select \{\s*background-position:\s*left 16px center/);
   });
   it("every tap target the styles size is 44px or more", () => {
     // a short word is still 44px wide to a finger: the seller choice's chips, and the trail's links

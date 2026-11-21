@@ -46,18 +46,18 @@ export default function Filters({ filters, types, onApply, popup = false, t, w }
           </select>
         </div>
       )}
-      <fieldset className="mk-w1-set">
+      <fieldset className="mk-set">
         <legend>{w.condition}</legend>
-        <div className="mk-w1-opts">
+        <div className="mk-opts">
           {(["", ...MK_CONDITIONS] as const).map((c) => (
-            <label key={c || "any"} className="mk-w1-opt">
+            <label key={c || "any"} className="mk-opt">
               <input type="radio" name={`${id}-cond`} value={c} checked={d.condition === c} onChange={() => setD({ ...d, condition: c })} />
               <span>{c ? t[`cond_${c}`] : w.anyCondition}</span>
             </label>
           ))}
         </div>
       </fieldset>
-      <fieldset className="mk-w1-set">
+      <fieldset className="mk-set">
         <legend>{w.price}</legend>
         <div className="mk-w1-range">
           <div className="mk-field">

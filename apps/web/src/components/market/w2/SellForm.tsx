@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import {
-  MK_DECLARATIONS, MK_DESC_MAX, MK_FAULTS_MAX, MK_FOR_WHOM, MK_MINE, MK_RULES, MK_SERIAL_MAX, MK_TITLE_MAX, MK_WHEEL_SIZES, SA_CITIES,
+  MK_DECLARATIONS, MK_DESC_MAX, MK_FAULTS_MAX, MK_FOR_WHOM, MK_MINE, MK_SERIAL_MAX, MK_TITLE_MAX, MK_WHEEL_SIZES, SA_CITIES,
   conditionKeys, listingHref, mkCatName, mkCategoryOf, mkCityName, mkPhotoSrc, mkPick, mkSports, mkTypesOf, sellHref,
   type MkCategory, type MkFactKey, type MkListingMine, type MkMe, type MkNameMode,
 } from "@/lib/market/core";
@@ -17,6 +17,7 @@ import MkIcon from "../MkIcon";
 import MkSignIn from "../MkSignIn";
 import { T as M } from "../Market.text";
 import { T } from "../w2.text";
+import RulesLink from "../w4/RulesLink";
 import PhotoGrid from "./PhotoGrid";
 import ShareButton from "./ShareButton";
 import { w2Get, w2Post, type W2Refused } from "./api";
@@ -386,14 +387,14 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
         <>
           {cat && cat.facts.length > 0 && <div className="mk-w2-two" data-f="facts">{cat.facts.map(fact)}</div>}
           {said("facts")}
-          <fieldset className="mk-w2-fs" data-f="condition">
+          <fieldset className="mk-set mk-w2-fs" data-f="condition">
             <legend>{m.condition}</legend>
             <div className="mk-w2-opts">
               {W2_CONDITIONS.map((c) => {
                 const k = conditionKeys(c);
                 return (
                   <label key={c} className="mk-w2-opt">
-                    <input type="radio" name={idOf("condition")} value={c} checked={form.condition === c} onChange={() => update({ condition: c })} />
+                    <input className="mk-radio" type="radio" name={idOf("condition")} value={c} checked={form.condition === c} onChange={() => update({ condition: c })} />
                     <span><b>{t[k.label]}</b><span className="mk-w2-def">{t[k.def]}</span></span>
                   </label>
                 );
@@ -449,7 +450,7 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
             </Field>
           )}
           {cat?.tier === "declare" && (
-            <fieldset className="mk-w2-fs" data-f="declarations">
+            <fieldset className="mk-set mk-w2-fs" data-f="declarations">
               <legend>{m.declarations}</legend>
               {MK_DECLARATIONS.map((k) => (
                 <label key={k} className="mk-check">
@@ -463,17 +464,17 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
           {draft && (shop && acct.shop
             ? <div className="mk-field"><span className="mk-label">{m.listedAs}</span><p className="mk-w2-val"><bdi dir="auto">{mkPick(locale, acct.shop.name_en, acct.shop.name_ar)}</bdi></p></div>
             : (
-              <fieldset className="mk-w2-fs" data-f="name_mode">
+              <fieldset className="mk-set mk-w2-fs" data-f="name_mode">
                 <legend>{m.nameQ}</legend>
                 <div className="mk-w2-opts">
                   {acct.names.short && (
                     <label className="mk-w2-opt">
-                      <input type="radio" name={idOf("name")} checked={nameMode === "short"} onChange={() => { setNameMode("short"); setErr(null); }} />
+                      <input className="mk-radio" type="radio" name={idOf("name")} checked={nameMode === "short"} onChange={() => { setNameMode("short"); setErr(null); }} />
                       <span><b><bdi dir="auto">{acct.names.short}</bdi></b></span>
                     </label>
                   )}
                   <label className="mk-w2-opt">
-                    <input type="radio" name={idOf("name")} checked={nameMode === "none"} onChange={() => { setNameMode("none"); setErr(null); }} />
+                    <input className="mk-radio" type="radio" name={idOf("name")} checked={nameMode === "none"} onChange={() => { setNameMode("none"); setErr(null); }} />
                     <span><b>{m.noName}</b></span>
                   </label>
                 </div>
@@ -495,7 +496,7 @@ export default function SellForm({ locale, cats, me, listing: first }: { locale:
                 <input type="checkbox" checked={termsTick} onChange={(e) => { setTermsTick(e.target.checked); setErr(null); }} />
                 <span>{m.acceptRules}</span>
               </label>
-              <Link className="mk-link" href={MK_RULES} target="_blank" rel="noopener">{t.rules}<MkIcon name="next" size={16} flip /></Link>
+              <RulesLink t={t} newTab />
               {said("terms")}
             </div>
           )}

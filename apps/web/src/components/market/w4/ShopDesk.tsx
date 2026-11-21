@@ -83,7 +83,7 @@ export default function ShopDesk({ page, locale, me, shop, error, tag, edit = fa
   }
 
   const title = <h1 ref={head} tabIndex={-1}>{page === "apply" ? w.applyTitle : w.myShop}</h1>;
-  const waiting = <div className="mk-w4-wrap">{title}<div className="mk-w4-skel" role="status" aria-busy="true" aria-label={t.name}><span /><span /><span /></div></div>;
+  const waiting = <div className="mk-w4-wrap">{title}<div className="mk-skel" role="status" aria-busy="true" aria-label={t.name}><span /><span /><span /></div></div>;
   if (loading) return waiting;
   if (!data) {
     if (why?.error === "signin") return <MkSignIn locale={locale} />;

@@ -53,11 +53,11 @@ export default function ReportPop({ target, refId, onClose, onSent }: { target: 
   return (
     <MkModal title={title} onClose={onClose} busy={busy}>
       <form className="mk-w3-report" onSubmit={submit} noValidate>
-        <fieldset className="mk-w3-reasons">
+        <fieldset className="mk-set mk-w3-reasons">
           <legend>{w.reason}</legend>
           {reportReasons(target).map((r) => (
             <label key={r} className="mk-w3-reason">
-              <input type="radio" name={group} checked={reason === r} onChange={() => { setReason(r); setErr(""); }} disabled={busy} />
+              <input className="mk-radio" type="radio" name={group} checked={reason === r} onChange={() => { setReason(r); setErr(""); }} disabled={busy} />
               <span>{w[`r_${r}`]}</span>
             </label>
           ))}
@@ -66,7 +66,7 @@ export default function ReportPop({ target, refId, onClose, onSent }: { target: 
           <label htmlFor={noteId}>{w.note}</label>
           <textarea id={noteId} dir="auto" rows={3} maxLength={MK_NOTE_MAX} value={note} disabled={busy} onChange={(e) => setNote(e.target.value)} />
         </div>
-        {err && <p className="mk-err mk-w3-err" role="alert">{mkErrorText(s, err)}</p>}
+        {err && <p className="mk-err" role="alert">{mkErrorText(s, err)}</p>}
         <div className="mk-pop-acts">
           <button type="submit" className="mk-btn" disabled={busy || !reason} aria-busy={busy || undefined}>{w.reportSend}</button>
           <button type="button" className="mk-btn2" onClick={onClose} disabled={busy}>{s.cancel}</button>

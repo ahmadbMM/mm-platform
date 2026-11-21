@@ -82,7 +82,7 @@ export default function SellApp({ locale, listingId, cats, me, mine, error }: Se
   }
 
   const title = <h1>{listingId === null ? t.sell : m.editTitle}</h1>;
-  if (!up || loading) return <>{title}<div className="mk-w2-skel" role="status" aria-busy="true"><span /><span /><span /></div></>;
+  if (!up || loading) return <>{title}<div className="mk-skel" role="status" aria-busy="true"><span /><span /><span /></div></>;
   if (!data) {
     if (why?.error === "signin") return <MkSignIn locale={locale} />;
     const absent = why?.error === "absent";

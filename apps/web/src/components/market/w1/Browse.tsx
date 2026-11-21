@@ -91,7 +91,7 @@ export default function Browse({ locale, base, filters, sports, types, result, f
 
   return (
     <div className="mk-w1-browse">
-      <header className="mk-w1-head">
+      <header className="mk-head">
         <h1>{t.name}</h1>
         {sell}
       </header>
@@ -142,7 +142,7 @@ export default function Browse({ locale, base, filters, sports, types, result, f
           <button ref={button} type="button" className="mk-btn2 mk-w1-fbtn" aria-expanded={open} aria-controls={panel ? `${id}-side` : undefined}
             aria-label={further ? w.filtersOn(further) : undefined} onClick={() => setOpen((o) => !o)}>
             <MkIcon name="filter" size={18} />{w.filters}
-            {further > 0 && <span className="mk-w1-n" aria-hidden="true">{further}</span>}
+            {further > 0 && <span className="mk-n" aria-hidden="true">{further}</span>}
           </button>
           {narrowed && <Link href={base} scroll={false} className="mk-link mk-w1-clear" onClick={tap(W1_NONE)}>{w.clearAll}</Link>}
         </div>

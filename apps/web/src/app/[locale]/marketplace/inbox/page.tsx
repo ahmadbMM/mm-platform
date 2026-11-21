@@ -20,7 +20,7 @@ import { pageMeta } from "@/lib/seo";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = serverLocalize(T, locale);
-  return pageMeta({ path: MK_INBOX, locale, noindex: true, title: `${t.inbox} · Micromobility` });
+  return pageMeta({ path: MK_INBOX, locale, noindex: true, title: `${t.inbox} · MicroMobility` });
 }
 
 export default async function MarketInboxPage({ params }: { params: Promise<{ locale: string }> }) {

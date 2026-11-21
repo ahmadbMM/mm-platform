@@ -5,12 +5,13 @@
 
 /* ── The selling form's frame ── */
 .mk-w2-wrap { display: flex; flex-direction: column; gap: 20px; }
-.mk-w2-wrap h1 { font-size: clamp(28px, 6.4vw, 40px); letter-spacing: -1px; margin: 0; }
+/* (the heading's size is market.css's: a task page's on the selling form, a browsing page's on My listings) */
+.mk .mk-w2-wrap h1 { margin: 0; }
 .mk-w2-wrap :is(h1, h2):focus { outline: none; }
 /* a card or the list takes the focus only from the script, when the pop-up that closed has no opener left to give it to */
 .mk-w2-spot:focus { outline: none; }
-.mk-w2-wrap h2 { font-size: 18px; letter-spacing: -.2px; margin: 0; }
-html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk-w2-wrap :is(h1, h2) { letter-spacing: 0; }
+.mk .mk-w2-wrap h2 { font-size: 18px; letter-spacing: -.2px; margin: 0; }
+.mk-w2-wrap > .mk-head { margin-block-end: 0; }
 .mk-w2-form { display: flex; flex-direction: column; gap: 20px; }
 .mk-w2-top { display: flex; flex-direction: column; gap: 10px; }
 /* a step change brings its heading into view under the site's own header, with the bar above it */
@@ -29,14 +30,13 @@ button.mk-w2-save { display: inline-flex; align-items: center; gap: 6px; min-hei
 .mk-w2-nav { display: flex; gap: 10px; margin-block-start: 4px; }
 .mk-w2-nav .mk-btn { flex: 1; min-height: 52px; font-size: 16px; }
 .mk-w2-nav .mk-btn2 { min-height: 52px; }
-.mk-w2-wrap :is(.mk-btn, .mk-btn2)[aria-busy="true"] { opacity: .6; cursor: progress; }
 /* what stands in the way, said at its control (and, for a missing birth date, the way to where it is added) */
 .mk-w2-said { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 
 /* ── Fields ── */
 .mk-w2-two { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-.mk-w2-fs { display: flex; flex-direction: column; gap: 10px; min-width: 0; margin: 0; padding: 0; border: 0; }
-.mk-w2-fs > legend { padding: 0; margin-block-end: 8px; font-size: 13px; font-weight: 700; color: var(--mk-ink-2); }
+/* a group of choices (market.css .mk-set), its choices one under the other */
+.mk-w2-fs { display: flex; flex-direction: column; gap: 10px; }
 .mk-w2-wrap .mk-field textarea.mk-w2-short { min-height: 88px; }
 .mk-w2-wrap .mk-field textarea { min-height: 168px; }
 .mk-w2-val { margin: 0; font-size: 16px; line-height: 1.5; color: var(--mk-ink); overflow-wrap: anywhere; }
@@ -51,9 +51,8 @@ button.mk-w2-save { display: inline-flex; align-items: center; gap: 6px; min-hei
 .mk-w2-opt:hover { border-color: rgba(26, 25, 25, .32); }
 .mk-w2-opt:has(input:checked) { border-color: var(--mk-green); background: var(--mk-green-soft); }
 .mk-w2-opt:has(input:focus-visible) { box-shadow: 0 0 0 3px var(--mk-green-soft); border-color: var(--mk-green); }
-.mk-w2-opt input { appearance: none; -webkit-appearance: none; flex: none; width: 22px; height: 22px; margin: 0; border: 1px solid var(--mk-ctl); border-radius: 50%; background: #fff; cursor: pointer; }
-.mk-w2-opt input:checked { border: 7px solid var(--mk-green); }
-.mk-w2-opt input:focus-visible { outline: none; }
+/* its round mark is market.css .mk-radio; the whole option shows the focus, so the mark itself does not again */
+.mk-w2-opt .mk-radio:focus-visible { box-shadow: none; }
 .mk-w2-opt > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .mk-w2-opt b { font-size: 15px; font-weight: 700; line-height: 1.45; }
 .mk-w2-def { font-size: 14px; line-height: 1.45; color: var(--mk-ink-2); }
@@ -132,19 +131,15 @@ button.mk-w2-save { display: inline-flex; align-items: center; gap: 6px; min-hei
 
 /* ── What stands in the way, and waiting ── */
 .mk-w2-plain { margin: 0; font-size: 17px; line-height: 1.5; color: var(--mk-ink); }
-.mk-w2-skel { display: flex; flex-direction: column; gap: 12px; }
-.mk-w2-skel span { height: 92px; border-radius: var(--mk-r-card); background: linear-gradient(100deg, var(--mk-well) 30%, var(--mk-line) 50%, var(--mk-well) 70%); background-size: 300% 100%; animation: mk-w2-wait 1.4s ease-in-out infinite; }
-@keyframes mk-w2-wait { from { background-position: 100% 0; } to { background-position: 0 0; } }
+/* (waiting is market.css .mk-skel) */
 
 /* ── My listings, and the drafts to carry on with ── */
 .mk-w2-mine { max-width: 1040px; margin-inline: auto; }
-.mk-w2-mine-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
 .mk-w2-drafts { display: flex; flex-direction: column; gap: 14px; }
 .mk-w2-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 0; padding: 0; list-style: none; }
 .mk-w2-item { gap: 12px; padding: 14px; overflow: visible; }
 .mk-w2-item-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
 .mk-w2-msgs { min-height: 44px; margin-block: -8px; }
-.mk-w2-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: var(--mk-green); color: var(--mk-paper); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .mk-w2-item-top { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 44px; color: var(--mk-ink) !important; text-decoration: none; }
 a.mk-w2-item-top:hover .mk-w2-item-title { text-decoration: underline; }
 .mk-w2-thumb { flex: none; width: 76px; border-radius: var(--mk-r-ctl); }
@@ -168,11 +163,12 @@ a.mk-w2-item-top:hover .mk-w2-item-title { text-decoration: underline; }
 .mk-pop .mk-w2-money input { min-height: 52px; font-size: 18px; }
 .mk-w2-soldform .mk-field { margin-block-end: 4px; }
 .mk-pop .mk-w2-about { font-weight: 700; color: var(--mk-ink); overflow-wrap: anywhere; }
-/* what a refusal says inside a pop-up keeps its own colour and weight there */
-.mk-pop .mk-w2-poperr { margin-block: 10px 0; color: var(--mk-red); font-size: 14px; }
+/* what a refusal says inside a pop-up (market.css .mk-pop .mk-err), a little under what it is about */
+.mk-pop .mk-err.mk-w2-poperr { margin-block: 10px 0; }
 .mk-pop .mk-w2-due { margin: 4px 0 2px; font-size: 34px; font-weight: 700; line-height: 1.1; color: var(--mk-ink); }
 .mk-pop .mk-w2-of { margin: 0 0 14px; color: var(--mk-ink-3); }
 .mk-pop .mk-w2-how { margin: 0; padding: 12px 14px; border-radius: var(--mk-r-ctl); background: var(--mk-well); color: var(--mk-ink); white-space: pre-line; }
+.mk-pop .mk-w2-poprules { margin-block-start: 8px; }
 
 @media (min-width: 480px) {
   .mk-w2-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -191,7 +187,7 @@ a.mk-w2-item-top:hover .mk-w2-item-title { text-decoration: underline; }
   .mk-w2-mine .mk-w2-list { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mk-w2-spin, .mk-w2-skel span { animation: none; }
+  .mk-w2-spin { animation: none; }
   .mk-w2-tile, .mk-w2-bar span { transition: none; }
   .mk-w2-lift { transform: none; }
 }

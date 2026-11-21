@@ -10,6 +10,7 @@ import MkIcon from "../MkIcon";
 import MkPhoto from "../MkPhoto";
 import ReportButton from "../ReportButton";
 import SellerTag from "../SellerTag";
+import RulesLink from "../w4/RulesLink";
 import type { MkWords } from "../Market.text";
 import type { W1Words } from "../w1.text";
 import Crumbs from "./Crumbs";
@@ -101,10 +102,12 @@ export default function ListingView({ l, cats, locale, t, w, signedIn, companyWa
                 </p>
               )}
               {contact("mk-btn-wide")}
-              <p className="mk-w1-acts">
+              {/* a box, not a paragraph: Report draws its pop-up (a heading, a form) in place */}
+              <div className="mk-w1-acts">
                 <ShareButton path={listingHref(l.id)} title={l.title} />
                 {!l.mine && stage !== "private" && <ReportButton target="listing" refId={l.id} signedIn={signedIn} reported={l.reported === true} />}
-              </p>
+                <RulesLink t={t} anchor="safety" />
+              </div>
             </div>
 
             <section className="mk-box mk-w1-seller" aria-label={w.seller}>

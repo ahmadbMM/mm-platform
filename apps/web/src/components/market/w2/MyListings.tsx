@@ -15,6 +15,7 @@ import MkPhoto from "../MkPhoto";
 import MkSignIn from "../MkSignIn";
 import { T as M, mkErrorText } from "../Market.text";
 import { T } from "../w2.text";
+import RulesLink from "../w4/RulesLink";
 import ConfirmDelete from "./ConfirmDelete";
 import ShareButton from "./ShareButton";
 import { w2Get, w2Post } from "./api";
@@ -121,7 +122,7 @@ export default function MyListings({ locale, items, error, how, now }: MyListing
     setPop(null);
   }
 
-  if (loading) return <div className="mk-w2-skel" role="status" aria-busy="true"><span /><span /><span /></div>;
+  if (loading) return <div className="mk-skel" role="status" aria-busy="true"><span /><span /><span /></div>;
   if (!list) {
     if (why?.error === "signin") return <MkSignIn locale={locale} />;
     const absent = why?.error === "absent";
@@ -188,7 +189,7 @@ export default function MyListings({ locale, items, error, how, now }: MyListing
                 {l.threads > 0 && l.status !== "held" && l.status !== "hidden" && (
                   <Link className="mk-link mk-w2-msgs" href={MK_INBOX}>
                     <MkIcon name="chat" size={16} />{m.messages}
-                    {l.unread > 0 && <><span className="mk-w2-badge" aria-hidden="true">{l.unread}</span><span className="mm-sr">{m.unread(l.unread)}</span></>}
+                    {l.unread > 0 && <><span className="mk-n" aria-hidden="true">{l.unread}</span><span className="mm-sr">{m.unread(l.unread)}</span></>}
                   </Link>
                 )}
               </div>
@@ -242,6 +243,7 @@ export default function MyListings({ locale, items, error, how, now }: MyListing
           <p className="mk-w2-due"><MkAmt n={pop.c.due} word={t.sar} /></p>
           <p className="mk-w2-of">{m.commissionOf(String(pop.c.pct), mkAmtText(pop.price))}</p>
           {mkPick(locale, pop.c.how_en, pop.c.how_ar).trim() && <p className="mk-w2-how mk-user" dir="auto">{mkPick(locale, pop.c.how_en, pop.c.how_ar)}</p>}
+          <RulesLink t={t} anchor="commission" className="mk-w2-poprules" />
           <div className="mk-pop-acts"><button type="button" className="mk-btn" onClick={() => setPop(null)}>{t.done}</button></div>
         </MkModal>
       )}

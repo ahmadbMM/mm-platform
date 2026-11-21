@@ -95,7 +95,7 @@ export default function FirstMessage({ listingId, title, kind, city, onClose }: 
       {load.state === "loading" && <p className="mk-w3-wait" role="status" aria-busy="true">{w.loading}</p>}
       {load.state === "fail" && (
         <>
-          <p className="mk-err mk-w3-err" role="alert">{mkErrorText(s, mkErrorKey(load.error, load.detail))}</p>
+          <p className="mk-err" role="alert">{mkErrorText(s, mkErrorKey(load.error, load.detail))}</p>
           <div className="mk-pop-acts">
             {load.error === "signin"
               ? <a className="mk-btn" href={signInHref(listingHref(listingId) + MK_CONTACT_HASH)}>{w.account}</a>
@@ -106,7 +106,7 @@ export default function FirstMessage({ listingId, title, kind, city, onClose }: 
       )}
       {load.state === "ready" && refused && (
         <>
-          <p className="mk-err mk-w3-err" role="alert">{mkErrorText(s, refused)}</p>
+          <p className="mk-err" role="alert">{mkErrorText(s, refused)}</p>
           <div className="mk-pop-acts">
             {refused === "birth" && <Link className="mk-btn" href="/account">{w.account}</Link>}
             <button type="button" className="mk-btn2" onClick={onClose}>{s.close}</button>
@@ -116,14 +116,14 @@ export default function FirstMessage({ listingId, title, kind, city, onClose }: 
       {load.state === "ready" && !refused && (
         <form className="mk-w3-first" onSubmit={submit} noValidate>
           {nameModes(load.me.names?.short).length > 1 && (
-            <fieldset className="mk-w3-pick" aria-labelledby={nameId}>
+            <fieldset className="mk-set" aria-labelledby={nameId}>
               <legend id={nameId}>{w.nameLabel}</legend>
-              <div className="mk-w3-pick-row">
-                <label className="mk-w3-opt">
+              <div className="mk-opts">
+                <label className="mk-opt">
                   <input type="radio" name={nameId} checked={mode === "short"} onChange={() => setMode("short")} disabled={busy} />
                   <span className="mk-user" dir="auto">{load.me.names.short}</span>
                 </label>
-                <label className="mk-w3-opt">
+                <label className="mk-opt">
                   <input type="radio" name={nameId} checked={mode === "none"} onChange={() => setMode("none")} disabled={busy} />
                   <span>{w.buyer}</span>
                 </label>
@@ -141,7 +141,7 @@ export default function FirstMessage({ listingId, title, kind, city, onClose }: 
               aria-invalid={err ? true : undefined} aria-describedby={err ? errId : undefined}
               onChange={(e) => { setText(e.target.value); if (err) setErr(""); }} />
           </div>
-          {err && <p id={errId} className="mk-err mk-w3-err" role="alert">{mkErrorText(s, err)}</p>}
+          {err && <p id={errId} className="mk-err" role="alert">{mkErrorText(s, err)}</p>}
           <p className="mk-w3-safety"><MkIcon name="shield" size={18} /><span>{s.safety}</span></p>
           <div className="mk-pop-acts">
             <button type="submit" className="mk-btn" disabled={busy} aria-busy={busy || undefined}><MkIcon name="send" size={18} flip />{w.send}</button>

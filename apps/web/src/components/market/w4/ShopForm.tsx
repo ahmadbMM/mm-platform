@@ -3,18 +3,18 @@
 import { useEffect, useId, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
-import { MK_RULES, mkErrorKey, type MkMe, type MkShopMine } from "@/lib/market/core";
+import { mkErrorKey, type MkMe, type MkShopMine } from "@/lib/market/core";
 import {
   W4_BIRTH_HREF, W4_DRAFT_PREFIX, w4Cities, w4DraftKey, w4DraftRead, w4DraftStale, w4DraftWrite, w4EditFieldsOf, w4FieldsOf, w4FormOf, w4IsLocked,
   w4Issues, w4NeedAgree, w4Said, w4TypeMax, type W4Field, type W4Form, type W4IssueKey, type W4Key,
 } from "@/lib/market/w4";
-import { rulesHref } from "@/lib/market/w4-rules";
 import MkIcon from "../MkIcon";
 import MkPhoto from "../MkPhoto";
 import { T as M, mkErrorText } from "../Market.text";
 import { T } from "../w4.text";
 import { w4Get, w4Post } from "./api";
 import { w4LogoCopies, w4LogoUpload, type W4Copies } from "./logo-client";
+import RulesLink from "./RulesLink";
 
 // A shop's form (W4), drawn in the browser only because it opens from what this browser kept of it.
 //   mode "apply"   the whole application: a new one, or one that is waiting or was not approved, sent (again). What is
@@ -284,8 +284,8 @@ export default function ShopForm({ locale, mode, shop, termsVersion, tag, onDone
               <span>{w.agree}</span>
             </label>
             <p className="mk-w4-links">
-              <Link className="mk-link" href={MK_RULES} target="_blank" rel="noopener">{t.rules}<MkIcon name="next" size={16} flip /></Link>
-              <Link className="mk-link" href={rulesHref("shops")} target="_blank" rel="noopener">{w.agreement}<MkIcon name="next" size={16} flip /></Link>
+              <RulesLink t={t} newTab />
+              <RulesLink t={t} anchor="shops" label={w.agreement} newTab />
             </p>
             {errOf("agreement") && <p className="mk-err" id={`${idOf("agreement")}-err`}>{errOf("agreement")}</p>}
           </div>

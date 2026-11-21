@@ -30,7 +30,7 @@ export default async function MinePage({ params }: { params: Promise<{ locale: s
     <MkFrame locale={locale} at={at}>
       <MkGate locale={locale} session={session}>
         <div className="mk-w2-wrap mk-w2-mine">
-          <div className="mk-w2-mine-head">
+          <div className="mk-head">
             <h1>{t.myListings}</h1>
             <SellLink t={t} />
           </div>

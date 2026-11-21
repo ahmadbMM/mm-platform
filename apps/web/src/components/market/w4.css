@@ -4,18 +4,12 @@
 
 /* ── The two shop pages: one column of boxes under the page's heading ── */
 .mk-w4-wrap { display: flex; flex-direction: column; gap: 20px; }
-.mk .mk-w4-wrap h1 { font-size: clamp(28px, 6.4vw, 40px); letter-spacing: -1px; margin: 0; }
+/* (the heading's size is a task page's, market.css .mk-narrow h1; waiting is market.css .mk-skel) */
+.mk .mk-w4-wrap h1 { margin: 0; }
 .mk-w4-wrap h1:focus { outline: none; }
 .mk .mk-w4-wrap h2 { font-size: 18px; line-height: 1.3; letter-spacing: -.2px; margin: 0; }
-html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk .mk-w4-wrap :is(h1, h2) { letter-spacing: 0; }
-.mk-w4-wrap :is(.mk-btn, .mk-btn2)[aria-busy="true"] { opacity: .6; cursor: progress; }
 .mk-w4-acts { display: flex; flex-wrap: wrap; gap: 10px; }
 .mk-w4-acts > * { flex: 1 1 200px; }
-
-/* waiting for the account's data, or for the form to open in the browser */
-.mk-w4-skel { display: flex; flex-direction: column; gap: 12px; }
-.mk-w4-skel span { height: 96px; border-radius: var(--mk-r-card); background: linear-gradient(100deg, var(--mk-well) 30%, var(--mk-line) 50%, var(--mk-well) 70%); background-size: 300% 100%; animation: mk-w4-wait 1.4s ease-in-out infinite; }
-@keyframes mk-w4-wait { from { background-position: 100% 0; } to { background-position: 0 0; } }
 
 /* ── The application's state: a mark, a chip, one sentence, staff's reason ── */
 .mk-w4-state { gap: 18px; }
@@ -133,9 +127,6 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk .mk
   .mk-w4-rules-cols { grid-template-columns: 300px minmax(0, 720px); gap: 64px; align-items: start; }
   .mk-w4-toc { position: sticky; inset-block-start: 76px; max-height: calc(100vh - 100px); overflow-y: auto; }
   .mk-w4-toc ol { grid-template-columns: minmax(0, 1fr); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .mk-w4-skel span { animation: none; }
 }
 /* the shop's two names sit with the page, whichever alphabet each is written in */
 [dir="ltr"] .mk-w4-id-names :is(h2, p) { text-align: left; }

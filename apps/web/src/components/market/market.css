@@ -32,8 +32,19 @@ html:is([lang="ar"], [lang="ur"]) :is(.mk, .mk-backdrop, .mm-site .mk-amt) { fon
 .mk-narrow { max-width: 640px; }
 .mk h1 { font-size: clamp(30px, 5vw, 52px); line-height: 1; letter-spacing: -1.6px; margin: 0 0 20px; text-wrap: balance; }
 .mk h2 { font-size: clamp(20px, 2.4vw, 26px); line-height: 1.15; letter-spacing: -.5px; margin: 0 0 14px; }
-html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk :is(h1, h2) { letter-spacing: 0; line-height: 1.25; }
+/* (Arabic, Urdu, Hindi, Nepali and Bengali headings take the site's own spacing: site.css sets it with !important.) */
+/* a task page's heading - selling, the inbox, a shop's application, My shop: the narrow frame - is a size smaller than
+   a page people browse (the Marketplace, My listings, a shop, the rules) */
+.mk-narrow h1 { font-size: clamp(28px, 6.4vw, 40px); letter-spacing: -1px; }
+/* a page's or a section's heading row: its name at the start, its one action ("Sell an item") at the end */
+.mk-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-block-end: 16px; }
+.mk .mk-head :is(h1, h2) { margin: 0; }
+.mk-head .mk-btn { min-height: 44px; padding-inline: 18px; }
 .mk :is(input, select, textarea, button, a) { -webkit-tap-highlight-color: transparent; }
+/* Every Marketplace control draws its own focus (a green edge with a soft ring; a chip or a tick its own), so the
+   site's outline (site.css, which weighs 0,4,0) is taken off it here: one ring, not two. Links and buttons keep the
+   site's ring; the site's own sign-in form inside a gated page keeps its own look. */
+.mm-site .mk-page :is(input, select, textarea):not(.mk-signin *):focus-visible { outline: none; }
 /* what people wrote, in its own direction; prices and sizes left to right */
 .mk-user { unicode-bidi: plaintext; overflow-wrap: anywhere; }
 .mk-amt { white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -58,6 +69,8 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk :is
 .mk-btn-red:hover:not(:disabled) { border-color: var(--mk-red); background: var(--mk-red-soft); }
 :is(.mk-btn, .mk-btn2):active:not(:disabled) { transform: scale(.98); }
 :is(.mk-btn, .mk-btn2):disabled { opacity: .45; cursor: default; }
+/* a request on its way from this button */
+:is(.mk-btn, .mk-btn2)[aria-busy="true"] { opacity: .6; cursor: progress; }
 .mk-btn-wide { width: 100%; }
 /* a text button or link: an action that is not the page's main one */
 .mk-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--mk-green) !important; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
@@ -74,11 +87,25 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk :is
 .mk-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--mk-ctl); background: #fff; color: var(--mk-ink) !important; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
 .mk-chip:hover { background: var(--mk-well); }
 .mk-chip:is([aria-pressed="true"], [aria-current="true"], [aria-current="page"]) { background: var(--mk-ink); border-color: var(--mk-ink); color: var(--mk-paper) !important; }
+/* while a row of chips scrolls (a phone), the site's focus ring is drawn inside a chip: outside it, the row cuts it off */
+@media (max-width: 599px) { .mm-site .mk-page .mk-chips :is(a, button):focus-visible { outline-offset: -4px; } }
+/* one choice of a few, drawn as a chip (a radio button under it: the filters' condition, how a buyer is named) */
+.mk-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.mk-opt { position: relative; display: inline-flex; max-width: 100%; cursor: pointer; }
+.mk-opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.mk-opt span { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; box-sizing: border-box; padding: 0 16px; border: 1px solid var(--mk-ctl); border-radius: 999px; background: #fff; color: var(--mk-ink); font-size: 14px; font-weight: 600; transition: background-color .2s ease, border-color .2s ease; }
+.mk-opt:hover span { background: var(--mk-well); }
+.mk-opt input:checked + span { background: var(--mk-ink); border-color: var(--mk-ink); color: var(--mk-paper); }
+.mk-opt input:focus-visible + span { border-color: var(--mk-green); box-shadow: 0 0 0 3px var(--mk-green-soft); }
+/* a small count on a button or a link (the filters set, a card's unread messages) */
+.mk-n { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--mk-green); color: var(--mk-paper); font-size: 12px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 
 /* ── A field: its label above its control ── */
 .mk-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .mk-field > label, .mk-field > .mk-label { font-size: 13px; font-weight: 700; color: var(--mk-ink-2); }
-.mk-field :is(input:not([type="checkbox"], [type="radio"]), select, textarea) { box-sizing: border-box; width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--mk-ctl); border-radius: var(--mk-r-ctl); background: #fff; color: var(--mk-ink); font: inherit; font-size: 16px; transition: border-color .2s ease, box-shadow .2s ease; }
+/* the box every typed field shares. Its weight is kept to one class and one element (:where), so the picker's and the
+   text area's own rules just under it, and each page's own sizes, are not painted over */
+.mk-field :is(input:where(:not([type="checkbox"], [type="radio"])), select, textarea) { box-sizing: border-box; width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--mk-ctl); border-radius: var(--mk-r-ctl); background: #fff; color: var(--mk-ink); font: inherit; font-size: 16px; transition: border-color .2s ease, box-shadow .2s ease; }
 .mk-field textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
 .mk-field select { appearance: none; -webkit-appearance: none; padding-inline-end: 40px; background: #fff var(--mk-chev) no-repeat right 16px center; text-overflow: ellipsis; cursor: pointer; }
 [dir="rtl"] .mk-field select { background-position: left 16px center; }
@@ -92,8 +119,20 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk :is
 .mk-check input { appearance: none; -webkit-appearance: none; flex: none; width: 22px; height: 22px; margin: 1px 0 0; border: 1px solid var(--mk-ctl); border-radius: 6px; background: #fff; cursor: pointer; }
 .mk-check input:checked { background: var(--mk-green) var(--mk-tick) no-repeat center; border-color: var(--mk-green); }
 .mk-check input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--mk-green-soft); }
+/* a round choice with its words beside it (a condition with its meaning, a report's reason) */
+.mk-radio { appearance: none; -webkit-appearance: none; flex: none; box-sizing: border-box; width: 22px; height: 22px; margin: 0; border: 1px solid var(--mk-ctl); border-radius: 50%; background: #fff; cursor: pointer; }
+.mk-radio:checked { border: 7px solid var(--mk-green); }
+.mk-radio:focus-visible { box-shadow: 0 0 0 3px var(--mk-green-soft); }
+/* a group of choices under one name */
+.mk-set { min-width: 0; margin: 0; padding: 0; border: 0; }
+.mk-set > legend { padding: 0; margin-block-end: 8px; font-size: 13px; font-weight: 700; color: var(--mk-ink-2); }
 /* what a refusal says, under the form or in the pop-up */
 .mk-err { margin: 0; color: var(--mk-red); font-size: 14px; font-weight: 600; }
+
+/* ── Waiting: grey blocks where the content will be ── */
+.mk-skel { display: flex; flex-direction: column; gap: 12px; }
+.mk-skel span { height: 96px; border-radius: var(--mk-r-card); background: linear-gradient(100deg, var(--mk-well) 30%, var(--mk-line) 50%, var(--mk-well) 70%); background-size: 300% 100%; animation: mk-wait 1.4s ease-in-out infinite; }
+@keyframes mk-wait { from { background-position: 100% 0; } to { background-position: 0 0; } }
 
 /* ── Tags: who is selling, and "Checked by our team" ── */
 .mk-tags { display: inline-flex; flex-wrap: wrap; gap: 6px; }
@@ -126,6 +165,8 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk :is
 .mk-pop-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-block-end: 12px; }
 .mk-pop-title { flex: 1; min-width: 0; margin: 0; font-size: 20px; font-weight: 700; line-height: 1.25; letter-spacing: 0; }
 .mk-pop p { margin: 0 0 12px; font-size: 15px; line-height: 1.5; color: var(--mk-ink-2); }
+/* a refusal in a pop-up keeps its own colour and weight (the rule above weighs more than one class) */
+.mk-pop .mk-err { margin: 0; color: var(--mk-red); font-size: 14px; font-weight: 600; }
 .mk-pop-acts { display: flex; flex-wrap: wrap; gap: 10px; margin-block-start: 20px; }
 .mk-pop-acts > * { flex: 1 1 140px; }
 
@@ -135,4 +176,8 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mk :is
 }
 @media (min-width: 1000px) {
   .mk { padding-inline: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-opt span { transition: none; }
+  .mk-skel span { animation: none; }
 }

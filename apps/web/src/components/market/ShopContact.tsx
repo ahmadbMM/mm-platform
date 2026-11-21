@@ -77,7 +77,7 @@ export default function ShopContact({ slug, name, signedIn, mapUrl, className = 
           {(load.state === "loading" || load.state === "idle") && <p className="mk-w3-wait" role="status" aria-busy="true">{w.loading}</p>}
           {load.state === "fail" && (
             <>
-              <p className="mk-err mk-w3-err" role="alert">{mkErrorText(s, mkErrorKey(load.error, load.detail))}</p>
+              <p className="mk-err" role="alert">{mkErrorText(s, mkErrorKey(load.error, load.detail))}</p>
               <div className="mk-pop-acts">
                 {load.error === "signin"
                   ? <a className="mk-btn" href={signIn}>{w.account}</a>

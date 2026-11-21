@@ -75,7 +75,7 @@ export default function ShopView({ shop, cats, filters, list, fail, locale, t, w
       </div>
 
       <section className="mk-w1-shop-items" aria-label={w.shopItems}>
-        <div className="mk-w1-head">
+        <div className="mk-head">
           <h2>{w.shopItems}</h2>
           <SellLink t={t} variant="link" />
         </div>

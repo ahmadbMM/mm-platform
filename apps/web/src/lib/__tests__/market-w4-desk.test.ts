@@ -39,7 +39,7 @@ const shop = (over: Partial<MkShopMine> = {}): MkShopMine => ({
   ...over,
 });
 const desk = (p: Partial<ShopDeskProps>) => render(createElement(ShopDesk, { page: "apply", locale: "en", me: me(), shop: null, error: null, tag: "ab".repeat(12), ...p }));
-const FORM_PLACE = "mk-w4-skel"; // where the form opens once the browser has it
+const FORM_PLACE = "mk-skel"; // where the form opens once the browser has it
 // the page's words as its markup writes them (an apostrophe is written as a character reference)
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 const written = <O extends Record<string, unknown>>(o: O): O =>

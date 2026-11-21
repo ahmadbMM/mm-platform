@@ -18,6 +18,7 @@ import MkModal from "../MkModal";
 import MkPhoto from "../MkPhoto";
 import ReportButton from "../ReportButton";
 import SellerTag from "../SellerTag";
+import RulesLink from "../w4/RulesLink";
 import { T as S, mkErrorText } from "../Market.text";
 import { T } from "../w3.text";
 import { useFocusAfter } from "./focus";
@@ -300,6 +301,7 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
           ? <button type="button" className="mk-link" onClick={() => void block(false)} disabled={busy === "block"}><MkIcon name="block" size={16} />{w.unblock}</button>
           : <button type="button" className="mk-link" onClick={() => { setPopErr(""); setPop("block"); }} aria-haspopup="dialog"><MkIcon name="block" size={16} />{w.block}</button>}
         <ReportButton target="thread" refId={id} signedIn reported={thread.reported} />
+        <RulesLink t={s} anchor="safety" />
       </div>
 
       {pop === "phone" && (
@@ -315,7 +317,7 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
         <MkModal title={w.shareWa} onClose={() => setPop("")} busy={busy === "share"}>
           <p>{w.shareWaBody}</p>
           <p className="mk-w3-safety"><MkIcon name="shield" size={18} /><span>{s.safety}</span></p>
-          {popErr && <p className="mk-err mk-w3-err" role="alert">{mkErrorText(s, popErr)}</p>}
+          {popErr && <p className="mk-err" role="alert">{mkErrorText(s, popErr)}</p>}
           <div className="mk-pop-acts">
             <button type="button" className="mk-btn" onClick={() => void share()} disabled={busy === "share"} aria-busy={busy === "share" || undefined}><MkIcon name="whatsapp" size={18} />{w.share}</button>
             <button type="button" className="mk-btn2" onClick={() => setPop("")} disabled={busy === "share"}>{s.cancel}</button>
@@ -325,7 +327,7 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
       {pop === "block" && (
         <MkModal title={w.blockTitle} onClose={() => setPop("")} busy={busy === "block"}>
           <p>{w.blockBody}</p>
-          {popErr && <p className="mk-err mk-w3-err" role="alert">{mkErrorText(s, popErr)}</p>}
+          {popErr && <p className="mk-err" role="alert">{mkErrorText(s, popErr)}</p>}
           <div className="mk-pop-acts">
             <button type="button" className="mk-btn2 mk-btn-red" onClick={() => void block(true)} disabled={busy === "block"} aria-busy={busy === "block" || undefined}><MkIcon name="block" size={18} />{w.block}</button>
             <button type="button" className="mk-btn2" onClick={() => setPop("")} disabled={busy === "block"}>{s.cancel}</button>

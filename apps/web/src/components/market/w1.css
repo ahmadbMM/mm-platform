@@ -5,10 +5,7 @@
    writes it. Nothing is pinned to the bottom of the screen; what stays in view while a page scrolls (the Filters
    panel, a listing's price column) stays under the header. Every tap target is 44px or more. */
 
-/* ── A page's heading row: its name, and "Sell an item" ── */
-.mk-w1-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-block-end: 16px; }
-.mk .mk-w1-head :is(h1, h2) { margin: 0; }
-.mk-w1-head .mk-btn { min-height: 44px; padding-inline: 18px; }
+/* (A page's heading row, its name and "Sell an item", is market.css .mk-head.) */
 
 /* ── The keyword search ── */
 .mk-w1-search { position: relative; display: flex; gap: 8px; margin-block-end: 14px; }
@@ -32,14 +29,8 @@
 /* the city, the order, Filters and "Clear all": two to a row on a phone, one row beside the sellers from 900px */
 .mk-w1-picks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: center; }
 .mk-w1-picks .mk-field :is(select) { min-height: 44px; padding-block: 8px; border-radius: 999px; font-size: 15px; font-weight: 600; }
-/* a picker shows its arrow, and keeps its words clear of it. market.css draws it (.mk-field select), but its rule for
-   every field weighs more and paints over it, so this builder's pickers (the city, the order, the product type) say it
-   again with weight to spare. The arrow sits at the end of the box: the right, and the left on a right-to-left page. */
-.mk :is(.mk-w1-picks, .mk-w1-form) .mk-field select { padding-inline-end: 40px; background: #fff var(--mk-chev) no-repeat right 16px center; }
-[dir="rtl"] .mk :is(.mk-w1-picks, .mk-w1-form) .mk-field select { background-position: left 16px center; }
 .mk-w1-fbtn { min-height: 44px; padding-inline: 18px; }
 .mk-w1-fbtn[aria-expanded="true"] { border-color: var(--mk-ink); }
-.mk-w1-n { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--mk-green); color: var(--mk-paper); font-size: 12px; font-weight: 700; line-height: 1; }
 .mk-w1-clear { justify-self: start; padding-inline: 6px; }
 
 /* ── The grid, and the Filters panel beside it on a wide screen ── */
@@ -85,15 +76,7 @@
 
 /* ── The further filters: one form, in the pop-up on a phone and in the side panel on a wide screen ── */
 .mk-w1-form { display: flex; flex-direction: column; gap: 18px; }
-.mk-w1-set { min-width: 0; margin: 0; padding: 0; border: 0; }
-.mk-w1-set > legend { margin-block-end: 8px; padding: 0; font-size: 13px; font-weight: 700; color: var(--mk-ink-2); }
-.mk-w1-opts { display: flex; flex-wrap: wrap; gap: 8px; }
-.mk-w1-opt { position: relative; display: inline-flex; cursor: pointer; }
-.mk-w1-opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
-.mk-w1-opt span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--mk-ctl); border-radius: 999px; background: #fff; color: var(--mk-ink); font-size: 14px; font-weight: 600; transition: background-color .2s ease, border-color .2s ease; }
-.mk-w1-opt:hover span { background: var(--mk-well); }
-.mk-w1-opt input:checked + span { background: var(--mk-ink); border-color: var(--mk-ink); color: var(--mk-paper); }
-.mk-w1-opt input:focus-visible + span { border-color: var(--mk-green); box-shadow: 0 0 0 3px var(--mk-green-soft); }
+/* (its groups and their chips are market.css .mk-set, .mk-opts and .mk-opt) */
 .mk-w1-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .mk-w1-form-acts { display: flex; flex-wrap: wrap; gap: 10px; margin-block-start: 4px; }
 .mk-w1-form-acts > * { flex: 1 1 120px; padding-inline: 14px; }
@@ -228,7 +211,7 @@
 .mk-w1-shop-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 24px; margin-block-end: 40px; }
 .mk-w1-shop-facts { gap: 4px; padding: 20px 22px; border-radius: var(--mk-r-card); }
 .mk .mk-w1-shop-facts h2 { margin: 0; font-size: 18px; letter-spacing: -.2px; }
-.mk-w1-shop-items .mk-w1-head { margin-block-end: 14px; }
+.mk-w1-shop-items .mk-head { margin-block-end: 14px; }
 
 @media (min-width: 600px) {
   .mk-w1-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
@@ -271,7 +254,7 @@
   .mk-w1-side { position: sticky; inset-block-start: 76px; max-height: calc(100vh - 100px); overflow-y: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mk-w1-card, .mk-w1-results, .mk-w1-gal-dots i, .mk-w1-view-stage img, .mk-w1-opt span { transition: none; }
+  .mk-w1-card, .mk-w1-results, .mk-w1-gal-dots i, .mk-w1-view-stage img { transition: none; }
   .mk-w1-card:hover { transform: none; }
   .mk-w1-gal-track { scroll-behavior: auto; }
 }
