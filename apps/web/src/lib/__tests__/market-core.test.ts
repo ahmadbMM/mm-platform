@@ -327,7 +327,9 @@ describe("photos", () => {
     for (const n of [`l12/${hex}.png`, `x12/${hex}.jpg`, `l12/${hex}.w480.jpg`, `l12/../${hex}.jpg`, `l/${hex}.jpg`, `l12/${hex.toUpperCase()}.jpg`, "", null]) expect(isMkPhotoName(n), String(n)).toBe(false);
     expect(isMkMediaPath("/media/market/ex-rental-road-1.jpg")).toBe(true);
     expect(isMkMediaPath("/media/market/2026/bike.webp")).toBe(true);
-    for (const n of ["/media/catalog/a.jpg", "/media/market/a.svg", "/media/market/../site/a.jpg", "https://x/media/market/a.jpg"]) expect(isMkMediaPath(n), n).toBe(false);
+    // the staging seed's demo listings show catalogue photos
+    expect(isMkMediaPath("/media/bikes/a.jpg")).toBe(true);
+    for (const n of ["/media/market/a.svg", "/media/market/../site/a.jpg", "/media/../x.jpg", "/media/", "/mediax/a.jpg", "https://x/media/market/a.jpg", "//x/media/a.jpg"]) expect(isMkMediaPath(n), n).toBe(false);
   });
   it("are shown from the site's own address, the small copy on a card", () => {
     expect(mkSmallName(`l12/${hex}.jpg`)).toBe(`l12/${hex}.w480.jpg`);

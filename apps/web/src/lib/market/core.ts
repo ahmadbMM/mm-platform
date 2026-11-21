@@ -506,8 +506,11 @@ export function mkHasPhone(v: string): boolean {
 
 /** A photo in the marketplace's own bucket: l<listing>/<32 hex>.jpg|webp, or a shop's logo s<shop>/<32 hex>.jpg|webp. */
 export const MK_PHOTO_NAME = /^[ls][0-9]{1,12}\/[0-9a-f]{32}\.(?:jpg|webp)$/;
-/** A photo staff uploaded for one of MicroMobility's own listings: a path of the site's media (/media/market/...). */
-export const MK_MEDIA_PATH = /^\/media\/market\/[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*\.(?:jpe?g|png|webp)$/;
+/** A photo of the site's own media (SPEC: "a /media/... path"): what staff upload for MicroMobility's own listings
+ *  (/media/market/..., which the database's staff_market_company_save holds them to) and the catalogue photos the
+ *  staging seed's demo listings use (/media/bikes/... and the like). It is only ever drawn: a customer's listing takes the
+ *  marketplace bucket's names alone (the database and the selling routes refuse anything else). */
+export const MK_MEDIA_PATH = /^\/media\/[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*\.(?:jpe?g|png|webp)$/;
 export const isMkPhotoName = (v: unknown): v is string => typeof v === "string" && MK_PHOTO_NAME.test(v);
 export const isMkMediaPath = (v: unknown): v is string => typeof v === "string" && MK_MEDIA_PATH.test(v) && !v.includes("..");
 /** The small copy's name beside a photo: l12/<hex>.jpg -> l12/<hex>.w480.jpg. */
