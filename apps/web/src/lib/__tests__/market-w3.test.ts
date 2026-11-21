@@ -452,20 +452,16 @@ describe("the contact routes", () => {
     expect((await threadGet(get("/api/market/thread/get?id=3", null))).status).toBe(401);
     expect((await threadList(get("/api/market/thread/list", null))).status).toBe(401);
   });
-  it("share a WhatsApp number without ever taking one from the browser, and take it back with p_on false", async () => {
+  it("share a WhatsApp number without ever taking one from the browser, with the contract's three arguments only", async () => {
     answer = () => json({ shared: true });
     expect(await body(await waPost(post("/api/market/thread/whatsapp", { thread: 3, number: "966500000000" })))).toEqual({ ok: true, shared: true });
     expect(calls[0]).toEqual({ fn: "market_share_whatsapp", args: { p_id: "c1", p_token: "a".repeat(32), p_thread: 3 } });
-    answer = () => json({ shared: false });
-    expect(await body(await waPost(post("/api/market/thread/whatsapp", { thread: 3, on: false })))).toEqual({ ok: true, shared: false });
-    expect(calls[1]).toEqual({ fn: "market_share_whatsapp", args: { p_id: "c1", p_token: "a".repeat(32), p_thread: 3, p_on: false } });
-    expect((await waPost(post("/api/market/thread/whatsapp", { thread: 3, on: "no" }))).status).toBe(400);
+    // there is no way back (the database's function takes no p_on): an `on` in the body is not passed on
+    expect(await body(await waPost(post("/api/market/thread/whatsapp", { thread: 3, on: false })))).toEqual({ ok: true, shared: true });
+    expect(calls[1]).toEqual({ fn: "market_share_whatsapp", args: { p_id: "c1", p_token: "a".repeat(32), p_thread: 3 } });
     expect((await waPost(post("/api/market/thread/whatsapp", {}))).status).toBe(400);
   });
-  it("say a database that cannot take a number back yet is absent, and a new account's refusal as it is", async () => {
-    answer = () => json({ code: "PGRST202", message: "Could not find the function public.market_share_whatsapp(p_id, p_on, p_thread, p_token) in the schema cache" }, 404);
-    const r = await waPost(post("/api/market/thread/whatsapp", { thread: 3, on: false }));
-    expect(await body(r)).toEqual({ ok: false, error: "absent" });
+  it("say a new account's refusal as it is", async () => {
     answer = () => json({ code: "P0001", message: "MKT_NEW" }, 400);
     expect(await body(await waPost(post("/api/market/thread/whatsapp", { thread: 3 })))).toEqual({ ok: false, error: "new" });
   });

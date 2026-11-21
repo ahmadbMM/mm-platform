@@ -55,7 +55,6 @@ export const T = {
     shareWaBody: "The other person will see a WhatsApp button that opens a chat with the mobile number on your account.",
     share: "Share",
     waShared: "Your WhatsApp number is shared in this conversation.",
-    waStop: "Stop sharing",
     waOpen: "Chat on WhatsApp",
     waHello: (title: string) => `Hello, I am writing about "${title}" on the MicroMobility Marketplace.`,
     // block
@@ -130,7 +129,6 @@ export const T = {
     shareWaBody: "سيظهر للطرف الآخر زر واتساب يفتح محادثة مع رقم الجوال المسجّل في حسابك.",
     share: "مشاركة",
     waShared: "رقمك على واتساب مُشارَك في هذه المحادثة.",
-    waStop: "إيقاف المشاركة",
     waOpen: "محادثة عبر واتساب",
     waHello: (title: string) => `مرحباً، أكتب إليك بخصوص «${title}» في سوق MicroMobility.`,
     block: "حظر",

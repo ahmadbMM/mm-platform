@@ -34,7 +34,8 @@ import "../w3.css";
 //   (a link) go back in the box with the reason; a phone number opens the centred notice that points at "Share my
 //   WhatsApp"; a cap is said in words.
 //   "Share my WhatsApp" is offered only when the thread says it may be (the other person has replied and the account
-//   is allowed to), is confirmed in a centred pop-up with the one safety sentence, and can be taken back.
+//   is allowed to) and is confirmed in a centred pop-up with the one safety sentence; once shared, the number stays on
+//   the thread (the contract's market_share_whatsapp has no way back), which the sharer is told in one line.
 //   Block is confirmed in a centred pop-up; only the one who blocked is told there is a block, and may lift it.
 //   Report opens the report pop-up for this conversation.
 export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt: InboxFmt }) {
@@ -50,7 +51,7 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
   const [err, setErr] = useState("");
   const [pop, setPop] = useState<"" | "share" | "block" | "phone">("");
   const [popErr, setPopErr] = useState("");
-  const [busy, setBusy] = useState<"" | "older" | "share" | "unshare" | "block">("");
+  const [busy, setBusy] = useState<"" | "older" | "share" | "block">("");
   const chat = useRef<HTMLElement>(null);
   const log = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
@@ -170,7 +171,7 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
     void deliver(item);
   }
 
-  /* ---- Share my WhatsApp, and taking it back ---- */
+  /* ---- Share my WhatsApp ---- */
   async function share() {
     setBusy("share");
     setPopErr("");
@@ -179,16 +180,6 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
     if (!r.ok) { setPopErr(mkErrorKey(r.error, r.detail)); return; }
     setThread((t) => ({ ...t, my_wa_shared: true, can_share_wa: false }));
     setPop("");
-    void refresh();
-  }
-  async function unshare() {
-    setBusy("unshare");
-    setErr("");
-    const r = await mkPost<{ shared: boolean }>("/api/market/thread/whatsapp", { thread: id, on: false });
-    setBusy("");
-    // a database that cannot take a number back yet says so as "absent": to the reader it simply could not be done
-    if (!r.ok) { setErr(r.error === "absent" ? "generic" : mkErrorKey(r.error, r.detail)); return; }
-    setThread((t) => ({ ...t, my_wa_shared: false }));
     void refresh();
   }
 
@@ -302,7 +293,6 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
       {thread.my_wa_shared && (
         <p className="mk-w3-shared">
           <span><MkIcon name="whatsapp" size={16} />{w.waShared}</span>
-          <button type="button" className="mk-link" onClick={() => void unshare()} disabled={busy === "unshare"} aria-busy={busy === "unshare" || undefined}>{w.waStop}</button>
         </p>
       )}
       <div className="mk-w3-acts">
