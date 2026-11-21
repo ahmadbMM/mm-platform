@@ -17,6 +17,9 @@ async function jccSession(page: Page): Promise<string | null> {
 }
 
 test("the confirmation's ticket cancels with a reason and edits its party, on the website", async ({ page }) => {
+  // staging: staging keeps its own booking flow (BookingFlow), whose confirmation draws the ticket without its
+  // changes (TicketCard's manage is false there); main's Experiences confirmation is not on staging.
+  test.skip(true, "staging: main's Experiences confirmation is not on staging");
   const id = await jccSession(page);
   test.skip(!id, "no upcoming circuit night");
   const date = /^\d{4}-\d{2}-\d{2}/.exec(id!)?.[0] ?? "2099-03-01";
