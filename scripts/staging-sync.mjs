@@ -73,7 +73,13 @@ const SOFT_GONE = {
 const IGNORE = new Set(["updated_at", "updated_by", "created_at"]);
 const ignored = (t, k) => IGNORE.has(k) && !(t.created && k === "created_at");
 const PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club", "about", "events", "gallery", "routes", "journal", "account", "terms", "bikes"];
-const STAGING_OVERRIDES = { "site.coming_soon": false, ...Object.fromEntries(PAGES.map((p) => [`page.${p}.visible`, true])) };
+// marketplace.purge_url: the address the database's nightly job asks to remove let-go photos; staging's database must
+// ask staging's website, never live's (live's purge removes live's files).
+const STAGING_OVERRIDES = {
+  "site.coming_soon": false,
+  "marketplace.purge_url": "https://staging.micromobility.sa/api/market/purge",
+  ...Object.fromEntries(PAGES.map((p) => [`page.${p}.visible`, true])),
+};
 // Staging's own settings, never copied from live nor removed (2026-11-10): online payments are tried on staging first
 // (pay.*), and the store is open there (store.open) while live keeps it shut. Every other store.* setting is kept by
 // staff in the live staff app since 2026-11-19 and copied here like the rest - once live has any (storeFromLive, set
@@ -81,7 +87,9 @@ const STAGING_OVERRIDES = { "site.coming_soon": false, ...Object.fromEntries(PAG
 // The Marketplace's switch (marketplace.on) is staging's own too (2026-11-20): it is looked at on staging while live
 // keeps it off. Every other marketplace.* setting is staff's, kept in the live staff app, and copied like the rest.
 let storeFromLive = false;
-const STAGING_OWN = (key) => /^pay\./.test(key) || key === "store.open" || key === "marketplace.on" || (!storeFromLive && /^store\./.test(key));
+// marketplace.blocked_words is not readable with live's public key (rentals 20261121300000), so it is staging's own
+// as well: otherwise every run would remove staging's row.
+const STAGING_OWN = (key) => /^pay\./.test(key) || key === "store.open" || key === "marketplace.on" || key === "marketplace.blocked_words" || (!storeFromLive && /^store\./.test(key));
 
 const prodH = { apikey: PROD_ANON_KEY, Authorization: `Bearer ${PROD_ANON_KEY}` };
 const stgH = { apikey: STAGING_SERVICE_KEY, Authorization: `Bearer ${STAGING_SERVICE_KEY}` };
@@ -204,7 +212,7 @@ for (const t of TABLES) {
     summary.push(`${t.name}: not on staging, skipped`);
     continue;
   }
-  if (t.name === "site_content") stg = stg.filter((r) => !STAGING_OWN(r.key)); // staging's own keys (pay., store., marketplace.on): never written over, never removed
+  if (t.name === "site_content") stg = stg.filter((r) => !STAGING_OWN(r.key)); // staging's own keys (pay., store., marketplace.on, marketplace.blocked_words): never written over, never removed
   const refs = REFS[t.name] || [];
   const own = new Set([...stg, ...prod].map((r) => idOf(t, r))); // a parent in the same table: written in the same upsert, first
   const shown = [], left = [];
