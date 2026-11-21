@@ -148,10 +148,6 @@ export const mkBlock = (s: Session, thread: number, on: boolean, req?: Request) 
 
 /* ------------------------------------------------------------------ photos in the marketplace's own bucket */
 
-const storage = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return url && key ? { url, key } : null;
-};
 /** The storage's own secret key (a Worker secret, never a NEXT_PUBLIC_ one): the website is the only writer to the
  *  `market` bucket, so a photo is stored only after the photo route has read its type from its first bytes, refused
  *  GPS, stripped its metadata and paired its two copies. The bucket has no insert policy for the public key. */
@@ -186,20 +182,24 @@ export async function mkStorePut(name: string, bytes: Uint8Array<ArrayBuffer>, t
 }
 
 /** The photos the database no longer wants (a seller took one off a listing; a listing deleted 30 days ago or expired
- *  60 days ago) are removed from the storage here, with the public key: the bucket lets go only of a name the
- *  database marked (market_purge_take lists them; the database sees for itself which are gone). Both copies of each
- *  go. Answers how many names were sent for removal; 0 when there was nothing to do or the database has no marketplace. */
+ *  60 days ago) are removed from the storage here, with the storage's secret key (writer above): market_purge_take is
+ *  the service key's alone, and the bucket has no remove policy for the public key. Both copies of each go. Answers how
+ *  many names were sent for removal; 0 when there was nothing to do, no key is set or the database has no marketplace. */
 export async function purgeMarketPhotos(max = 100): Promise<number> {
-  const st = storage();
+  const st = writer();
   if (!st) return 0;
-  const r = await call<{ names: string[] }>("market_purge_take", { p_max: max }, { shape: hasList("names"), timeout: 8000 });
-  if (!r.ok) return 0;
-  const names = r.data.names.filter(isMkPhotoName);
-  if (!names.length) return 0;
+  const auth = { apikey: st.key, Authorization: `Bearer ${st.key}`, "content-type": "application/json" };
   try {
+    const take = await fetch(`${st.url}/rest/v1/rpc/market_purge_take`, {
+      method: "POST", headers: auth, body: JSON.stringify({ p_max: max }), signal: AbortSignal.timeout(8000),
+    });
+    if (!take.ok) return 0;
+    const data: unknown = await take.json();
+    if (!hasList("names")(data)) return 0;
+    const names = ((data as { names: unknown[] }).names).filter((n): n is string => typeof n === "string" && isMkPhotoName(n));
+    if (!names.length) return 0;
     const res = await fetch(`${st.url}/storage/v1/object/market`, {
-      method: "DELETE",
-      headers: { apikey: st.key, Authorization: `Bearer ${st.key}`, "content-type": "application/json" },
+      method: "DELETE", headers: auth,
       body: JSON.stringify({ prefixes: names.flatMap((n) => [n, mkSmallName(n)]) }), signal: AbortSignal.timeout(15_000),
     });
     return res.ok ? names.length : 0;

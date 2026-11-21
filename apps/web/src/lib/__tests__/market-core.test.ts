@@ -518,10 +518,23 @@ describe("the database calls", () => {
     expect(await mkStorePut(`l4/${hex}.jpg`, bytes, "image/jpeg")).toBe(false);
     expect(calls.length).toBe(2);
   });
-  it("remove from the storage only the photos the database named, both copies of each", async () => {
+  it("remove from the storage only the photos the database named, both copies of each, with the storage's secret key", async () => {
     const hex = "0123456789abcdef0123456789abcdef";
+    // without the secret key nothing is asked or removed
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+    stub(() => json({ names: [`l4/${hex}.jpg`] }));
+    expect(await purgeMarketPhotos()).toBe(0);
+    expect(calls.length).toBe(0);
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service");
+    const auths: string[] = [];
     stub((c) => (c.url.includes("/rpc/market_purge_take") ? json({ names: [`l4/${hex}.jpg`, "not/a/name.jpg"] }) : json([])));
+    const recorded = vi.mocked(fetch);
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      auths.push(new Headers(init?.headers).get("authorization") ?? "");
+      return recorded(url, init);
+    }));
     expect(await purgeMarketPhotos()).toBe(1);
+    expect(auths).toEqual(["Bearer service", "Bearer service"]);
     expect(calls[1]).toMatchObject({ url: "https://example.supabase.co/storage/v1/object/market", method: "DELETE", body: { prefixes: [`l4/${hex}.jpg`, `l4/${hex}.w480.jpg`] } });
     stub(() => json({ names: [] }));
     expect(await purgeMarketPhotos()).toBe(0);
