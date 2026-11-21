@@ -457,7 +457,8 @@ describe("closing the account (L13)", () => {
   const src = (p: string) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), "utf8");
   it("is in My Account: the existing deletion request, asked in a centred confirmation", () => {
     const pageSrc = src("../../app/[locale]/account/[[...part]]/page.tsx");
-    expect(pageSrc).toMatch(/<DeleteAccount locale=\{locale\} requestedAt=\{extras\.deletion\.requestedAt\} \/>/);
+    // staging: since main's account menu (2026-11-19) the request is its own page, Delete my account (AccDelete)
+    expect(pageSrc).toMatch(/<AccDelete w=\{w\} locale=\{locale\} requestedAt=\{del\.at\} \/>/);
     const del = src("../../components/account/DeleteAccount.tsx");
     expect(del).toContain('"/api/account/deletion"');
     expect(del).toContain("showModal()"); // a modal <dialog>, centred (account.css: margin auto)

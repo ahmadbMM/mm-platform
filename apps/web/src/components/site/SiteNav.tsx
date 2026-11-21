@@ -12,6 +12,7 @@ import SavedLink from "@/components/store/SavedLink";
 import { cartCount } from "@/lib/cart";
 import { fill } from "@/i18n/tx";
 import "./sx-B1-nav.css";
+import { bookingsWord } from "@/components/site/Bookings.words";
 
 type NavProps = {
   locale: string;
@@ -42,6 +43,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
   const community = COMMUNITY.pages.map(byKey).filter((l): l is NavLink => !!l);
   // The account page, once staff switch it on; until then the booking app's own account.
   const accountHref = hidden.includes("account") ? bookingLink(booking, locale) : null;
+  const bookingsHref = accountHref ? (() => { try { const u = new URL(booking); u.searchParams.set("tab", "bookings"); return bookingLink(u.toString(), locale); } catch { return accountHref; } })() : null;
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState(false);
@@ -147,6 +149,15 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
             )}
           </div>
           {(() => {
+            // Bookings (/bookings, 2026-11-19): a ticket beside the account, as the booking app's header has; while the
+            // account page is off, the booking app's own Bookings tab
+            const ticket = <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.6 7.6A1.6 1.6 0 0 1 5.2 6h13.6a1.6 1.6 0 0 1 1.6 1.6V10a2 2 0 0 0 0 4v2.4a1.6 1.6 0 0 1-1.6 1.6H5.2a1.6 1.6 0 0 1-1.6-1.6V14a2 2 0 0 0 0-4zM14.4 6.6v1.6M14.4 11.2v1.6M14.4 15.8v1.6" /></svg>;
+            const label = bookingsWord(locale);
+            return bookingsHref
+              ? <a href={bookingsHref} className="mm-nav-icon mm-nav-tk" title={label} aria-label={label}>{ticket}</a>
+              : <Link href="/bookings" className="mm-nav-icon mm-nav-tk" title={label} aria-label={label} aria-current={path === "/bookings" ? "page" : undefined}>{ticket}</Link>;
+          })()}
+          {(() => {
             const icon = <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M5 20c1.4-3.6 4.4-5.4 7-5.4s5.6 1.8 7 5.4" /></svg>;
             const label = tx("Account", "الحساب");
             return accountHref
@@ -179,6 +190,9 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
               </div>
             );
           })}
+          {bookingsHref
+            ? <a href={bookingsHref}>{bookingsWord(locale)}{arrow}</a>
+            : <Link href="/bookings" onClick={() => setOpen(false)}>{bookingsWord(locale)}{arrow}</Link>}
           {accountHref
             ? <a href={accountHref}>{tx("Account", "الحساب")}{arrow}</a>
             : <Link href="/account" onClick={() => setOpen(false)}>{tx("Account", "الحساب")}{arrow}</Link>}

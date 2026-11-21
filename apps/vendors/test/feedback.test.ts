@@ -45,11 +45,12 @@ describe("feedback window", () => {
 });
 
 describe("feedback words", () => {
-  it("names each rating, in both languages with Western digits", () => {
+  it("names each rating, in every language with Western digits", () => {
     expect(ratingText("en", 1)).toBe("1 – Poor");
     expect(ratingText("en", 5)).toBe("5 – Excellent");
     expect(ratingText("ar", 4)).toBe(STRINGS.ar.fbRate4);
     expect(ratingText("ar", 4)).toMatch(/^4 /);
+    expect(ratingText("ms", 4)).toBe("4 – Sangat baik");
     expect(ratingText("en", 9)).toBe("9");
   });
 

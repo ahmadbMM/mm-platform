@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
-import PageShell, { navFrom } from "@/components/site/PageShell";
+import PageShell from "@/components/site/PageShell";
 import SignIn from "@/components/account/SignIn";
 import { passkeysShown } from "@/lib/sx-B7-passkey-server";
-import HandoffLink from "@/components/account/HandoffLink";
 import LiveMap from "@/components/live/LiveMap";
 import "@/components/account/account.css";
 import "@/components/live/live.css";
@@ -14,7 +13,7 @@ import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { getAccount } from "@/lib/account";
 import { asLocale, resolvePage } from "@/lib/content";
-import { bookingLink, localHref } from "@/lib/links";
+import { localHref } from "@/lib/links";
 import { SESSION_ID } from "@/lib/live";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
@@ -46,8 +45,6 @@ export default async function LivePage({ params, searchParams }: { params: Promi
 
   if (!acct) {
     const c = resolvePage(accountSchema, content, L);
-    const app = navFrom(site).booking;
-    const handoff = (auth?: string) => bookingLink(`${app.replace(/[?#].*$/, "")}?handoff=site${auth ? `&auth=${auth}` : ""}`, locale);
     return (
       <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
         <div className="ac">
@@ -56,11 +53,8 @@ export default async function LivePage({ params, searchParams }: { params: Promi
             <p className="ac-eyebrow">{title}</p>
             <h1>{S(c.signin.title)}</h1>
             <p className="ac-text">{tx("Sign in with your Micromobility account to see where your ride is.", "سجّل الدخول بحساب مايكروموبيليتي لترى أين وصلت جولتك.")}</p>
+            {/* Create account and Forgot password are the sign-in's own, on this site (the user, 2026-11-19) */}
             <SignIn locale={locale} passkeys={passkeysShown(content)} />
-            <ul className="ac-notes">
-              <li><HandoffLink href={handoff("signup")}>{S(c.signin.create)}</HandoffLink></li>
-              <li><HandoffLink href={handoff("forgot")}>{S(c.signin.forgot)}</HandoffLink></li>
-            </ul>
           </section>
         </div>
       </PageShell>

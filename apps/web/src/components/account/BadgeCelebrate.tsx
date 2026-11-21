@@ -1,83 +1,105 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useLocalize } from "@/i18n/TxProvider";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { onBackdrop } from "@/lib/backdrop";
+import { pickCheer, type Cheer, type CheerStore } from "@/lib/badge-cheer";
+import { TickIcon } from "@/components/site/Icons";
 import Medal from "./Medal";
-import { T } from "./Account.text";
+import { ratingFinWords } from "./RatingFin.words";
+import { BDG_ASKED } from "./quiet";
 
-// A badge just earned pops up once (the booking app's _bdgCelebrate and _bdgProfCheer), and only while it IS new
-// (BDG_FRESH_MS, the booking app's 2026-11-09 fix): the newest one staff gave in the last three days, since this device
-// last showed one; else National Day 96 within three days of its ride, or Race Ready when a save on this site filled
-// the profile's last field (a profile that arrives full is not news). Remembered per account in this browser only, so
-// without the three days every badge a rider already held popped as "New badge!" on a new phone or browser, and again
-// after Safari wiped the site's storage. With no storage it never pops rather than popping on every visit. Each
-// candidate is drawn as a closed pop-up; the one due is opened, centred, on the page's first paint.
-export type Cheer = { slug: string; icon: string; color: string; name: string; how: string; about: string;
-  /** A badge staff gave: when (ISO); null for Race Ready and National Day 96. */
-  at: string | null;
-  /** A badge the site works out itself: the day it was earned (National Day 96: its ride's), when it has one. */
-  day?: string | null };
+// My Account's new-badge pop-up (the booking app's _bdgCelebrate, _bdgProfCheer and, for a Community badge, _plsCheer;
+// lib/badge-cheer.ts has the rules): once the account page is on screen, /api/account/badge-new says which earned badges
+// may be new, and the one due opens centred, once on this device - "New badge!", the medal, its name, what it means, how
+// it is earned, and for one staff gave their note and the day; Close. A Community badge has Community and Done and is
+// marked seen on the server. Asked once in five minutes in this tab, and again as soon as a Save fills the profile:
+// `short` is the profile short of full as the page was drawn; drawn again full after a Save, Race Ready may pop up.
+// It waits while another pop-up (the rating, a waiver...) holds the page.
+type Answer = { ok?: boolean; who?: string; rode?: number | null; pulse?: boolean; community?: Cheer | null; seen?: string[]; items?: Cheer[]; close?: string };
+const ASK_GAP = 5 * 60_000;
+const SHORT = "mm_bdg_prof_short";
 
-const FRESH_MS = 3 * 864e5;
-const fresh = (s: string | null | undefined) => { const v = Date.parse(s || ""); return Number.isFinite(v) && Date.now() - v < FRESH_MS; };
-
-// A save on My Account made while the profile was short of full (ProfileForm), for the account that made it: Race Ready,
-// if that save filled it, pops up the next time the badges are drawn (the booking app's _bdgProfNew). This tab only.
-const FILLED = "mm_bdg_prof_save";
-export function profileSaved(accountId: string): void {
-  try { window.sessionStorage.setItem(FILLED, accountId); } catch { /* storage off: no pop */ }
-}
-
-const store = {
-  get(k: string): string | null { try { return window.localStorage.getItem(k); } catch { return null; } },
-  set(k: string, v: string): boolean { try { window.localStorage.setItem(k, v); return true; } catch { return false; } },
+const store: CheerStore = {
+  get(k) { try { return window.localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { window.localStorage.setItem(k, v); return true; } catch { return false; } },
 };
+const ss = {
+  get(k: string) { try { return window.sessionStorage.getItem(k); } catch { return null; } },
+  set(k: string, v: string) { try { window.sessionStorage.setItem(k, v); } catch { /* storage off */ } },
+  del(k: string) { try { window.sessionStorage.removeItem(k); } catch { /* storage off */ } },
+};
+// One ask at a time: a page drawn twice at once (or an effect run twice in development) shares it.
+let asking: Promise<Answer | null> | null = null;
+function ask(locale: string): Promise<Answer | null> {
+  asking ??= fetch(`/api/account/badge-new?locale=${encodeURIComponent(locale)}`, { cache: "no-store", credentials: "same-origin" })
+    .then((r) => (r.ok ? (r.json() as Promise<Answer>) : null)).catch(() => null)
+    .finally(() => { setTimeout(() => { asking = null; }, 0); });
+  return asking;
+}
+/** Another pop-up holds the page (the rating and the other gates make the page inert; a dialog is open). */
+const held = () => document.documentElement.classList.contains("rg-lock") || !!document.querySelector(".rg-gate, dialog[open]");
 
-export default function BadgeCelebrate({ accountId, items }: { accountId: string; items: Cheer[] }) {
-  const t = useLocalize(T);
-  const refs = useRef<(HTMLDialogElement | null)[]>([]);
+export default function BadgeCelebrate({ locale, short }: { locale: string; short: boolean }) {
+  const path = usePathname();
+  const dlg = useRef<HTMLDialogElement>(null);
+  const [show, setShow] = useState<{ c: Cheer; close: string; comm: boolean } | null>(null);
+  const fw = ratingFinWords(locale);
+
   useEffect(() => {
-    const at = (s: string | null) => (s ? Date.parse(s) || 0 : 0);
-    let pick = -1;
-    const given = items.map((x, i) => [x, i] as const).filter(([x]) => x.at).sort((a, b) => at(b[0].at) - at(a[0].at))[0];
-    if (given && fresh(given[0].at)) {
-      const k = `mm_bdg_seen_${accountId}`;
-      if (at(given[0].at) > (Number(store.get(k)) || 0) && store.set(k, String(at(given[0].at)))) pick = given[1];
-    }
-    if (pick < 0) {
-      let saved = false;
-      try { saved = window.sessionStorage.getItem(FILLED) === accountId; } catch { /* storage off */ }
-      for (const [x, i] of items.map((x, i) => [x, i] as const)) {
-        if (x.at) continue;
-        if (x.slug === "complete_profile") {
-          if (!saved) continue;
-          try { window.sessionStorage.removeItem(FILLED); } catch { /* storage off */ }
-        } else if (!fresh(x.day)) continue;
-        const k = `mm_bdg_cheer_${x.slug}_${accountId}`;
-        if (store.get(k)) continue;
-        if (store.set(k, "1")) pick = i;
-        break;
-      }
-    }
-    const d = pick >= 0 ? refs.current[pick] : null;
-    if (d && !d.open && typeof d.showModal === "function") d.showModal();
-  }, [accountId, items]);
-  if (!items.length) return null;
+    // the profile short of full in this tab: a later drawing of it full is this rider's own save (Race Ready)
+    const filled = !short && ss.get(SHORT) === "1";
+    if (short) ss.set(SHORT, "1");
+    if (!filled && Number(ss.get(BDG_ASKED) || 0) > Date.now()) return;
+    let live = true, wait: ReturnType<typeof setTimeout> | undefined;
+    void ask(locale).then((a) => {
+      if (!live) return;
+      if (!a?.ok || !a.who) return; // no answer: the next page asks again
+      ss.set(BDG_ASKED, String(Date.now() + ASK_GAP));
+      if (filled) ss.del(SHORT);
+      const close = a.close || "Close";
+      const open = () => {
+        if (!live) return;
+        if (held()) { wait = setTimeout(open, 1500); return; }
+        if (a.community) {
+          setShow({ c: a.community, close, comm: true });
+          void fetch("/api/account/badge-new", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ seen: a.seen ?? [] }) }).catch(() => null);
+          return;
+        }
+        const c = pickCheer(a.items ?? [], { who: a.who!, store, rode: a.rode ?? null, filled, pulse: !!a.pulse });
+        if (c) setShow({ c, close, comm: false });
+      };
+      open();
+    });
+    return () => { live = false; clearTimeout(wait); };
+  }, [short, path, locale]);
+
+  useEffect(() => { if (show && dlg.current && !dlg.current.open) dlg.current.showModal(); }, [show]);
+  if (!show) return null;
+  const { c } = show;
+  const sp = ["special", "national", "pink", "vlap", "defe", "volunteer", "farm"].includes(c.color);
+  const done = () => dlg.current?.close();
   return (
-    <>
-      {items.map((x, i) => (
-        <dialog key={x.slug} ref={(el) => { refs.current[i] = el; }} className={`badge-pop-box${x.color === "special" || x.color === "national" ? ` special sp-${x.color}` : ""}`}
-          aria-label={x.name} onClick={(e) => { if (e.target === e.currentTarget) e.currentTarget.close(); }}>
-          <div className="badge-pop-in">
-            <p className="badge-pop-new">{t.newBadge}</p>
-            <Medal icon={x.icon} color={x.color} className="badge-pop-ic" />
-            <p className="badge-pop-nm">{x.name}</p>
-            {x.about && <p className="badge-pop-about">{x.about}</p>}
-            {x.how && <p className="badge-pop-d">{x.how}</p>}
-            <form method="dialog"><button type="submit" className="badge-pop-close">{t.close}</button></form>
+    <dialog ref={dlg} className={`badge-pop-box bdg-new${sp ? ` special sp-${c.color}` : ""}`} aria-labelledby="bdg-new-nm"
+      onClose={() => setShow(null)} onClick={(e) => { if (onBackdrop(e)) done(); }}>
+      <div className="badge-pop-in">
+        <p className="badge-pop-new">{fw.badge}</p>
+        <Medal icon={c.icon} color={c.color} className="badge-pop-ic" />
+        <p className="badge-pop-nm" id="bdg-new-nm">{c.name}</p>
+        {c.about && <p className="badge-pop-about">{c.about}</p>}
+        {c.how && <p className="badge-pop-d">{c.how}</p>}
+        {c.given?.note && <p className="badge-pop-note"><bdi>{c.given.note}</bdi></p>}
+        {c.given && <p className="badge-pop-earned"><TickIcon size={15} /> {c.given.line}</p>}
+        {show.comm ? (
+          <div className="bdg-new-acts">
+            <Link href="/club#challenges" className="badge-pop-ask bdg-new-go" onClick={done}>{fw.community}</Link>
+            <button type="button" className="badge-pop-close" onClick={done}>{fw.done}</button>
           </div>
-        </dialog>
-      ))}
-    </>
+        ) : (
+          <button type="button" className="badge-pop-close" onClick={done} autoFocus>{show.close}</button>
+        )}
+      </div>
+    </dialog>
   );
 }

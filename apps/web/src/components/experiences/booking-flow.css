@@ -1,0 +1,355 @@
+/* The booking steps on micromobility.sa (components/experiences/BookingFlow.tsx), from staging's experiences.css and
+   sx-B6.css. The bar under each step stays in the page: never fixed to the bottom of the screen (the owner: no bottom bars). */
+.bk-ic { flex: none; vertical-align: -3px; }
+html[dir="rtl"] .bk-ic-flip { transform: scaleX(-1); }
+/* EM10-B (2026-11-18): the steps beside a 380px summary card that sticks under the header; the grid follows the page's
+   direction, so in Arabic and Urdu the card stands on the left */
+.bk-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
+.bk-main { min-width: 0; }
+.bk-head { margin-bottom: 18px; }
+.bk-title { font-size: 26px; font-weight: 700; letter-spacing: -.5px; line-height: 1.15; margin: 0; color: #1a1919; }
+html:is([lang="ar"], [lang="ur"]) .bk-title { letter-spacing: 0; line-height: 1.35; }
+.bk-sub { font-size: 15px; color: #4a4843; line-height: 1.5; margin: 4px 0 0; }
+.bk-sub.sm { font-size: 13px; margin: 0 0 12px; }
+.bk-evnote { font-size: 13.5px; color: #4a4843; line-height: 1.55; margin: 0 0 14px; }
+/* the stepper: numbered circles, a drawn tick on the steps done, only the current one named */
+.bk-stepper { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.bk-step-wrap { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.bk-step-wrap:last-child { flex: 0 1 auto; min-width: 28px; } /* its name is cut short too rather than run off a phone; its circle stays whole */
+.bk-step { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.bk-step-c { width: 28px; height: 28px; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; background: #fff; color: #6e6b63; border: 1px solid rgba(26, 25, 25, .24); box-sizing: border-box; }
+.bk-step-c.on { background: #1a1919; color: #fbf9f4; border-color: #1a1919; }
+.bk-step-lbl { font-size: 13px; font-weight: 700; color: #1a1919; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk-step-ln { flex: 1 1 auto; min-width: 10px; height: 1px; background: rgba(26, 25, 25, .24); }
+.bk-step-ln.on { background: #1a1919; }
+
+.bk-card { background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
+.bk-h3 { font-size: 17px; font-weight: 700; margin: 0 0 2px; }
+.bk-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+/* The bar under each step (the Reserve page research, 2026-11-10, row 12): Back and the step's button on every step, a short
+   summary between them (the date picked and Waitlist on a full one, row 1; the party's total once every rider has a type,
+   row 9). An error heads it and the pay line closes it. On a phone it is fixed to the bottom of the screen, the booking's
+   one floating bar, and the page keeps a focused field and its own last lines clear of it (row 7: scroll-padding equal to
+   the bar, --bk-foot-h, measured by BookingFlow, plus the safe area). */
+.bk-foot .bk-err { order: -1; }
+.bk-foot-sum { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 12.5px; line-height: 1.3; color: #4a4843; }
+.bk-foot-k { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-foot-v { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; color: #1a1919; font-variant-numeric: tabular-nums; }
+.bk-foot-sum.tot .bk-foot-v .tk-amt { font-size: 17px; }
+.bk-wl-chip { display: inline-flex; align-items: center; margin-inline-start: 8px; padding: 1px 8px; border-radius: 999px; background: rgba(163, 59, 46, .1); color: #a33b2e; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.bk-foot-v .bk-wl-chip { margin-inline-start: 4px; }
+/* A text link that is a button: the promo code's (it opens the field in place, row 10), the empty list's Instagram. */
+.bk-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 700; color: #077a4b; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.bk-link:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; border-radius: 2px; }
+/* The height's unit inside its field, in place of a hint line (the owner, 2026-11-10). */
+.bk-unit-wrap { position: relative; display: flex; align-items: center; }
+.bk-unit-wrap input { flex: 1; min-width: 0; padding-inline-end: 48px !important; }
+.bk-unit { position: absolute; inset-inline-end: 14px; font-size: 14px; font-weight: 600; color: #6e6b63; pointer-events: none; }
+/* The review's Change (row 8): a block's own way back to its step. */
+.bk-change { flex: none; min-height: 44px; min-width: 44px; padding: 0 14px; border: 1px solid rgba(26, 25, 25, .24); border-radius: 999px; background: #fff; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; cursor: pointer; }
+.bk-change:hover { background: #f4f1ea; }
+.bk-rv-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+/* Cancellation terms, a row of its own on a booking paid now (the owner, 2026-11-10), and its pop-up's clause. */
+.bk-termrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 48px; margin-top: 12px; padding: 0 14px; border: 1px solid rgba(26, 25, 25, .14); border-radius: 12px; background: #fff; font: inherit; font-size: 14px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
+.bk-termrow:hover { background: #f4f1ea; }
+.bk-terms { margin: 0 0 14px; padding: 12px 14px; max-height: 46vh; overflow-y: auto; border-radius: 12px; background: #fbf9f4; font-size: 13.5px; line-height: 1.6; color: #2e352f; }
+.bk-terms .bk-h3 { font-size: 15px; margin: 0 0 4px; }
+.bk-terms h4 { margin: 10px 0 4px; font-size: 14px; }
+.bk-terms p { margin: 6px 0; }
+.bk-terms ul { margin: 6px 0; padding-inline-start: 20px; }
+.bk-terms li + li { margin-top: 4px; }
+/* An add-on: the whole row takes it (row 14). */
+.bk-addon { cursor: pointer; }
+.bk-btn, .bk-btn2 { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; font: inherit; font-size: 15px; cursor: pointer; text-decoration: none; box-sizing: border-box; }
+.bk-btn { border: 0; border-radius: 999px; background: #077a4b; color: #fbf9f4 !important; font-weight: 700; }
+.bk-btn:hover { background: #06603b; }
+.bk-btn:disabled { opacity: .45; cursor: default; }
+.bk-btn.wide { width: 100%; }
+.bk-btn.grow { flex: 1 1 200px; }
+.bk-btn2 { border: 1px solid rgba(26, 25, 25, .24); border-radius: 999px; background: #fff; color: #1a1919 !important; font-weight: 600; min-height: 48px; }
+.bk-btn2:hover { background: #f4f1ea; }
+.bk-btn2:disabled { opacity: .45; cursor: default; }
+.bk-spin { width: 16px; height: 16px; border: 2px solid rgba(251, 249, 244, .4); border-top-color: #fbf9f4; border-radius: 50%; animation: bk-spin .8s linear infinite; }
+@keyframes bk-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bk-spin { animation: none; } }
+.bk-note { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #6e6b63; }
+.bk-full { display: flex; align-items: flex-start; gap: 8px; background: #f4f1ea; border: 1px solid rgba(26, 25, 25, .12); border-radius: 10px; padding: 12px 14px; color: #8a5c14; }
+.bk-full-dot { width: 8px; height: 8px; border-radius: 50%; background: #b98a1a; flex: none; margin-top: 6px; }
+.bk-err { flex-basis: 100%; margin: 0; color: #a33b2e; font-size: 14px; font-weight: 600; }
+.bk-warn { margin: 0 0 14px; padding: 12px 14px; border-radius: 10px; background: rgba(185, 138, 26, .1); color: #8a5c14; font-size: 14px; font-weight: 600; }
+.bk-ferr { margin: 6px 0 0; color: #a33b2e; font-size: 13px; font-weight: 600; }
+
+/* riders */
+.bk-qty-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid rgba(26, 25, 25, .12); }
+.bk-qty-k { font-size: 15px; font-weight: 600; }
+.bk-qty-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.bk-qty { display: flex; align-items: center; gap: 12px; }
+.bk-qty button { width: 44px; height: 44px; border-radius: 10px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; color: #1a1919; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.bk-qty button:hover { background: #f4f1ea; }
+.bk-qty > span { min-width: 32px; text-align: center; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bk-capnote { margin: 0; font-size: 12px; font-weight: 700; color: #8a5c14; text-align: end; max-width: 220px; line-height: 1.35; }
+.bk-rider + .bk-rider { border-top: 1px solid rgba(26, 25, 25, .12); padding-top: 16px; margin-top: 4px; }
+.bk-rider-h { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 13px; font-weight: 700; color: #077a4b; }
+.bk-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex: none; border-radius: 50%; background: #1a1919; color: #fbf9f4; font-size: 12px; font-weight: 700; }
+.bk-field { margin-bottom: 16px; }
+.bk-field > label, .bk-label { display: block; font-size: 13px; font-weight: 600; color: #4a4843; margin-bottom: 6px; }
+.bk-hint { font-weight: 400; color: #6e6b63; }
+.bk-field input[type="text"], .bk-field input[type="number"], .bk-field select, .bk-promo input, .bk-dob select {
+  width: 100%; min-height: 48px; box-sizing: border-box; padding: 10px 12px; border: 1px solid rgba(26, 25, 25, .24); border-radius: 10px; background: #fff; color: #1a1919; font: inherit; font-size: 16px; }
+.bk-field input:focus, .bk-field select:focus, .bk-promo input:focus, .bk-dob select:focus { outline: none; border-color: #077a4b; box-shadow: inset 0 0 0 1px #077a4b; }
+.bk-field input[aria-invalid="true"] { border-color: #a33b2e; }
+.bk-types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 480px) { .bk-types { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bk-types.one { grid-template-columns: 1fr; }
+.bk-pick { display: flex; min-width: 0; }
+.bk-pill { flex: 1 1 0; min-width: 0; min-height: 48px; display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 6px; padding: 6px 8px; font: inherit; font-size: 14px; font-weight: 600; color: #1a1919; background: #fff;
+  border: 1px solid rgba(26, 25, 25, .24); border-radius: 10px; cursor: pointer; text-align: center; transition: background .15s, border-color .15s; }
+.bk-pick:not(.solo) .bk-pill { border-start-end-radius: 0; border-end-end-radius: 0; }
+.bk-pill:hover { background: #f4f1ea; }
+/* chosen: the one selection mark of the booking pages, an ink ring and a filled dot, as the chosen date's card (row 17) */
+.bk-pill.on { background: #fff; border-color: #1a1919; box-shadow: inset 0 0 0 1px #1a1919; color: #1a1919; }
+.bk-pill.on::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: #1a1919; }
+.bk-pill-n { overflow-wrap: anywhere; }
+.bk-pill-p { font-size: 13px; font-weight: 500; opacity: .7; font-variant-numeric: tabular-nums; }
+.bk-info { flex: 0 0 40px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: 0; margin-inline-start: -1px; background: #fff; color: #4a4843;
+  border: 1px solid rgba(26, 25, 25, .24); border-radius: 10px; border-start-start-radius: 0; border-end-start-radius: 0; cursor: pointer; }
+.bk-info:hover { color: #1a1919; background: #f4f1ea; }
+.bk-pick.on .bk-info { border-color: #1a1919; color: #1a1919; }
+.bk-hint2 { margin: 8px 0 0; font-size: 12.5px; color: #6e6b63; line-height: 1.5; }
+.bk-pricewrap { margin-top: 4px; }
+.bk-price { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: #f4f1ea; border-radius: 12px; padding: 14px 16px; }
+.bk-price-k { font-size: 13px; color: #4a4843; font-weight: 500; line-height: 1.5; }
+.bk-price-v { font-size: 20px; font-weight: 700; color: #1a1919; font-variant-numeric: tabular-nums; }
+.bk-promo { margin-top: 16px; }
+.bk-promo > label { display: block; font-size: 13px; font-weight: 600; color: #4a4843; margin-bottom: 6px; }
+.bk-promo-row { display: flex; gap: 8px; }
+.bk-promo-row input { flex: 1; min-width: 0; text-transform: uppercase; }
+.bk-promo-row .bk-btn2 { flex: none; padding: 0 16px; }
+.bk-disc { display: flex; justify-content: space-between; gap: 10px; margin: 8px 0 0; font-size: 13px; font-weight: 700; color: #077a4b; }
+
+/* waiver */
+.bk-waiver { background: #fbf9f4; border: 1px solid rgba(26, 25, 25, .12); border-radius: 12px; padding: 16px 18px; max-height: 260px; overflow-y: auto; font-size: 14px; line-height: 1.65; color: #4a4843; }
+.bk-waiver:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.bk-agree { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 14px 16px; min-height: 52px; box-sizing: border-box; border: 1.5px solid rgba(26, 25, 25, .14); border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600; }
+.bk-agree.on { border-color: #077a4b; }
+.bk-agree input { width: 20px; height: 20px; flex: none; accent-color: #077a4b; }
+
+/* review */
+.bk-addon { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid rgba(26, 25, 25, .12); }
+.bk-addon.on { background: rgba(7, 122, 75, .08); }
+.bk-check { width: 24px; height: 24px; flex: none; border-radius: 4px; border: 1.5px solid rgba(26, 25, 25, .3); background: #fff; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; position: relative; }
+.bk-check::after { content: ""; position: absolute; inset: -10px; } /* a 44px target */
+.bk-check.on { background: #077a4b; border-color: #077a4b; }
+.bk-addon-img { width: 52px; height: 52px; flex: none; border-radius: 6px; object-fit: contain; background: #f4f1ea; border: 1px solid rgba(26, 25, 25, .12); }
+.bk-addon-img.sm { width: 40px; height: 40px; }
+.bk-addon-txt { flex: 1; min-width: 0; font-size: 14px; }
+.bk-addon-n { font-weight: 600; }
+.bk-addon-b { color: #6e6b63; font-size: 12px; }
+.bk-addon-q { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.bk-addon-q button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; color: #1a1919; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.bk-addon-q button:disabled { opacity: .4; cursor: default; }
+.bk-addon-q span { min-width: 16px; text-align: center; font-weight: 700; font-size: 14px; }
+.bk-addon-p { flex: none; font-weight: 700; color: #06603b; font-size: 14px; white-space: nowrap; }
+.bk-cat { font-size: 13px; font-weight: 700; color: #4a4843; margin: 14px 0 4px; }
+.bk-k { font-size: 12px; font-weight: 600; color: #6e6b63; margin: 0 0 3px; }
+.bk-sec { margin-top: 16px; }
+.bk-rv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid rgba(26, 25, 25, .12); }
+.bk-rv-head p { margin: 0; }
+.bk-rv-date { font-size: 15px; font-weight: 700; }
+.bk-rv-time { font-size: 13px; color: #4a4843; }
+.bk-rv-by { text-align: end; }
+.bk-rv-rider { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid rgba(26, 25, 25, .12); }
+.bk-rv-mid { flex: 1; min-width: 0; }
+.bk-rv-mid p { margin: 0; }
+.bk-rv-field { margin-bottom: 0; } /* a ticketed event's seat named on the review */
+.bk-rv-field .bk-ferr { margin-top: 4px; }
+.bk-rv-name { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.bk-rv-q { color: #6e6b63; font-weight: 600; }
+.bk-rv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px !important; font-size: 12.5px; color: #4a4843; }
+.bk-rv-price { flex: none; font-size: 14px; font-weight: 700; color: #06603b; white-space: nowrap; }
+.bk-sum-row { display: flex; justify-content: space-between; gap: 10px; margin: 0; padding: 3px 0; font-size: 14px; color: #4a4843; }
+.bk-sum-tot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; font-size: 15px; font-weight: 700; color: #4a4843; }
+.bk-sum-tot.sep { border-top: 1px solid rgba(26, 25, 25, .12); margin-top: 6px; padding-top: 10px; }
+.bk-sum-tot .tk-amt { font-size: 22px; color: #1a1919; font-variant-numeric: tabular-nums; }
+.bk-already { margin-top: 16px; padding: 16px 18px; border-radius: 12px; background: #f4f1ea; border: 1px solid rgba(26, 25, 25, .12); }
+.bk-already-t { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #8a5c14; }
+
+/* the summary beside the steps on a wide screen */
+.bk-side { position: sticky; top: 90px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; padding: 18px 20px; }
+.bk-side p { margin: 0; }
+.bk-side-h { font-size: 15px; font-weight: 700; margin-bottom: 10px !important; }
+.bk-side-k { font-size: 13px; font-weight: 700; color: #077a4b; }
+.bk-side-when { font-size: 13px; color: #4a4843; }
+.bk-side-when strong { color: #077a4b; }
+.bk-side-time { font-size: 17px; font-weight: 700; margin-top: 2px !important; }
+.bk-side-row { display: flex; justify-content: space-between; margin-top: 10px !important; font-size: 13px; color: #4a4843; }
+.bk-side-total { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 12px !important; padding-top: 12px; border-top: 1px solid rgba(26, 25, 25, .12); font-size: 14px; font-weight: 700; }
+.bk-side-total .tk-amt { font-size: 20px; }
+.bk-tickets { margin-top: 6px; }
+
+/* pop-ups: centred on every screen, never a bottom sheet */
+.bk-backdrop { position: fixed; inset: 0; z-index: 10000; background: rgba(26, 25, 25, .5); display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
+.bk-pop { position: relative; width: 100%; max-width: 440px; max-height: calc(100svh - 32px); overflow-y: auto; background: #fff; color: #1a1919; border-radius: 18px; border: 1px solid rgba(26, 25, 25, .12); box-shadow: 0 24px 60px rgba(26, 25, 25, .18); }
+.bk-pop.sheet { max-width: 520px; }
+.bk-pop-body { padding: 20px 22px 22px; }
+.bk-pop-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.bk-pop-head > div { min-width: 0; }
+.bk-pop-title { font-size: 20px; font-weight: 700; line-height: 1.25; margin: 0; flex: 1; }
+.bk-pop-kind { margin: 2px 0 0; font-size: 13px; font-weight: 700; color: var(--ev, #077a4b); }
+.bk-pop-kind.ev-saturday { --ev: #077a4b; }
+.bk-pop-msg { font-size: 14.5px; line-height: 1.6; color: #2e352f; margin: 0 0 12px; }
+.bk-pop-for { font-size: 13.5px; line-height: 1.55; color: #4a4843; margin: 0 0 16px; }
+.bk-pop-for b { color: #1a1919; }
+.bk-pop-foot { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.bk-pop-foot > * { flex: 1 1 140px; }
+.bk-pop-alt { margin: 14px 0 0; text-align: center; font-size: 14px; }
+.bk-pop-alt a { color: #077a4b; font-weight: 700; }
+.bk-x { flex: none; width: 44px; height: 44px; margin: -8px -10px 0 0; border: 0; background: none; color: #4a4843; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 10px; }
+html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
+.bk-x:hover { background: #f4f1ea; color: #1a1919; }
+.bk-lock { width: 32px; height: 32px; flex: none; border-radius: 50%; background: #f4f1ea; display: inline-flex; align-items: center; justify-content: center; color: #1a1919; }
+.bk-kick { margin: 0 0 2px; font-size: 12px; font-weight: 700; color: #077a4b; }
+.bk-level { display: inline-block; margin: 0 0 10px; padding: 3px 10px; border-radius: 999px; background: #f4f1ea; color: #4a4843; font-size: 12px; font-weight: 700; }
+.bk-level.easy { background: rgba(7, 122, 75, .12); color: #077a4b; }
+.bk-sheet-media { aspect-ratio: 16 / 10; background: #f4f1ea; overflow: hidden; border-radius: 18px 18px 0 0; }
+.bk-sheet-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bk-fixlist { margin: 0 0 16px; padding-inline-start: 20px; font-size: 14px; line-height: 1.7; }
+.bk-dob { display: grid; grid-template-columns: 1fr 1.6fr 1.2fr; gap: 8px; }
+.bk-pop .ac-form { margin-top: 4px; }
+.bk-pop .bk-field select { appearance: auto; }
+
+@media (max-width: 899px) {
+  .bk-layout { grid-template-columns: 1fr; }
+  .bk-side { display: none; }
+}
+/* EM10-B: on a tablet the steps stand in one centred column of 560-640px */
+@media (min-width: 600px) and (max-width: 899px) {
+  .bk-layout .bk-main { width: 100%; max-width: 640px; margin-inline: auto; }
+}
+/* A session for the other gender (the owner, 2026-10-27): why it cannot be booked, in place of the button. */
+.xs-refuse { margin: 0; padding: 14px 16px; border-inline-start: 4px solid #7a5a10; background: rgba(122, 90, 16, .08); color: #1a1919; font-weight: 700; font-size: 15px; line-height: 1.5; }
+/* The chip of a session for one gender, or of a pool session (the owner, 2026-10-27), in the summary and on the review. */
+.bk-side .bk-side-sg, .bk-rv-head .bk-rv-sg { margin: 6px 0 0; }
+@media (max-width: 767px) {
+  .xs-event { padding: 20px; gap: 14px; min-height: 104px; }
+  .xs-ev-title { font-size: 20px; }
+  .xs-logo { height: 54px; }
+  .bk-card { padding: 16px 14px; }
+  .bk-title { font-size: 22px; }
+  .bk-step-lbl { max-width: 110px; }
+  .xs .xs-go { width: 100%; }
+  .xs-lbl { font-size: 12.5px; }
+}
+
+/* staging sx-B6.css: the party, the folded riders, the waiver row, the confirmation */
+/* ── The Experiences booking steps, the payment page's booking half and the confirmation (the user, 2026-11-18: "do all";
+   builder B6). The booking's own look: paper #fbf9f4, ink #1a1919 / #4a4843 / #6e6b63, action green #077a4b, hairlines
+   rgba(26,25,25,.12-.24), 10px controls, 14px cards; 44px hit areas; logical properties only. ── */
+
+/* EM04-B: the fixed bar steps aside while the phone's keyboard is up (useKeyboardUp) */
+.bk .bk-foot.fix.kb { display: none; }
+
+/* EF09, EM06-B: the party, adults and children 5+, on the dates step and the riders step */
+.sx6-party { display: flex; flex-direction: column; gap: 4px; margin: 0 0 16px; padding: 6px 16px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; }
+.bk-card .sx6-party { padding: 0 0 12px; margin-bottom: 16px; border: 0; border-bottom: 1px solid rgba(26, 25, 25, .12); border-radius: 0; }
+.sx6-party-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
+.sx6-party-k { font-size: 15px; font-weight: 700; color: #1a1919; }
+
+/* E04: the empty list's Instagram as a button */
+.xs-empty .sx6-ig { margin-top: 12px; }
+
+/* EM07-B: a rider of a party as one row that opens their answers */
+.bk-rider.sx6-fold + .bk-rider.sx6-fold { padding-top: 4px; }
+.sx6-rider-h { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; margin: 0 0 4px; padding: 0; border: 0; background: none; font: inherit; color: #1a1919; text-align: start; cursor: pointer; }
+.sx6-rider-h:focus-visible, .sx6-fold-tog:focus-visible, .sx6-agree-l:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; border-radius: 8px; }
+.sx6-rider-s { flex: 1 1 auto; min-width: 0; font-size: 14.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sx6-chev { flex: none; color: #6e6b63; transition: transform .15s ease; }
+.sx6-chev.on { transform: rotate(90deg); }
+html[dir="rtl"] .sx6-chev { transform: scaleX(-1); }
+html[dir="rtl"] .sx6-chev.on { transform: rotate(90deg); }
+/* rider 1's height from the account, as a fact with Change */
+.sx6-fact { display: flex; align-items: center; gap: 10px; margin: 0; min-height: 44px; font-size: 15px; }
+.sx6-fact-k { color: #4a4843; font-weight: 600; }
+.sx6-fact-v { font-weight: 700; color: #1a1919; }
+.sx6-fact .bk-change { margin-inline-start: auto; }
+
+/* the add-ons and the waiver's title behind their arrow (EM07-B) */
+.sx6-fold-h { margin: 0; }
+.sx6-fold-tog { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0; border: 0; background: none; font: inherit; font-size: 17px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
+.sx6-fold-tog > span:first-child { flex: 1 1 auto; min-width: 0; }
+.sx6-count { flex: none; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: #077a4b; color: #fbf9f4; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; }
+#bk-ad-body { margin-top: 8px; }
+/* the waiver's tick row: the box ticks, its words open the waiver */
+.sx6-agree { cursor: default; }
+.sx6-agree-l { flex: 1 1 auto; min-height: 44px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; line-height: 1.45; color: #1a1919; text-align: start; text-decoration: underline; text-decoration-color: rgba(26, 25, 25, .3); text-underline-offset: 3px; cursor: pointer; }
+.sx6-wv-body { max-height: min(52svh, 420px); overflow-y: auto; margin-bottom: 14px; }
+/* EF14, EF22: fact rows under the total, the key on one line and the fact beside it */
+.bk-sum-row.sx6-row span:first-child { flex: none; white-space: nowrap; }
+.bk-sum-row.sx6-row span:last-child { color: #1a1919; font-weight: 600; text-align: end; }
+
+/* EM09-B: the confirmation */
+.sx6-done-h { display: flex; align-items: center; gap: 10px; }
+.sx6-done-tick { flex: none; width: 32px; height: 32px; border-radius: 50%; background: #077a4b; color: #fbf9f4; display: inline-flex; align-items: center; justify-content: center; }
+.sx6-after { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+.sx6-manage { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sx6-manage .bk-btn2 { flex: 1 1 160px; }
+.sx6-until { flex: 1 1 100%; margin: 0; font-size: 14px; font-weight: 600; color: #1a1919; }
+.sx6-kit-h { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.sx6-kit ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.sx6-kit a { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 6px 12px 6px 6px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 12px; color: #1a1919; text-decoration: none; font-size: 14px; font-weight: 700; }
+html[dir="rtl"] .sx6-kit a { padding: 6px 6px 6px 12px; }
+.sx6-kit a > span:not(.sx6-kit-ph) { flex: 1 1 auto; min-width: 0; }
+.sx6-kit img, .sx6-kit-ph { flex: none; width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: #f4f1ea; display: inline-flex; align-items: center; justify-content: center; color: #6e6b63; }
+@media (min-width: 768px) {
+  .sx6-done { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 320px); gap: 24px; align-items: start; }
+  .sx6-done .sx6-after { margin-top: 0; }
+}
+/* the official Wallet artwork, as a button no smaller than the others (Google's brand rules) */
+.sx6-wallet { align-items: flex-start; }
+.sx6-badge { display: inline-flex; align-items: center; min-height: 48px; padding: 2px 0; border: 0; background: none; cursor: pointer; }
+.sx6-badge img { display: block; height: 44px; width: auto; }
+.sx6-badge:disabled { opacity: .6; cursor: default; }
+.sx6-badge:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; border-radius: 10px; }
+/* EF34: "In 3 days" beside the date */
+.tk-dw.sx6-soon { white-space: nowrap; }
+
+/* the pop-ups this build adds (gift, packs) */
+.sx6-pop { max-height: 90svh; }
+.sx6-ta { width: 100%; box-sizing: border-box; min-height: 88px; padding: 10px 12px; border: 1px solid rgba(26, 25, 25, .24); border-radius: 10px; font: inherit; font-size: 16px; color: #1a1919; background: #fff; resize: vertical; }
+.sx6-ta:focus { outline: none; border-color: #077a4b; box-shadow: inset 0 0 0 1px #077a4b; }
+.sx6-link { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid rgba(26, 25, 25, .12); border-radius: 10px; background: #fbf9f4; font-size: 14px; word-break: break-all; }
+
+/* EF21: the packs on the dates step, EF20: a gift's own line */
+.sx6-packs { margin: 16px 0 0; padding: 14px 16px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; }
+.sx6-packs h3 { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.sx6-pack { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+.sx6-pack + .sx6-pack { border-top: 1px solid rgba(26, 25, 25, .12); }
+.sx6-pack-t { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; font-size: 14px; font-weight: 700; }
+.sx6-pack-t small { font-size: 13px; font-weight: 600; color: #4a4843; }
+.sx6-pack .bk-btn2 { flex: none; min-height: 44px; padding: 0 16px; }
+.sx6-use { margin: 8px 0 0; }
+
+@media (hover: hover) {
+  .sx6-kit a:hover { border-color: rgba(26, 25, 25, .24); background: #f4f1ea; }
+  .sx6-rider-h:hover .sx6-rider-s, .sx6-fold-tog:hover > span:first-child { color: #077a4b; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sx6-chev { transition: none; }
+}
+
+/* EF20: a gift's link opened on Experiences, above the booking */
+.sx6-gift { margin: 0 0 16px; padding: 14px 16px; background: #fff; border: 1px solid rgba(7, 122, 75, .35); border-radius: 14px; }
+.sx6-gift p { margin: 0; }
+.sx6-gift-h { font-size: 15px; font-weight: 700; color: #077a4b; }
+.sx6-gift-n { margin-top: 4px !important; font-size: 14px; line-height: 1.5; color: #1a1919; white-space: pre-line; }
+
+/* Each step's title takes the focus as the step opens (a screen reader reads where it is): a heading is not a control, so
+   no ring is drawn around it. */
+.bk [data-step-title]:focus { outline: none; }
+
+/* A bike type whose own places are taken: Full where its price would be, dimmed, never picked (the booking app's tp-shut). */
+.bk-pill.shut { opacity: .55; cursor: not-allowed; }
+.bk-pill.shut .bk-pill-p { color: #a33b2e; font-weight: 700; }
+
+/* The locker's card on the review stays mounted (it reads the session's offer) but shows only where lockers are offered. */
+.bk-card.bk-lk-none { display: none; }

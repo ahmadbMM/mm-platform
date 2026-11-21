@@ -7,7 +7,6 @@ import { intlOf } from "@/i18n/locales";
 import { APPLE_RELAY, fixItems, nameTyped, normPhone, splitPhone, type FixField } from "@/lib/account-profile";
 import { BOOKING_URL } from "@/lib/links";
 import { T } from "./Account.text";
-import { profileSaved } from "./BadgeCelebrate";
 import { CitySelect, CountrySelect, DobPicker, PhoneInput, postJson, uploadPhoto, useNatOptions } from "./fields";
 
 // What staff asked the rider to correct (customer_fix_fields), and what the server asks for itself
@@ -20,7 +19,7 @@ import { CitySelect, CountrySelect, DobPicker, PhoneInput, postJson, uploadPhoto
 // they are asked.
 type Was = { name: string; email: string; phone: string; birth_date: string | null; gender: string | null; nationality: string | null; country: string | null; city: string | null; height: number | null };
 
-export default function FixRequest({ locale, fields: initial, more: moreAtFirst = false, fillingFor = null, was }: {
+export default function FixRequest({ locale, fields: initial, more: moreAtFirst = false, was }: {
   locale: string; fields: FixField[]; more?: boolean; was: Was;
   /** The account, while its profile is short of full: a save here may fill it (Race Ready, ProfileForm's fillingFor). */
   fillingFor?: string | null;
@@ -99,7 +98,6 @@ export default function FixRequest({ locale, fields: initial, more: moreAtFirst 
     setBusy(false);
     if (b.ok) {
       const left = (b.left ?? []) as FixField[];
-      if (fillingFor) profileSaved(fillingFor);
       if (typeof b.more === "boolean") setMore(b.more);
       if (!left.length) { setDone(true); router.refresh(); return; }
       setFields(left);

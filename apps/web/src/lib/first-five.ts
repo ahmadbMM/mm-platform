@@ -30,3 +30,15 @@ export function firstFive(rows: Row[], ratedId: string, sessions: Map<string, Re
   const n = recordNights(all, sessions).length;
   return n > 0 && n < P5 ? { n, tg: P5, book: ticketGroups(rows, today).length === 0 } : null;
 }
+
+/** The path on /club's members' area (the booking app's _p5Tab, lent to member-hub.js's Community tab): a member with
+ *  fewer than five rides ridden sees it in the place of the month's challenge, from no ride at all, until the fifth. A
+ *  member who has not ridden but has finished a session without a bike (the pool, yoga, a run) keeps the month's
+ *  challenge, which counts those sessions; the path never would. Null: the challenge stays. */
+export function firstFiveTab(rows: Row[], sessions: Map<string, RecordSession>): { n: number; tg: number } | null {
+  const all = rows.map(ticketRow).filter((r): r is TicketRow => !!r);
+  const n = recordNights(all, sessions).length;
+  if (n >= P5) return null;
+  if (!n && recordNights(all, sessions, true).length > 0) return null;
+  return { n, tg: P5 };
+}

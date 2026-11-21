@@ -91,6 +91,43 @@ const NOTICE: Record<Lang, Notice> = {
     ],
     back: "العودة إلى البوابة",
   },
+  ms: {
+    title: "Notis privasi untuk log masuk premis",
+    draft: "Draf: notis ini sedang menunggu kelulusan MicroMobility dan mungkin berubah.",
+    intro: "MicroMobility mengendalikan portal ini supaya kafe dan restoran boleh menjadi tuan rumah sarapan selepas Kayuhan Sosial Sabtu kami. Notis ini menerangkan data peribadi yang disimpan oleh portal tentang orang yang log masuk bagi pihak premis, sebabnya, tempoh ia disimpan, dan hak anda di bawah Undang-Undang Perlindungan Data Peribadi (PDPL) Arab Saudi.",
+    sections: [
+      { title: "Apa yang kami simpan", items: [
+        "Orang hubungan premis: nama, nombor telefon bimbit dan e-mel, seperti yang dimasukkan oleh premis atau MicroMobility.",
+        "Akaun log masuk anda: e-mel atau nombor telefon bimbit anda, nama anda, peranan anda (pemilik, pengurus atau pemerhati), sama ada akaun log masuk itu aktif, dan bila anda kali terakhir log masuk. Kata laluan anda disimpan hanya sebagai cincangan sehala yang tidak boleh dibaca oleh sesiapa pun.",
+        "Peranti anda yang log masuk: bila setiap log masuk bermula dan kali terakhir digunakan, bila ia tamat tempoh, dan keterangan pelayar (ejen pengguna). Token log masuk itu sendiri disimpan hanya sebagai cincangan.",
+        "Cubaan log masuk yang gagal: kiraan bagi setiap akaun log masuk, digunakan untuk menghentikan log masuk buat sementara selepas kegagalan berulang.",
+        "Apa yang anda lakukan dalam portal: tarikh yang anda mohon atau batalkan (dengan sebab yang anda berikan), nota anda, maklum balas anda selepas sarapan, dan rekod audit tentang siapa yang mengubah setiap tempahan dan bila.",
+      ] },
+      { title: "Mengapa kami menggunakannya", items: [
+        "Untuk menjalankan program sarapan bersama premis anda: tarikh, pengesahan, pembatalan dan perhentian sarapan dalam kayuhan.",
+        "Untuk menghubungi premis tentang tempahannya, termasuk pada hari sarapan.",
+        "Untuk memastikan portal selamat: log masuk, log keluar, penukaran kata laluan dan menghalang cubaan gagal yang berulang.",
+        "Asas kami ialah perjanjian antara premis anda dan MicroMobility, serta kepentingan sah kami untuk memastikan perkhidmatan ini selamat.",
+      ] },
+      { title: "Siapa yang melihatnya", items: [
+        "Kakitangan MicroMobility yang menguruskan premis.",
+        "Penyedia perkhidmatan kami, hanya untuk menjalankan portal: Supabase (pangkalan data) dan Cloudflare (pengehosan portal).",
+        "Penunggang melihat nama premis anda, pautan peta dan tawaran untuk penunggang, tetapi tidak sekali-kali butiran hubungan peribadi atau ID log masuk anda.",
+        "Kami tidak menjual data peribadi.",
+      ] },
+      { title: "Berapa lama kami menyimpannya", items: [
+        "Sesi log masuk tamat selepas 30 hari, atau selepas 14 hari tanpa digunakan, dan kemudian dipadamkan apabila anda log masuk pada kali seterusnya, atau lebih awal.",
+        "Kiraan cubaan log masuk yang gagal ditetapkan semula selepas log masuk yang berjaya, dan selepas sehari tanpa kegagalan.",
+        "Akaun log masuk, butiran hubungan dan rekod tempahan: selagi premis anda bekerjasama dengan MicroMobility, kemudian sehingga 2 tahun untuk rekod kami (dicadangkan, belum disahkan).",
+      ] },
+      { title: "Hak anda", items: [
+        "Di bawah PDPL, anda boleh meminta untuk dimaklumkan cara data anda digunakan, untuk mendapatkan salinannya, supaya ia dibetulkan atau dilengkapkan, dan supaya ia dipadamkan apabila kami tidak lagi memerlukannya.",
+        "Anda juga boleh menarik balik persetujuan apabila kami bergantung padanya, dan membuat aduan kepada Pihak Berkuasa Data dan Kecerdasan Buatan Saudi (SDAIA).",
+        `Untuk menggunakan mana-mana hak ini, hantar e-mel ke ${MM_EMAIL}. Kami menjawab dalam tempoh 30 hari.`,
+      ] },
+    ],
+    back: "Kembali ke portal",
+  },
 };
 
 /** Draws the notice into main; signedOut: the way back is the sign-in page. */

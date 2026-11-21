@@ -4,7 +4,7 @@ import { SITE_URL } from "@/lib/seo";
 
 // Search engines stay out while the site is Coming Soon (the launch package ships the same
 // Disallow: / until launch day). Once it is open they read everything but the private parts -
-// the API, the staff preview and a visitor's own account - and are pointed at the sitemap.
+// the API, the staff preview and a visitor's own account and bookings - and are pointed at the sitemap.
 // Read on every request: built once, it kept the Coming Soon "Disallow: /" after launch until the
 // next deploy.
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   return closed
     ? { rules: { userAgent: "*", disallow: "/" } }
     : {
-        rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/preview", "/account"] },
+        rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/preview", "/account", "/bookings"] },
         sitemap: `${SITE_URL}/sitemap.xml`,
       };
 }

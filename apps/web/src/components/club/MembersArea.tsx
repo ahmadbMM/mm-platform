@@ -27,6 +27,17 @@ import SuggestRide from "./SuggestRide";
 import SeasonCard from "./SeasonCard";
 import type { RsgRow } from "@/lib/ride-suggestions";
 import { memberHubWords } from "./MemberHub.words";
+import { yearFrom, type HubFeed } from "@/lib/hub-feed";
+import type { MtFeed } from "@/lib/mentorship";
+import { fill } from "@/i18n/tx";
+import { ratingFinWords } from "@/components/account/RatingFin.words";
+import { CHALLENGE_KEYS, communityWords, mentorWords, pickWords, YEAR_KEYS } from "./Community.words";
+import { ChatButton, ClubGoalCard, FirstFiveCard, ReportCard, SeasonGoalCard, TipCard, VolunteerCallCard } from "./HubCards";
+import ChallengeCard from "./ChallengeCard";
+import YearCard from "./YearCard";
+import Mentorship from "./Mentorship";
+import InviteFriend from "./InviteFriend";
+import ClubParts from "./ClubParts";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
 // their card - name, since when, credits, tier and what is left to the next - their attendance
@@ -45,6 +56,20 @@ import { memberHubWords } from "./MemberHub.words";
 // stands near the end of its tab, before its invitation; the Ramadan season (SeasonCard.tsx, lib/hub-season.ts): its card
 // leads the area while Ramadan runs and on Eid al-Fitr's first three days, and the members' sessions take its night blue
 // and gold, as the app's next session's card does.
+// The Community tab's own cards (2026-11-19, the owner's rule of 2026-10-01: what the booking app shows a customer, the
+// website shows too), from its one read, hub_feed (lib/hub-feed.ts), placed as the app's tab places them: with nothing
+// booked ahead, the Saturday report of the member's own ride just finished leads the area (`recap`); Your year
+// (December and January) after My interests; Your challenge - or, under five rides, the first five rides (`p5`) - after
+// the upcoming sessions; the season challenges and the club goal after Plan my Saturdays; then the staff card (the
+// Saturday report, the announcements, else the tip of the week), the Mentorship programme (mentor_feed, lib/
+// mentorship.ts), Volunteers needed, Suggest a ride, and the invitation to a Saturday social ride (`invite`, the member's
+// code). hub_feed's club numbers and each session's riders are never read (no head counts for customers, 2026-11-13).
+// Since 2026-11-20 the area is in three parts behind a switch, as the app's tab (ClubParts.tsx): Sessions (the Ramadan card,
+// the recap, the Build-up plan, My interests, the upcoming sessions, the member's rides, the staff card), Challenges (the
+// year, My month, the challenge, Plan my Saturdays, the season challenges, the club goal) and Club (the title, Ask,
+// Mentorship, Volunteers needed, Suggest a ride, the invitation); the card, its tier bar and the birthday stay above them.
+// The Community chat is a round button at the bottom corner of the area (ChatButton), as the booking app's is since
+// 2026-11-20 (it was the Club part's first card).
 type Props = {
   locale: string;
   L: Locale;
@@ -75,6 +100,8 @@ type Props = {
    *  chosen; absent on a database without it. The list of members itself lives in the booking app. */
   title?: MemberTitle | null;
   communityHref?: string;
+  /** The booking app's Community chat (/members?hv=chat there): the corner button that opens it; none: no button. */
+  chatHref?: string;
   accountHref?: string;
   /** The open Ask pages this member may answer (lib/ask-server.ts readAskList); none: no section. */
   asks?: AskCard[];
@@ -90,9 +117,20 @@ type Props = {
   suggestions?: RsgRow[] | null;
   /** The Ramadan season today (lib/hub-season.ts seasonKind): its card and look; "" or none: neither. */
   season?: "ramadan" | "eid" | "";
+  /** The Community tab's read (hub_feed, lib/hub-feed.ts); none: none of its cards. `recap`: its Saturday report leads. */
+  hub?: HubFeed | null;
+  recap?: boolean;
+  /** The kinds the member tried this year, named in the page's language, for Your year's slides. */
+  yearKinds?: { k: string; name: string }[];
+  /** The first five rides in the challenge's place (lib/first-five.ts firstFiveTab); none: the challenge. */
+  p5?: { n: number; tg: number } | null;
+  /** The Mentorship programme (mentor_feed); none: no card. */
+  mentor?: MtFeed | null;
+  /** The member's invitation code (member_invite_code); none: no invitation. */
+  invite?: string | null;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions, season }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, chatHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions, season, hub, recap, yearKinds, p5, mentor, invite }: Props) {
   const t = serverLocalize(T, locale);
   const ask = serverLocalize(ASK_T, locale);
   const N = (n: number) => fmtNum(n, locale);
@@ -101,35 +139,84 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
   const since = a.since ? new Intl.DateTimeFormat(intlOf(locale), { month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(a.since)) : "";
   const pct = a.tier >= 2 || !a.next ? 100 : Math.min(100, Math.round((a.credits / a.next) * 100));
   const anns = announcementsOf(a.announcements, L);
+  const cw = communityWords(locale), rf = ratingFinWords(locale), first = firstNameOf(a.firstName);
+  const report = hub?.post ? <ReportCard p={hub.post} locale={locale} w={cw} /> : null;
   const when = (time: string | null) => {
     const m = /^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/.exec(time || "");
     return m ? <bdi dir="ltr">{m[1]} – {m[2]}</bdi> : time ? <bdi dir="ltr">{time}</bdi> : null;
   };
-  return (
-    <InterestsBox initial={interests ?? null} words={interestWords(locale)}>
-    <div className={`club-mine club-members${season ? " club-ssn-on" : ""}`}>
-      <h2>{t.title}</h2>
+  // The three parts (2026-11-20, as the app's tab): Sessions, Challenges and Club, behind a switch (ClubParts.tsx). The card,
+  // its tier bar and the birthday greeting stay above them (/account's "Open my card" lands on the card). A part with
+  // nothing in it is not passed, so it has no button.
+  const sess = (
+    <>
       {season && <SeasonCard locale={locale} kind={season} />}
-      {isBirthday(a.birthDate, today) && (
-        <p className="club-bday" role="status"><strong>{t.birthday(a.firstName)}</strong><span>{t.birthdayText}</span></p>
-      )}
-      <div className={`club-cardviz tier-${a.tier}`}>
-        <div className="club-cardviz-top">
-          <span className="club-cardviz-brand"><img src={a.tier === 2 ? "/site/logo-mark-dark.png" : "/site/logo-mark.png"} alt="Micromobility" /><span>{t.label}</span></span>
-          <span className="club-pill">{tierNames[a.tier]}</span>
-        </div>
-        <div className="club-cardviz-bottom">
-          <span className="club-cardviz-label">{t.credits}</span>
-          <strong className="club-cardviz-num">{N(a.credits)}</strong>
-          <div className="club-cardviz-foot"><strong>{a.firstName}</strong>{since && <span>{t.since} {since}</span>}</div>
-        </div>
-      </div>
-      <span className="club-bar"><span style={{ width: `${pct}%` }} /></span>
-      <p className="club-mine-next">{a.tier >= 2 || !a.next ? t.top : t.toNext(N(Math.max(0, a.next - a.credits)), tierNames[a.tier + 1])}</p>
-
+      {recap && report}
       {bup && <BuildupPlan locale={locale} plan={bup.plan} name={bup.name} bookAt={(id) => bookAt(id, "saturday")} />}
       <InterestsCard at="first" />
 
+      <section className="club-up" aria-labelledby="club-up-h">
+        <h3 id="club-up-h">{t.upcoming}</h3>
+        {a.upcoming.length ? (
+          <ul>
+            {a.upcoming.map((r) => {
+              const closed = opens ? opens(r.date, r.kind) : null;
+              const sg = sgOf ? sgOf(r) : null;
+              const refusal = refusalOf ? refusalOf(r) : null;
+              const book = <a href={bookAt(r.id, r.kind)}>{t.book} {arrow}</a>;
+              return (
+                <li key={r.id} className={closed ? "closed" : ""}>
+                  <span className="club-up-when">{day(r.date)}{r.time ? <> · {when(r.time)}</> : null}</span>
+                  <strong>{nameOf(r.kind, r.title)}{sg && <> <span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span></>}</strong>
+                  {r.booked ? <em>{t.booked}</em> : r.waitlist ? <em>{t.waitlist}</em> : refusal ? <small>{refusal}</small>
+                    : closed && opensWords ? <OpensIn as="small" className="club-wait" text={closed} at={opensAt ? opensAt(r.date) : null} words={opensWords}>{book}</OpensIn>
+                    : closed ? <small>{closed}</small> : book}
+                </li>
+              );
+            })}
+          </ul>
+        ) : <p className="club-att-empty">{empty}</p>}
+      </section>
+
+      <section className="club-att" aria-labelledby="club-att-h">
+        <h3 id="club-att-h">{t.attendance}</h3>
+        <div className="club-att-nums"><span>{t.rides(N(a.rides))}</span><span>{t.groupRides(N(a.groupRides))}</span></div>
+        <p className="club-att-sub">{t.last}</p>
+        {a.last.length ? (
+          <ul className="club-last">
+            {a.last.map((r, i) => (
+              <li key={i}><span>{day(r.date, { day: "numeric", month: "short", year: "numeric" })}</span><strong>{nameOf(r.kind, r.title)}</strong>{r.rated ? <em>{t.rated}</em> : <a href={localHref("/account", locale)}>{t.rate} {arrow}</a>}</li>
+            ))}
+          </ul>
+        ) : <p className="club-att-empty">{t.noLast}</p>}
+      </section>
+
+      {!recap && report}
+      {anns.length > 0 && (
+        <section className="club-ann" aria-labelledby="club-ann-h">
+          <h3 id="club-ann-h">{t.announcements}</h3>
+          <ul>{anns.map((x, i) => <li key={i}>{x.text}{x.cta && x.href ? <> <a href={localHref(x.href, locale)}>{x.cta} {arrow}</a></> : null}</li>)}</ul>
+        </section>
+      )}
+      {hub && !hub.post && !anns.length && <TipCard today={hub.today || today} w={cw} />}
+      <InterestsCard at="end" />
+    </>
+  );
+  const challenge = hub && (p5
+    ? <FirstFiveCard n={p5.n} tg={p5.tg} name={rf.p5} of={fill(rf.p5Of, N(p5.n), N(p5.tg))} w={cw} />
+    : hub.me ? <ChallengeCard me={hub.me} locale={locale} w={pickWords(cw, CHALLENGE_KEYS)} name={first} /> : null);
+  const goals = (hub?.year || (month && kindName) || challenge || plan || hub?.goals.length || hub?.club) ? (
+    <>
+      {hub?.year && <YearCard y={hub.year} locale={locale} w={pickWords(cw, YEAR_KEYS)} kinds={yearKinds ?? []} from={yearFrom(hub.year, locale)} />}
+      {month && kindName && <MyMonth locale={locale} month={month} kindName={kindName} first={firstNameOf(a.firstName)} />}
+      {challenge}
+      {plan && <PlanSaturdays boxes={planBoxes(plan, locale)} title={memberHubWords(locale).plan} month={plan.month ? monthName(plan.month, locale) : ""} err={memberHubWords(locale).err} />}
+      {hub?.goals.map((g) => <SeasonGoalCard key={g.id || g.name} g={g} locale={locale} w={cw} shareLabel={cw.kMile} first={first} />)}
+      {hub?.club && <ClubGoalCard g={hub.club} locale={locale} w={cw} />}
+    </>
+  ) : null;
+  const club = (title || (asks && asks.length > 0) || mentor || hub?.volunteer || suggestions || invite) ? (
+    <>
       {title && (
         <section className="club-comm" aria-labelledby="club-comm-h">
           <h3 id="club-comm-h">{t.community}</h3>
@@ -156,55 +243,35 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
           </ul>
         </section>
       )}
-
-      <section className="club-att" aria-labelledby="club-att-h">
-        <h3 id="club-att-h">{t.attendance}</h3>
-        <div className="club-att-nums"><span>{t.rides(N(a.rides))}</span><span>{t.groupRides(N(a.groupRides))}</span></div>
-        <p className="club-att-sub">{t.last}</p>
-        {a.last.length ? (
-          <ul className="club-last">
-            {a.last.map((r, i) => (
-              <li key={i}><span>{day(r.date, { day: "numeric", month: "short", year: "numeric" })}</span><strong>{nameOf(r.kind, r.title)}</strong>{r.rated ? <em>{t.rated}</em> : <a href={localHref("/account", locale)}>{t.rate} {arrow}</a>}</li>
-            ))}
-          </ul>
-        ) : <p className="club-att-empty">{t.noLast}</p>}
-      </section>
-
-      {month && kindName && <MyMonth locale={locale} month={month} kindName={kindName} first={firstNameOf(a.firstName)} />}
-
-      <section className="club-up" aria-labelledby="club-up-h">
-        <h3 id="club-up-h">{t.upcoming}</h3>
-        {a.upcoming.length ? (
-          <ul>
-            {a.upcoming.map((r) => {
-              const closed = opens ? opens(r.date, r.kind) : null;
-              const sg = sgOf ? sgOf(r) : null;
-              const refusal = refusalOf ? refusalOf(r) : null;
-              const book = <a href={bookAt(r.id, r.kind)}>{t.book} {arrow}</a>;
-              return (
-                <li key={r.id} className={closed ? "closed" : ""}>
-                  <span className="club-up-when">{day(r.date)}{r.time ? <> · {when(r.time)}</> : null}</span>
-                  <strong>{nameOf(r.kind, r.title)}{sg && <> <span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span></>}</strong>
-                  {r.booked ? <em>{t.booked}</em> : r.waitlist ? <em>{t.waitlist}</em> : refusal ? <small>{refusal}</small>
-                    : closed && opensWords ? <OpensIn as="small" className="club-wait" text={closed} at={opensAt ? opensAt(r.date) : null} words={opensWords}>{book}</OpensIn>
-                    : closed ? <small>{closed}</small> : book}
-                </li>
-              );
-            })}
-          </ul>
-        ) : <p className="club-att-empty">{empty}</p>}
-      </section>
-
-      {plan && <PlanSaturdays boxes={planBoxes(plan, locale)} title={memberHubWords(locale).plan} month={plan.month ? monthName(plan.month, locale) : ""} err={memberHubWords(locale).err} />}
-
-      {anns.length > 0 && (
-        <section className="club-ann" aria-labelledby="club-ann-h">
-          <h3 id="club-ann-h">{t.announcements}</h3>
-          <ul>{anns.map((x, i) => <li key={i}>{x.text}{x.cta && x.href ? <> <a href={localHref(x.href, locale)}>{x.cta} {arrow}</a></> : null}</li>)}</ul>
-        </section>
-      )}
+      {mentor && <Mentorship feed={mentor} locale={locale} w={{ ...mentorWords(cw), cancel: memberHubWords(locale).intCancel }} />}
+      {hub?.volunteer && <VolunteerCallCard id={hub.volunteer} w={cw} />}
       {suggestions && <SuggestRide locale={locale} rows={suggestions} words={suggestWords(locale)} />}
-      <InterestsCard at="end" />
+      {invite && <InviteFriend code={invite} locale={locale} label={cw.invBtn} msg={cw.invMsg} />}
+    </>
+  ) : null;
+  return (
+    <InterestsBox initial={interests ?? null} words={interestWords(locale)}>
+    <div className={`club-mine club-members${season ? " club-ssn-on" : ""}`}>
+      <h2>{t.title}</h2>
+      {isBirthday(a.birthDate, today) && (
+        <p className="club-bday" role="status"><strong>{t.birthday(a.firstName)}</strong><span>{t.birthdayText}</span></p>
+      )}
+      <div className={`club-cardviz tier-${a.tier}`}>
+        <div className="club-cardviz-top">
+          <span className="club-cardviz-brand"><img src={a.tier === 2 ? "/site/logo-mark-dark.png" : "/site/logo-mark.png"} alt="Micromobility" /><span>{t.label}</span></span>
+          <span className="club-pill">{tierNames[a.tier]}</span>
+        </div>
+        <div className="club-cardviz-bottom">
+          <span className="club-cardviz-label">{t.credits}</span>
+          <strong className="club-cardviz-num">{N(a.credits)}</strong>
+          <div className="club-cardviz-foot"><strong>{a.firstName}</strong>{since && <span>{t.since} {since}</span>}</div>
+        </div>
+      </div>
+      <span className="club-bar"><span style={{ width: `${pct}%` }} /></span>
+      <p className="club-mine-next">{a.tier >= 2 || !a.next ? t.top : t.toNext(N(Math.max(0, a.next - a.credits)), tierNames[a.tier + 1])}</p>
+
+      <ClubParts parts={{ sess, ...(goals ? { goals } : {}), ...(club ? { club } : {}) }} labels={{ sess: cw.secSess, goals: cw.secGoals, club: cw.secClub }} label={t.title} />
+      {chatHref && <ChatButton href={chatHref} label={memberHubWords(locale).chtTitle} />}
     </div>
     </InterestsBox>
   );

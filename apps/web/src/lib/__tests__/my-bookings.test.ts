@@ -3,7 +3,7 @@ import { createElement, isValidElement, type ReactElement } from "react";
 // The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
-import AccountPage from "../../app/[locale]/account/[[...part]]/page";
+import BookingsPage from "../../app/[locale]/bookings/page";
 import TicketCard, { TicketCancelled } from "@/components/booking/TicketCard";
 import { TicketWake } from "@/components/booking/TicketParts";
 import Countdown from "@/components/booking/Countdown";
@@ -32,8 +32,12 @@ describe("the cancelled bookings (the booking app's _mrCancelled)", () => {
   const cx = (o: Record<string, unknown>) => ({ id: "c1", session_id: "2099-03-05", session_date: "2099-03-05", status: "cancelled", cancelled_by: "customer", ...o });
   it("keep one row per booking whose day has not gone, saying who cancelled it, soonest first", () => {
     expect(cancelledGroups([cx({ session_id: "2099-03-09", session_date: "2099-03-09", cancelled_by: null }), cx({}), cx({ id: "c2", cancelled_by: "staff" })], "2099-03-01"))
-      .toEqual([{ key: "2099-03-05", sessionId: "2099-03-05", date: "2099-03-05", by: "staff" }, { key: "2099-03-09", sessionId: "2099-03-09", date: "2099-03-09", by: "" }]);
+      .toEqual([{ key: "2099-03-05", sessionId: "2099-03-05", date: "2099-03-05", by: "staff", at: "" }, { key: "2099-03-09", sessionId: "2099-03-09", date: "2099-03-09", by: "", at: "" }]);
     expect(cancelledGroups([cx({ session_date: "2099-03-01", session_id: "2099-03-01" })], "2099-03-01")[0].by).toBe("customer"); // today is not gone
+  });
+  it("say when the ticket was cancelled: the latest stamp of its rows (2026-11-20)", () => {
+    expect(cancelledGroups([cx({ cancelled_at: "2099-02-27T08:00:00+00:00" }), cx({ id: "c2", cancelled_at: "2099-02-28T11:32:00+00:00" })], "2099-03-01")[0].at).toBe("2099-02-28T11:32:00+00:00");
+    expect(cancelledGroups([cx({ cancelled_at: null })], "2099-03-01")[0].at).toBe("");
   });
   it("leave out a day gone, a rider turned down, and a booking that still has a place on it", () => {
     expect(cancelledGroups([cx({ session_date: "2099-02-28", session_id: "2099-02-28" })], "2099-03-01")).toEqual([]);
@@ -49,6 +53,12 @@ describe("the cancelled bookings (the booking app's _mrCancelled)", () => {
     expect(html).toContain('<span class="tk-cx-chip">Cancelled by you</span>');
     expect(html).toContain("<bdi>Sunday 1 Mar 2099</bdi> · <bdi>9 PM – 11 PM</bdi>");
     expect(draw("staff")).toContain(">Cancelled by us<");
+    // when it was cancelled, in Riyadh time (2026-11-20); nothing when the row carries no stamp
+    const at = (x: string | undefined, t = TICKET.en, locale = "en") => renderToStaticMarkup(createElement(TicketCancelled, { locale, date: "2099-03-01", session: jcc, name: "Open Sports Day", by: "customer", at: x, t, gather: "Gathering", start: "Start" }));
+    expect(at("2099-02-28T11:32:00+00:00")).toContain('<p class="tk-cx-at">Cancelled: <bdi>28 Feb 2099, 14:32</bdi></p>');
+    expect(at("2099-02-28T11:32:00+00:00", TICKET.ar, "ar")).toContain('<p class="tk-cx-at">ملغي: <bdi>');
+    expect(html).not.toContain("tk-cx-at");
+    expect(at("")).not.toContain("tk-cx-at");
     expect(draw("")).toContain(">Cancelled<");
     for (const no of ["<a", "<button", "tk-qr", "MMC", "SAR", "⃁", "Ann"]) expect(html, no).not.toContain(no);
     expect(draw("customer", TICKET.ar, "ar")).toContain(">أُلغي بطلبك<");
@@ -125,10 +135,12 @@ describe("the ticket's Details, buttons and words", () => {
     expect(html).not.toMatch(/\p{Extended_Pictographic}/u);
   });
   it("says Leave waitlist on a waitlist's ticket, Cancel on a booking", () => {
-    expect(card([row({ status: "waitlist" })])).toContain('<a class="tk-btn red" href="https://book.example.test/?tab=bookings">Leave waitlist</a>');
-    expect(card([row({ status: "waitlist" })], { t: TICKET.ar, locale: "ar" })).toContain(">مغادرة قائمة الانتظار</a>");
-    expect(card([row({ status: "waitlist" }), row({ id: "q2abcdef", queueNum: 5 })])).toContain(">Cancel</a>"); // a place is held
-    expect(card([row({})])).toContain(">Cancel</a>");
+    // on the website itself since 2026-11-19 (TicketManage): a button that opens the reasons, never a link to the booking app
+    expect(card([row({ status: "waitlist" })])).toContain('<button type="button" class="tk-btn red" aria-haspopup="dialog">Leave waitlist</button>');
+    expect(card([row({ status: "waitlist" })], { t: TICKET.ar, locale: "ar" })).toContain(">مغادرة قائمة الانتظار</button>");
+    expect(card([row({ status: "waitlist" }), row({ id: "q2abcdef", queueNum: 5 })])).toContain(">Cancel</button>"); // a place is held
+    expect(card([row({})])).toContain(">Cancel</button>");
+    expect(card([row({})])).not.toContain("?tab=bookings");
   });
   it("makes the countdown a timer", () => {
     const html = renderToStaticMarkup(createElement(Countdown, { moments: [[Date.parse("2099-03-01T17:15:00Z"), "collect"]], now: Date.parse("2099-03-01T09:00:00Z"), t: { collect: "Bike collection in {0}", gather: "Gathering in {0}", start: "Starts in {0}", h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
@@ -182,7 +194,7 @@ function findAll(n: unknown, type: unknown, out: ReactElement[] = []): ReactElem
   findAll((n.props as { children?: unknown }).children, type, out);
   return out;
 }
-describe("My Account's rides", () => {
+describe("Bookings' rides (/bookings, moved from My Account 2026-11-19)", () => {
   beforeEach(() => {
     resetRides(); resetSiteContent();
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
@@ -207,7 +219,7 @@ describe("My Account's rides", () => {
       if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/0" } });
       return json([]);
     }));
-    const p = await AccountPage({ params: Promise.resolve({ locale: "en", part: undefined }), searchParams: Promise.resolve({}) });
+    const p = await BookingsPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) });
     const cx = findAll(p, TicketCancelled).map((e) => e.props as { date: string; by: string });
     expect(cx).toEqual([expect.objectContaining({ date: "2099-03-05", by: "staff" })]);
     const cards = findAll(p, TicketCard).map((e) => e.props as { past?: boolean; rows: TicketRow[]; links: { share?: string | null; place: string | null } });

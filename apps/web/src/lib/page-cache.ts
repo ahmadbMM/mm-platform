@@ -37,7 +37,7 @@ const HTML_LANG = new Map<string, string>(LOCALES.map((l) => [l.html.toLowerCase
 const LANGS = new Set<string>(LOCALE_CODES);
 // Payment pages (/pay/<id>) and the store's cart, checkout, order and tracking pages change with every payment: never kept (2026-11-10).
 // Nor a quote's link (/store/q/<token>, 2026-11-18): it says it was used the moment its order is paid.
-const SKIP = /^\/(?:api|_next|media|b|petromin|community|account|ask|preview|login|en|ar|bikes\/\d{1,6}|pay|store\/(?:cart|checkout|order|track|q)|testimonials\/write)(?:\/|$)/;
+const SKIP = /^\/(?:api|_next|media|b|petromin|community|account|bookings|ask|preview|login|en|ar|bikes\/\d{1,6}|pay|store\/(?:cart|checkout|order|track|q)|testimonials\/write)(?:\/|$)/;
 const PRIVATE = ["mm_acct", "mm_preview"];
 const LANG_COOKIE = "NEXT_LOCALE";
 // Tracking parameters (utm_*, fbclid...) change nothing on the page: a link from Instagram or a

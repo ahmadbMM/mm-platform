@@ -135,7 +135,7 @@ export default function RatingGate({ entryId, name, when, form, noBike, restaura
           <h2 id={`rg-title-${entryId}`} className="rg-title rg-fin-t"><bdi>{title}</bdi></h2>
           {fin.k !== "badge" && <FinProgress n={fin.n} tg={fin.tg} labelledBy={`rg-title-${entryId}`} of={fin.k === "p5" ? fw.p5Of : undefined} />}
           {fin.book && <Link href="/experiences" className="rr-send rg-fin-go" onClick={finish}>{fw.book}</Link>}
-          {fin.mem !== false && <Link href="/club" className={`rr-send rg-fin-go${fin.book ? " rg-fin-2" : ""}`} onClick={finish}>{fw.community}</Link>}
+          {fin.mem !== false && <Link href="/club#challenges" className={`rr-send rg-fin-go${fin.book ? " rg-fin-2" : ""}`} onClick={finish}>{fw.community}</Link>}
           <button type="button" className="rg-fin-done" onClick={finish}>{fw.done}</button>
         </div>
       </div>

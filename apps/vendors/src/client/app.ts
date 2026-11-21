@@ -4,7 +4,7 @@ import { h, uid, type Child } from "./dom";
 import { icon, type IconName } from "./icons";
 import { errorKey, type Me } from "./model";
 import { plural, type PluralKey } from "./plurals";
-import { fmt, type Key, type Lang } from "./strings";
+import { fmt, LANGS, type Key, type Lang } from "./strings";
 
 export const app = {
   lang: "en" as Lang,
@@ -18,14 +18,14 @@ export const app = {
 export const t = (k: Key, vars?: Record<string, string | number>) => fmt(app.lang, k, vars);
 /** A phrase with a count, in the plural form the page's language wants for n (plurals.ts). */
 export const tn = (k: PluralKey, n: number, vars?: Record<string, string | number>) => plural(app.lang, k, n, vars);
-export const isRtl = () => app.lang === "ar";
+export const isRtl = () => !!LANGS.find((l) => l.code === app.lang)?.rtl;
 
 const LANG_KEY = "mm_vendor_lang";
 
 export function savedLang(): Lang | null {
   try {
     const v = localStorage.getItem(LANG_KEY);
-    return v === "en" || v === "ar" ? v : null;
+    return LANGS.find((l) => l.code === v)?.code ?? null;
   } catch {
     return null;
   }
@@ -35,10 +35,16 @@ export function setLang(l: Lang): void {
   app.lang = l;
   try { localStorage.setItem(LANG_KEY, l); } catch { /* private mode: the choice lasts this visit */ }
   document.documentElement.lang = l;
-  document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+  document.documentElement.dir = isRtl() ? "rtl" : "ltr";
   document.title = fmt(l, "appName");
   const skip = document.querySelector("a.skip");
   if (skip) skip.textContent = fmt(l, "skipToContent");
+}
+
+/** The language a device asks for (navigator.language, "ms-MY", "ar-SA", "en-US"): one of the portal's, else English. */
+export function deviceLang(nav: string | undefined): Lang {
+  const code = String(nav || "en").toLowerCase().split(/[-_]/)[0];
+  return LANGS.find((l) => l.code === code)?.code ?? "en";
 }
 
 /** Says a result out loud to screen readers (the page's one polite live region). */

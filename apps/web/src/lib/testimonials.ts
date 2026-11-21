@@ -113,7 +113,7 @@ function mineItem(v: unknown): TmMineItem | null {
 }
 
 /** testimonial_mine's answer when it is {ok: true, ...}; null for anything else (a refusal says why: tmRefusal). The
- *  one-time ask about an old comment is the booking app's alone and is not carried. */
+ *  one-time ask about an old comment is read on its own (tmOldAsk). */
 export function tmMine(raw: unknown): TmMine | null {
   if (!isObj(raw) || raw.ok !== true) return null;
   const names = isObj(raw.names) ? raw.names : {};
@@ -124,6 +124,35 @@ export function tmMine(raw: unknown): TmMine | null {
     items: (Array.isArray(raw.items) ? raw.items : []).map(mineItem).filter((x): x is TmMineItem => x !== null),
   };
 }
+
+/** The one-time ask about an old comment (the booking app's rider-testimonial.js _tstAskRun, dfbfba44, fbd39da1): a done
+ *  ride rated 9 or 10 before the switch was last turned on, with 40 characters or more written, not yet a testimonial,
+ *  for an account that never answered the ask. testimonial_mine names it in `ask` while the switch is on and one is due;
+ *  null for none (or anything it cannot use). */
+export type TmOldAsk = { entry: string; body: string; date: string | null; about: TmAbout; title: string | null; titleAr: string | null };
+export function tmOldAsk(raw: unknown): TmOldAsk | null {
+  if (!isObj(raw) || raw.ok !== true || raw.on !== true || !isObj(raw.ask)) return null;
+  const a = raw.ask, entry = S(a.entry_id), body = S(a.body).trim();
+  if (!ENTRY.test(entry) || !body) return null;
+  const date = /^\d{4}-\d{2}-\d{2}/.test(S(a.date)) ? S(a.date).slice(0, 10) : null;
+  return { entry, body, date, about: isAbout(a.about) ? a.about : "other", title: str(a.title)?.trim() ?? null, titleAr: str(a.title_ar)?.trim() ?? null };
+}
+/** What the ask names the ride by: its title (the Arabic one on the Arabic page), else - an untitled ride, every Saturday
+ *  and most sessions - its kind (294f2348), never "Something else". */
+export function tmAskTitle(a: TmOldAsk, locale: string, about: Record<string, string>): string {
+  return (locale === "ar" && a.titleAr) || a.title || (a.about !== "other" ? about[a.about] ?? "" : "");
+}
+/** An answer to the ask as a page posts it ({entry, yes, nameMode, consent}), read into testimonial_old_answer's
+ *  arguments (without the account's id and token); null when it cannot be one. A no sends no name and no tick. */
+export function tmOldArgs(b: unknown): Record<string, unknown> | null {
+  if (!isObj(b) || typeof b.entry !== "string" || !ENTRY.test(b.entry) || typeof b.yes !== "boolean") return null;
+  const mode = TM_NAME_MODES.includes(b.nameMode as TmNameMode) ? (b.nameMode as TmNameMode) : null;
+  if (b.yes && !mode) return null;
+  return { p_entry: b.entry, p_yes: b.yes, p_name_mode: mode ?? "short", p_consent: b.yes && b.consent === true };
+}
+/** The ask's answer that ends it for good: taken, answered before ("done"), the ride no longer due ("entry"), or the switch
+ *  gone off ("off"). */
+export const tmOldEnded = (v: unknown): boolean => isObj(v) && (v.ok === true || (v.ok === false && ["done", "entry", "off"].includes(S(v.error))));
 
 /** The error codes the rider's functions answer (the contract), and the site's own: "busy" (the minute's requests),
  *  "absent" (a database without the functions yet), "origin", "generic". Anything else reads as "generic". */

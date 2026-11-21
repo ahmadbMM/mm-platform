@@ -103,14 +103,15 @@ describe("the card", () => {
     expect(html).not.toContain("<textarea"); // the form and the list open on the tap
     expect(renderToStaticMarkup(createElement(SuggestRide, { locale: "ar", rows: [], words: suggestWords("ar") }))).toContain("اقترح جولة</h3>");
   });
-  it("stands after the announcements, before the interests at the end", async () => {
+  it("stands in the Club part, after the Sessions part's announcements and interests (2026-11-20)", async () => {
     const { default: MembersArea } = await import("@/components/club/MembersArea");
     const a = memberArea({ status: 200, data: { ok: true, member: true, first_name: "Sara", credits: 0, tier: 0, next: 100, rides: 1, group_rides: 1, last: [], upcoming: [], announcements: [{ text: "Hello" }] }, message: "" });
     if (!a.ok || !a.member) throw new Error("not a member");
     const props = { locale: "en", L: "en" as const, area: a, tierNames: ["Rider", "Pro", "Legend"] as [string, string, string], nameOf: () => "", bookAt: () => "", today: "2026-11-18", empty: "None" };
     const html = renderToStaticMarkup(createElement(MembersArea, { ...props, suggestions: [], interests: { saved: true, keys: ["road"], suggested: [], offered: ["road"] } }));
-    expect(html.indexOf('class="club-ann"')).toBeLessThan(html.indexOf('class="club-rsg"'));
-    expect(html.indexOf('class="club-rsg"')).toBeLessThan(html.indexOf('class="club-int"'));
+    expect(html.indexOf('class="club-ann"')).toBeLessThan(html.indexOf('class="club-int"'));
+    expect(html.indexOf('class="club-int"')).toBeLessThan(html.indexOf('id="club-pane-club"'));
+    expect(html.indexOf('id="club-pane-club"')).toBeLessThan(html.indexOf('class="club-rsg"'));
     expect(renderToStaticMarkup(createElement(MembersArea, { ...props, suggestions: null }))).not.toContain("club-rsg");
   });
   it("has its words in all 16 languages, the booking app's own where it speaks them", () => {

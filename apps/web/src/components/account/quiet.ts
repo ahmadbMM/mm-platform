@@ -12,6 +12,10 @@ export const SHARE_QUIET = "mm_share_none";
 export const CLUB_QUIET = "mm_club_none";
 export const RACE_QUIET = "mm_race_none";
 export const RATE_QUIET = "mm_rate_none";
+/** Details the account owes (FixGateLoader): none owed is kept ten minutes in a tab. */
+export const FIX_QUIET = "mm_fix_none";
+/** The one-time ask about an old comment (TestimonialAskLoader): the server is asked once an hour in a tab. */
+export const TM_ASK_QUIET = "mm_tm_ask_none";
 /** A check the site's meter turned away (429: the minute's checks are used up, lib/rate-limit.ts) is not an answer: the
  *  pop-up asks again after BUSY_RETRY_MS and the pop-ups after it keep waiting - never let through as if nothing were
  *  owed (bug hunt 2026-11-18). */
@@ -19,6 +23,11 @@ export const BUSY = "busy" as const;
 export const BUSY_RETRY_MS = 20_000;
 /** Not a quiet window: the birthday week's answer for the day (BirthdayConfetti.tsx), forgotten with them. */
 export const BDAY_SEEN = "mm_bday";
+/** The new-badge pop-up's last ask (BadgeCelebrate.tsx: once in five minutes), forgotten with them. */
+export const BDG_ASKED = "mm_bdg_asked";
+/** A company challenge's join code kept from a link (/account/company?company=CODE, CompanyLink.tsx) until the rider is
+ *  signed in: a sign-out drops it, as the booking app's Log out does (8e7d29c7). */
+export const COMPANY_CODE = "mm_co_code";
 
 // A sign-in through the booking app's hand-over (api/account/handoff) lands on /account?handoff=done with no sign-in
 // form on the way, so the first look at a window on that page load forgets them all, as a sign-in does.
@@ -45,7 +54,10 @@ export function forgetQuiet(): void {
     sessionStorage.removeItem(CLUB_QUIET);
     sessionStorage.removeItem(RACE_QUIET);
     sessionStorage.removeItem(RATE_QUIET);
+    sessionStorage.removeItem(TM_ASK_QUIET);
+    sessionStorage.removeItem(FIX_QUIET);
     sessionStorage.removeItem(BDAY_SEEN);
+    sessionStorage.removeItem(BDG_ASKED);
   } catch { /* storage off: nothing kept */ }
 }
 
@@ -62,6 +74,7 @@ export function forgetStore(): void {
 export function signOut(): void {
   forgetQuiet();
   forgetStore();
+  try { localStorage.removeItem(COMPANY_CODE); } catch { /* storage off: nothing kept */ }
   fetch("/api/account", { method: "DELETE" })
     .catch(() => null)
     .finally(() => { forgetQuiet(); forgetStore(); window.location.reload(); });

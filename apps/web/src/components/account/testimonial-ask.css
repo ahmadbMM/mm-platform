@@ -1,0 +1,6 @@
+/* The one-time ask about an old comment (TestimonialAskLoader.tsx): the rating's pop-up (rating.css .rg-gate, .rg-box)
+   with the rider's own words quoted as written, in their own direction. */
+.tm-old .tm-old-q { margin: 2px 0 4px; padding: 12px 14px; border-inline-start: 3px solid #077a4b; border-radius: 10px; background: #f4f1ea; color: #1a1919;
+  font-size: 15px; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; max-height: 40vh; overflow-y: auto; }
+.tm-old .tm-ask { gap: 12px; }
+.tm-old .rr-send:focus-visible, .tm-old .rg-fin-done:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }

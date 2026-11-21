@@ -124,6 +124,9 @@ const BIKE_IMG: Record<string, { img: string; model: string; easy?: boolean }> =
 };
 const GROUP_IMG: Record<RideGroup, string> = { beg: "group-jyc", int: "group-msr" };
 const imgOf = (name: string) => `/site/experiences/bikes/${name}.webp`;
+// staging: this flow has the ride's, the swim's and the activity waiver's words alone; the Farm House Night (listed nowhere
+// here) and the Blood Donation event read the activity waiver's, as they did before lib/booking.ts gave them their own
+const flowWaiver = (s: Pick<BookSession, "kind">): "bike" | "swim" | "activity" => { const k = waiverKind(s); return k === "farm" || k === "blood" ? "activity" : k; };
 
 export default function BookingFlow({ locale, events, prices, maxPrices, jccCap = JCC_ACCOUNT_CAP, seatMax = EVENT_SEAT_MAX, acct, items, start, text, links, today, now, typeNames, routes, pay, exit, sx }: Props) {
   const t = useLocalize(T);
@@ -447,7 +450,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     if (e === "rejected" && sel) { setModal({ kind: "rejected", s: sel }); return; }
     if (e === "fix_first") { setModal({ kind: "fix" }); return; }
     if (e === "already" || e === "one_per_session") { setAlready(true); return; }
-    if (e === "pick_type") { go(2); setFieldErr({ key: "type-0", msg: t.err.pick_type }); return; }
+    // (a type closed or full since the page was read: lib/booking.ts now names them apart; this flow asks for another type)
+    if (e === "pick_type" || e === "type_closed" || e === "type_full") { go(2); setFieldErr({ key: "type-0", msg: t.err.pick_type }); return; }
     // the waiver is ticked on the review (EM07-B): its row is brought into view, the tick cleared
     if (e === "waiver" && sel) { setWaiverOk(null); if (step !== 3) go(3); requestAnimationFrame(() => document.getElementById("bk-waiver")?.scrollIntoView({ behavior: "smooth", block: "center" })); return; }
     if (e === "cap") { setErr(fill(t.err.cap, String(cap))); return; }
@@ -936,7 +940,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     // it is; its words open in a centred pop-up from the row. EF18: with staff's guardian tick on, the tick names each child.
     const wvAsk = needsWaiver(sel) && !isAlready;
     const wvOk = waiverOk === sel.id;
-    const w = t.waiver[waiverKind(sel)];
+    const w = t.waiver[flowWaiver(sel)];
     const kidNames = riders.filter((r) => r.child && r.name.trim()).map((r) => r.name.trim());
     const agreeText = sx?.settings.guardian && kidNames.length ? s6.guardianAgree(kidNames.join(rtl ? "، " : ", ")) : w.agree;
     // EF14: the refund beside the price, as pay_booking_cancel counts it (a booking paid online now)
@@ -1211,7 +1215,7 @@ function Pop({ modal, close, t, links, locale, sel, acct, pay, onGone, onPickBik
     );
   } else if (modal.kind === "waiver") {
     // the waiver's words, opened from its tick row on the review (EM07-B; the booking app's showWaiverText): I agree ticks it
-    const w = t.waiver[sel ? waiverKind(sel) : "bike"];
+    const w = t.waiver[sel ? flowWaiver(sel) : "bike"];
     inner = (
       <div className="bk-pop-body">
         <div className="bk-pop-head"><h2 id={label} className="bk-pop-title">{w.title}</h2>{x}</div>

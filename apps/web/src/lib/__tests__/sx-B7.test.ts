@@ -621,7 +621,8 @@ function findAll(n: unknown, type: unknown, out: ReactElement[] = []): ReactElem
 }
 
 describe("the account page", () => {
-  const draw = async (on: boolean, signedIn: boolean) => {
+  // staging: since main's account menu (2026-11-19) the passkeys card is on its Password page, /account/password
+  const draw = async (on: boolean, signedIn: boolean, part?: string[]) => {
     jar.account = signedIn ? `c1~${TOKEN}` : "";
     vi.stubGlobal("fetch", vi.fn(async (url: string) => {
       const u = String(url);
@@ -629,7 +630,7 @@ describe("the account page", () => {
       if (u.endsWith("/rpc/customer_profile")) return new Response(JSON.stringify([{ name: "Sara Test", email: "sara@example.com", phone: "+966500000001" }]), { status: 200 });
       return new Response("[]", { status: 200 });
     }));
-    return AccountPage({ params: Promise.resolve({ locale: "en", part: undefined }), searchParams: Promise.resolve({}) });
+    return AccountPage({ params: Promise.resolve({ locale: "en", part }), searchParams: Promise.resolve({}) });
   };
   it("signed out: the sign-in form offers a passkey only while the switch is on", async () => {
     expect(findAll(await draw(true, false), SignIn)[0].props).toMatchObject({ passkeys: true });
@@ -637,11 +638,11 @@ describe("the account page", () => {
     expect(findAll(await draw(false, false), SignIn)[0].props).toMatchObject({ passkeys: false });
   });
   it("signed in: the passkeys card and the offer only while the switch is on", async () => {
-    const on = await draw(true, true);
+    const on = await draw(true, true, ["password"]);
     expect(findAll(on, PasskeyCard)).toHaveLength(1);
     expect(findAll(on, PasskeyOffer)).toHaveLength(1);
     resetSiteContent();
-    const off = await draw(false, true);
+    const off = await draw(false, true, ["password"]);
     expect(findAll(off, PasskeyCard)).toHaveLength(0);
     expect(findAll(off, PasskeyOffer)).toHaveLength(0);
   });

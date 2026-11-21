@@ -13,7 +13,7 @@ import { T as TICKET } from "@/components/booking/tickets.text";
 import { ROUTE_PAGE_WORDS, routePageWords } from "@/components/booking/RoutePage.words";
 import { LOCALE_CODES } from "@/i18n/locales";
 import { serverLocalize } from "@/i18n/dicts";
-import AccountPage from "../../app/[locale]/account/[[...part]]/page";
+import BookingsPage from "../../app/[locale]/bookings/page";
 
 const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 
@@ -236,7 +236,7 @@ function findAll(n: unknown, type: unknown, out: ReactElement[] = []): ReactElem
   findAll((n.props as { children?: unknown }).children, type, out);
   return out;
 }
-describe("My Account", () => {
+describe("Bookings (/bookings)", () => {
   beforeEach(() => {
     resetRides(); resetSiteContent();
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
@@ -262,7 +262,7 @@ describe("My Account", () => {
   it("gives the ticket its route's stored line and turn points, read from the site's content alone", async () => {
     jar.account = "c1~a1b2c3d4e5f6a7b8c9d0";
     const reads = stub({ ...ROUTES_CONTENT, "route.track.obhur_2d_coast": STORED });
-    const p = await AccountPage({ params: Promise.resolve({ locale: "en", part: undefined }), searchParams: Promise.resolve({}) });
+    const p = await BookingsPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) });
     const cards = findAll(p, TicketCard).map((e) => e.props as { routePage?: RoutePage | null; route?: unknown });
     expect(cards).toHaveLength(1);
     expect(cards[0].route).toMatchObject({ name: "Obhur coast", km: 32.5 });
@@ -273,7 +273,7 @@ describe("My Account", () => {
   it("gives none when nothing is stored for the route", async () => {
     jar.account = "c1~a1b2c3d4e5f6a7b8c9d0";
     stub(ROUTES_CONTENT);
-    const p = await AccountPage({ params: Promise.resolve({ locale: "en", part: undefined }), searchParams: Promise.resolve({}) });
+    const p = await BookingsPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) });
     const cards = findAll(p, TicketCard).map((e) => e.props as { routePage?: RoutePage | null; route?: unknown });
     expect(cards).toHaveLength(1);
     expect(cards[0].route).toMatchObject({ name: "Obhur coast" });

@@ -31,7 +31,7 @@ export function CountrySelect({ id, value, onChange, opts, placeholder, label, d
       <option value="">{placeholder}</option>
       {/* A value saved before this list existed still shows, so a save keeps it. */}
       {(!opts || !known) && value && <option value={value}>{value}</option>}
-      {opts?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      {opts?.map((o, i) => <option key={`${i}-${o.value}`} value={o.value}>{o.label}</option>)}
     </select>
   );
 }

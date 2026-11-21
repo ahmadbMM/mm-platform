@@ -63,6 +63,14 @@ export type TicketRow = {
   /** "Still coming?" (rentals 20261114080200; lib/still-coming.ts): when the rider said they are coming, null before; absent
    *  when the read has no such column (nothing is asked). */
   comingAt?: string | null;
+  /** "Running late" (rentals 20261119600100; lib/still-coming.ts): the minutes the rider said they will be late (10, 20 or
+   *  30) and when they said it, null before; absent when the read has no such columns (nothing is offered). */
+  lateMin?: number | null; lateAt?: string | null;
+  /** "Note for the desk" (rentals 20261119600300, the customer features round of 2026-11-19, item 9): what the rider wrote
+   *  for our team with the booking (queue_entries.rider_note, 200 characters at most, on the booking's first row), null
+   *  without one; absent when the read has no such column. Shown read-only in the ticket's Details; it is changed in the
+   *  booking app (its review step and the ticket's Edit). */
+  riderNote?: string | null;
   /** "Report a bike problem" (rentals 20261114081500; lib/bike-report.ts): the rider's last report on the booking, null
    *  before; absent when the read has no such column (no button). */
   bikeReportAt?: string | null;
@@ -148,6 +156,8 @@ export type TicketSession = {
 type Row = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() && Number.isFinite(Number(v)) ? Number(v) : null);
+/** The minutes a rider said they will be late, as the database allows them (queue_entries_late_min_chk), else null. */
+const lateMinOf = (v: unknown): number | null => { const n = N(v); return n === 10 || n === 20 || n === 30 ? n : null; };
 
 /** A my_bookings row as the ticket reads it, or null for a status it never shows. */
 export function ticketRow(r: Row): TicketRow | null {
@@ -183,6 +193,10 @@ export function ticketRow(r: Row): TicketRow | null {
     rideCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.ride_code)) ? S(r.ride_code) : null,
     // "Still coming?" and "Report a bike problem" (2026-11-13): only a read that carries the columns has them
     ...("coming_at" in r ? { comingAt: S(r.coming_at) || null } : {}),
+    // "Running late" (2026-11-19): 10, 20 or 30 minutes and when, only from a read that carries the columns
+    ...("late_min" in r ? { lateMin: lateMinOf(r.late_min), lateAt: S(r.late_at) || null } : {}),
+    // the rider's note for the desk (2026-11-19), only from a read that carries the column
+    ...("rider_note" in r ? { riderNote: S(r.rider_note).trim().slice(0, 200) || null } : {}),
     ...("bike_report_at" in r ? { bikeReportAt: S(r.bike_report_at) || null } : {}),
     ...(bikes.length > 1 && bikes[0] === bike ? { bikeIds: bikes } : {}),
   };
@@ -231,6 +245,8 @@ export function addonLines(rows: Pick<TicketRow, "id" | "name" | "addonLines">[]
 export const LOCKER_LINE = "locker";
 export type TicketLocker = { period: string; code: string | null; status: string };
 const LOCKER_TIMES: Record<string, [string, string]> = { early: ["18:00", "20:00"], late: ["21:00", "23:00"], both: ["18:00", "23:00"], pm: ["19:00", "21:00"] }; // both: one span, 6 PM - 11 PM (the owner, 2026-11-09)
+/** When a locker period starts ("18:00"), for Bookings' soonest-first order; "" for a period it does not know. */
+export const lockerStart = (period: string): string => LOCKER_TIMES[period]?.[0] ?? "";
 /** customer_lockers' rows by booking, the ones not cancelled; an empty map when the answer is not a list. */
 export function lockersOf(data: unknown): Map<string, TicketLocker> {
   const out = new Map<string, TicketLocker>();
@@ -321,9 +337,10 @@ export function doneToday(rows: Row[], today: string): Group[] {
   return grouped(all.filter((r) => r.status === "done" && !live.has(groupKey(r))));
 }
 
-/** A cancelled booking, as My Account lists it under the tickets (the booking app's _mrCxRow): its session, its day, and
- *  who cancelled it (queue_entries.cancelled_by: 'staff', 'customer', or '' when nobody knows). */
-export type CancelledGroup = { key: string; sessionId: string; date: string; by: "staff" | "customer" | "" };
+/** A cancelled booking, as My Account lists it under the tickets (the booking app's _mrCxRow): its session, its day,
+ *  who cancelled it (queue_entries.cancelled_by: 'staff', 'customer', or '' when nobody knows), and when (the server's
+ *  own stamp, queue_entries.cancelled_at, the latest of the ticket's rows; '' for a row cancelled before the column, 2026-11-20). */
+export type CancelledGroup = { key: string; sessionId: string; date: string; by: "staff" | "customer" | ""; at: string };
 /** The account's cancelled bookings whose day has not gone, one per ticket, soonest first (the booking app's _mrCancelled,
  *  2026-11-10): with no email or SMS the page is the rider's only record, and a booking cancelled by the rider, or by
  *  staff (a whole session cancelled with its refunds among them), used to vanish without a word. A ticket that still
@@ -339,8 +356,10 @@ export function cancelledGroups(rows: Row[], today: string): CancelledGroup[] {
     // Victory Lap's Singles and Doubles are two tickets (groupKey); an Arena Heros place reads its own column
     const key = groupKey({ sessionId, vl: isArenaId(sessionId) ? null : vlEntry(r.vl) });
     if (live.has(key)) continue;
-    const g = by.get(key) ?? { key, sessionId, date, by: "" as const, who: new Set<string>() };
+    const g = by.get(key) ?? { key, sessionId, date, by: "" as const, at: "", who: new Set<string>() };
     g.who.add(S(r.cancelled_by));
+    const at = S(r.cancelled_at);
+    if (at && (Date.parse(at) || 0) > (Date.parse(g.at) || 0)) g.at = at;
     by.set(key, g);
   }
   return [...by.values()]

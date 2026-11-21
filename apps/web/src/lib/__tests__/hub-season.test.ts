@@ -67,7 +67,8 @@ describe("the card and the look", () => {
     if (!a.ok || !a.member) throw new Error("not a member");
     const props = { locale: "en", L: "en" as const, area: a, tierNames: ["Rider", "Pro", "Legend"] as [string, string, string], nameOf: () => "", bookAt: () => "", today: "2027-02-10", empty: "None" };
     const on = renderToStaticMarkup(createElement(MembersArea, { ...props, season: "ramadan" }));
-    expect(on).toContain('<div class="club-mine club-members club-ssn-on"><h2>Your membership</h2><div class="club-ssn club-ssn-ramadan">');
+    expect(on).toContain('<div class="club-mine club-members club-ssn-on"><h2>Your membership</h2>');
+    expect(on).toContain('<div class="club-pane" id="club-pane-sess" data-part="sess"><div class="club-ssn club-ssn-ramadan">'); // it leads the Sessions part (2026-11-20)
     const off = renderToStaticMarkup(createElement(MembersArea, { ...props, season: "" }));
     expect(off).toContain('<div class="club-mine club-members"><h2>');
     expect(off).not.toContain("club-ssn");

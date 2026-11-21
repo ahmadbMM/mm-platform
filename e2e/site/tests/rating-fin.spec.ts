@@ -67,7 +67,7 @@ test("a member's last rating ends on the month's challenge, with Community and D
   expect(bad).toEqual([]);
   // Community: the members' area, the pop-up gone
   await dlg.getByRole("link", { name: "Community" }).click();
-  await page.waitForURL("**/club");
+  await page.waitForURL("**/club#challenges"); // the Challenges part (2026-11-20)
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(await inert()).toBe(false);
 });
@@ -139,7 +139,7 @@ test("a member on the path: Book filled, then Community outlined, then Done", as
   const bg = (name: string) => dlg.getByRole("link", { name }).evaluate((a) => getComputedStyle(a).backgroundColor);
   expect(await bg("Community")).not.toBe(await bg("Book your next ride"));
   await community.click();
-  await page.waitForURL("**/club");
+  await page.waitForURL("**/club#challenges"); // the Challenges part (2026-11-20)
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 

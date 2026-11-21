@@ -75,6 +75,8 @@ export type BookSession = {
   /** Members book first (lib/members-first.ts, 2026-11-18) while it lasts: `held` for a visitor who is not a member, whose
    *  `opens` then says when everyone may (`everyone`); `label` is "Members book first" held, else a member's "Members first". */
   mf?: { held: boolean; label: string; everyone: string };
+  /** The bike types whose own places are taken (lib/booking-server.ts typesFull): said Full on their pills, never picked. */
+  typesFull?: string[];
 };
 
 /** The signed-in account, as the wizard needs it (lib/booking-server.ts bookingAccount). */
@@ -109,20 +111,28 @@ export type BookAccount = {
 };
 
 // ── What a session involves (KIND_TRAITS) ────────────────────────────────────────────────────
-const NO_BIKE: RideKind[] = ["swim", "workshop", "event"];
+/** The kinds with no bike to ride (the booking app's KIND_TRAITS bike:false): the pool, the workshop, an event, the runs,
+ *  the races, the Blood Donation event, yoga and the Farm House Night. */
+const NO_BIKE: RideKind[] = ["swim", "workshop", "event", "runher", "vlap", "arena", "defe5k", "blood", "yoga", "farm"];
 export const needsBike = (s: Pick<BookSession, "kind">) => !NO_BIKE.includes(s.kind);
-/** Which waiver a kind is agreed under (_waiverKind): the ride's where there is a bike, the swim's
- *  for the swim, the activity waiver for everything else (workshop, event, any other kind). */
-export type WaiverKind = "bike" | "swim" | "activity";
-const BIKE_WAIVER: RideKind[] = ["jcc", "saturday", "petromin", "snd96"];
-export const waiverKind = (s: Pick<BookSession, "kind">): WaiverKind => (BIKE_WAIVER.includes(s.kind) ? "bike" : s.kind === "swim" ? "swim" : "activity");
+/** A run (Run for Her, the DEFE 5KM Run: _isRun) and a race (Victory Lap, Arena Heros: _isRace). */
+export const isRun = (s: Pick<BookSession, "kind">) => s.kind === "runher" || s.kind === "defe5k";
+export const isRace = (s: Pick<BookSession, "kind">) => s.kind === "vlap" || s.kind === "arena";
+/** Which waiver a kind is agreed under (_waiverKind): the Blood Donation event's, the ride's where there is a bike, the
+ *  swim's for the swim, the Farm House Night's, and the activity waiver for everything else. */
+export type WaiverKind = "bike" | "swim" | "activity" | "farm" | "blood";
+export const waiverKind = (s: Pick<BookSession, "kind">): WaiverKind =>
+  (s.kind === "blood" ? "blood" : needsBike(s) ? "bike" : s.kind === "swim" ? "swim" : s.kind === "farm" ? "farm" : "activity");
 /** Every booking needs an agreed waiver (owner, 2026-10-03: "you can't book anything without
  *  agreeing"; the database refuses one without: WAIVER_REQUIRED). */
 export const needsWaiver = (s: Pick<BookSession, "kind">) => Boolean(waiverKind(s));
-/** The wizard's path (_regSteps): the riders step only where there is a bike, then the review, where the waiver is
- *  ticked right above the button (the booking app's review since 2026-10-10; the website's since 2026-11-18, EM07-B: its
- *  own step 2.5 went). 2.5 stays in the type for an older address only. */
+/** The wizard's path (_regSteps): a second step where there is a bike to size, an event's seats, the Farm House Night's
+ *  family, a runner's or an athlete's details and the donor's; then the review, where the waiver is ticked right above
+ *  the button (the booking app's review since 2026-10-10). 2.5 stays in the type for an older address only. */
 export type Step = 1 | 2 | 2.5 | 3;
+export const hasDetailsStep = (s: Pick<BookSession, "kind">) => needsBike(s) || s.kind === "event" || s.kind === "farm" || isRun(s) || isRace(s) || s.kind === "blood";
+// staging: its own booking flow (BookingFlow.tsx) draws step 2 for the bikes alone, so its path keeps that step to where
+// there is a bike (main's hasDetailsStep adds an event's seats, the Farm House Night's family and the race details there)
 export function regSteps(s: Pick<BookSession, "kind">): Step[] {
   const st: Step[] = [1];
   if (needsBike(s)) st.push(2);
@@ -165,9 +175,17 @@ export const JCC_ACCOUNT_CAP = 3;
 /** Seats one account books on a ticketed event (EVENT_SEAT_MAX, Settings > Business event_seat_max; the database's
  *  _group_ride_cap allows five): the page passes the setting in (lib/biz.ts bizOf), this is its default. */
 export const EVENT_SEAT_MAX = 5;
-export function maxRiders(s: Pick<BookSession, "community" | "kind">, booked: number, cap: number = JCC_ACCOUNT_CAP, seatMax: number = EVENT_SEAT_MAX): number {
+/** Places a member books on a Farm House Night: themselves and their family by name (FARM_SEAT_MAX, 2026-11-13). */
+export const FARM_SEAT_MAX = 4;
+/** A Petromin night's party (GROUP_RIDE_MAX, Settings > Business group_ride_max): the member and one guest. */
+export const GROUP_RIDE_MAX = 2;
+/** A session that takes a party (_partyRide): a Petromin night, an event's seats and the Farm House Night's family. */
+export const partyRide = (s: Pick<BookSession, "community" | "kind">) => (s.community && s.kind === "petromin") || s.kind === "event" || s.kind === "farm";
+export function maxRiders(s: Pick<BookSession, "community" | "kind">, booked: number, cap: number = JCC_ACCOUNT_CAP, seatMax: number = EVENT_SEAT_MAX, groupMax: number = GROUP_RIDE_MAX): number {
+  if (s.kind === "farm") return Math.max(1, FARM_SEAT_MAX - booked); // the member and their family (_maxRiders)
   if (s.kind === "event") return Math.max(1, seatMax - booked); // a ticketed event's seats, as the booking app's _maxRiders
-  if (s.community) return 1; // the Petromin ride (two) is booked through its own form, never here
+  if (s.community && s.kind === "petromin") return Math.max(1, groupMax - booked);
+  if (s.community) return 1;
   return Math.max(1, cap - booked);
 }
 
@@ -403,10 +421,15 @@ export function birthOk(v: string, today: string): boolean {
 
 // ── The answer the booking route gives ───────────────────────────────────────────────────────
 /** Every refusal the wizard words (the app's _bookRefused and its own checks). men_only and women_only: a session
- *  for the other gender (the owner, 2026-10-27; the database's GENDER_ONLY). */
+ *  for the other gender (the owner, 2026-10-27; the database's GENDER_ONLY). The rest follow the booking app's _bookRefused:
+ *  a type closed or full since the page was read (TYPE_CLOSED, TYPE_FULL), members book first (MEMBERS_FIRST), the capped
+ *  waitlist full (WAITLIST_FULL), the member bikes gone (MEMBER_BIKES_FULL), a runner, donor or athlete under age or
+ *  without the details or the agreement to share them (RUN_*, BLOOD_*, VL_*). */
 export const REFUSALS = ["signin", "closed", "members", "rejected", "already", "one_per_session", "group_cap", "cap", "fix_first", "pick_type",
   "waitlist_full", "not_open", "waiver", "invalid", "generic", "offline", "origin", "slow", "men_only", "women_only",
-  "ref_code_carbon", "ref_code_session", "blood_code_carbon", "blood_code_session", "place_gone", "saturday_link", "waiver_outdated"] as const;
+  "ref_code_carbon", "ref_code_session", "blood_code_carbon", "blood_code_session", "place_gone", "saturday_link", "waiver_outdated",
+  "type_closed", "type_full", "members_first", "member_bikes_full", "run_age", "run_km", "run_details", "share", "blood_age", "blood_details",
+  "vl_age", "vl_one_each", "vl_no_team", "vl_team_full", "vl_team_self", "vl_gender", "vl_race", "vl_div", "vl_shirt", "vl_team_locked", "vl_details"] as const;
 export type Refusal = (typeof REFUSALS)[number];
 
 /** A session for one gender that this account may not book (lib/session-gender.ts genderOk; the booking app's _sgOk):
@@ -420,27 +443,81 @@ export const genderRefused = (s: Pick<BookSession, "gender">, gender: SessionGen
 export function refusalOf(err: { code?: string; message?: string; details?: string } | null | undefined): Refusal {
   const m = `${err?.code ?? ""} ${err?.message ?? ""}`;
   const d = String(err?.details ?? "").trim();
+  const md = `${m} ${d}`;
   if (/STALE_SESSION/.test(m)) return "signin";
   // the last place went to another device while this rider was booking one (rentals 20261111030000; asked for with
   // seat_only): nothing was kept, and the rider chooses the waitlist or another ride
   if (/PLACE_GONE/.test(m)) return "place_gone";
   // a session for one gender (GENDER_ONLY from _gender_entry_guard, its detail the gender it is for; \bmale\b never matches "female")
   if (/GENDER_ONLY/.test(m)) return /\bmale\b/.test(d) ? "men_only" : "women_only";
-  if (/SESSION_CLOSED/.test(m)) return "closed";
-  if (/FIX_FIRST/.test(m)) return "fix_first";
-  if (/PICK_TYPE|TYPE_CLOSED/.test(m)) return "pick_type"; // TYPE_CLOSED: closed since this page was read (_type_closed_guard)
-  if (/NOT_OPEN_YET/.test(m)) return "not_open";
+  if (/WAIVER_OUTDATED/.test(md)) return "waiver_outdated";
   if (/WAIVER_REQUIRED/.test(m)) return "waiver";
+  if (/FIX_FIRST/.test(m)) return "fix_first";
+  // staff switched micromobility.sa/saturday on after this page was drawn (the queue guard's SATURDAY_LINK)
+  if (d === "SATURDAY_LINK" || /SATURDAY_LINK|micromobility\.sa\/saturday/.test(m)) return "saturday_link";
+  if (/WAITLIST_FULL/.test(md)) return "waitlist_full";
+  if (/SESSION_CLOSED/.test(m)) return "closed";
+  if (/TYPE_CLOSED/.test(m)) return "type_closed"; // closed since this page was read (_type_closed_guard)
+  if (/TYPE_FULL/.test(m)) return "type_full"; // its places taken since this page was read (_type_full_guard)
+  if (/PICK_TYPE/.test(m)) return "pick_type";
+  if (/MEMBERS_FIRST/.test(md)) return "members_first";
+  if (/NOT_OPEN_YET/.test(m)) return "not_open";
+  if (/MEMBER_BIKES_FULL/.test(md)) return "member_bikes_full";
+  if (/RUN_AGE/.test(md)) return "run_age";
+  if (/BLOOD_AGE/.test(md)) return "blood_age";
+  if (/BLOOD_DETAILS/.test(md)) return "blood_details";
+  if (/(BLOOD|RUN|VL)_SHARE/.test(md)) return "share";
+  // a personal code where it does not pay (_ref_code_guard, _blood_code_guard): its detail names why
+  const code = /\b(REF|BLOOD)_CODE_(CARBON|SESSION)\b/.exec(md);
+  if (code) return `${code[1].toLowerCase()}_code_${code[2].toLowerCase()}` as Refusal;
+  if (/RUN_KM/.test(md)) return "run_km";
+  if (/RUN_DETAILS/.test(md)) return "run_details";
+  // Victory Lap's and Arena Heros' own codes (_vl_entry_guard)
+  const vl = /VL_[A-Z_]+/.exec(md)?.[0];
+  if (vl) {
+    const k = vl.toLowerCase() as Refusal;
+    return (REFUSALS as readonly string[]).includes(k) ? k : "vl_details";
+  }
   if (d === "MEMBERS_ONLY" || /community members only/i.test(m)) return "members";
   if (d === "ONE_PER_SESSION" || /One place per person/i.test(m)) return "one_per_session";
   if (d === "GROUP_CAP" || /riders per booking/i.test(m)) return "group_cap";
-  // a personal code where it does not pay (_ref_code_guard, _blood_code_guard): its detail names why
-  const code = /\b(REF|BLOOD)_CODE_(CARBON|SESSION)\b/.exec(`${d} ${m}`);
-  if (code) return `${code[1].toLowerCase()}_code_${code[2].toLowerCase()}` as Refusal;
-  // staff switched micromobility.sa/saturday on after this page was drawn (the queue guard's SATURDAY_LINK), and the
-  // waiver this site sends is older than the one the database asks for (WAIVER_OUTDATED), as the booking app reads them
-  if (d === "SATURDAY_LINK" || /SATURDAY_LINK|micromobility\.sa\/saturday/.test(m)) return "saturday_link";
-  if (/WAIVER_OUTDATED/.test(`${m} ${d}`)) return "waiver_outdated";
   if (/BAD_INPUT|22023/.test(m)) return "invalid";
   return "generic";
+}
+
+// ── The party (staging's lib/sx-b6.ts, the 2026-11-18 build's EF09, EM06-B, EM07-B) ───────────────────────────────────
+/** A rider of the party: a child (5 and over, the birth-date rule's floor) rides the Kids bike where the ride offers it. */
+export type PartyRider = Rider & { child?: boolean };
+export function partyOf(riders: PartyRider[]): { adults: number; kids: number } {
+  const kids = riders.filter((r) => r.child).length;
+  return { adults: Math.max(1, riders.length - kids), kids };
+}
+/** The party set from the stepper: adults first (rider 1 is the account holder), then the children, each one kept as it
+ *  was answered; never more than `cap` in all and never fewer than one adult. A new child starts on the Kids bike when
+ *  `kidsType` says the ride has one. */
+export function setParty(riders: PartyRider[], adults: number, kids: number, cap: number, kidsType: string | null): PartyRider[] {
+  const a = Math.max(1, Math.min(cap, Math.floor(adults)));
+  const k = Math.max(0, Math.min(cap - a, Math.floor(kids)));
+  const grown = riders.filter((r) => !r.child), small = riders.filter((r) => r.child);
+  const blank = (child: boolean): PartyRider => ({ name: "", height: "", type: child && kidsType ? (kidsType as Rider["type"]) : "", ...(child ? { child: true } : {}) });
+  const out: PartyRider[] = [];
+  for (let i = 0; i < a; i++) out.push(grown[i] ?? blank(false));
+  for (let i = 0; i < k; i++) out.push(small[i] ?? blank(true));
+  return out;
+}
+/** A rider row's summary while folded (EM07-B): which rider, adult or child, the bike picked. */
+export function riderDone(r: Rider, needsName: boolean): boolean {
+  return !!r.type && (!needsName || !!r.name.trim()) && (r.type === "Own" || /^\d{2,3}$/.test(r.height));
+}
+/** Whether a list of dates has one here that can be chosen (not one that opens later, goes to another page, or is fully
+ *  booked). */
+export function datesLive(sessions: { opens?: string | null; satLink?: string | null; handoff?: string | null; fbk?: boolean }[]): boolean {
+  return sessions.some((s) => !s.opens && !s.satLink && !s.handoff && !s.fbk);
+}
+/** A party whose places carry their own names (an event's seats, the Farm House Night's family; the booking app's
+ *  regRiderNames): the first place may stand for the account holder, every other needs a name. The first one missing, or
+ *  -1 when all are given. */
+export function unnamedPlace(riders: Pick<Rider, "name">[], acctName: string): number {
+  if (riders.length < 2) return -1;
+  return riders.findIndex((r, i) => !(r.name.trim() || (i === 0 ? acctName : "")).trim());
 }

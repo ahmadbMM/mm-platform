@@ -85,6 +85,11 @@ export type RideSession = {
   /** The places left at which Few spots left turns itself on (the booking app's _fewAtOf, bike_slots._fewAt, the staff
    *  Bookings round of 2026-11-18): a whole number 1-999, on an open date whose switch is off; absent otherwise. */
   fewAt?: number;
+  /** Each bike type's own places where staff cap them (bike_slots by type, the booking app's _n6rTypePlaces; the database's
+   *  _type_full_guard), and the bikes of each type out of service (out_bikes by type): the booking steps say a type Full
+   *  once its places are taken. Absent where nothing is capped by type. */
+  typePlaces?: Record<string, number>;
+  outBy?: Record<string, number>;
   /** Members book first (sessions.public_at, rentals 20261118210800; lib/members-first.ts): until this time (ISO) only
    *  Community members may book it. Only a read that asks for it has it (SESSION_COLS_PUBLIC_AT), and only when set; a
    *  copy kept at the edge from before has none, and reads as open to everyone. */
@@ -396,6 +401,27 @@ function revealOf(r: Row): Pick<RideSession, "revealAt"> {
 
 /** The bikes out of service a row says (sessions.out_bikes, {type: count}; the booking app's _n6rOut/_n6rOutN): the
  *  whole positive counts summed, anything else none. Only when the read asked for it (SESSION_COLS_OUT). */
+/** Each bike type's own places in a session's settings (the booking app's _n6rTypePlaces): a count, or a count per size
+ *  summed. A fleet picked bike by bike (_bikes) is not counted here (the database still caps it). */
+export function typePlacesOf(slots: unknown): Record<string, number> | null {
+  const sl = slotsOf(slots);
+  if (Array.isArray(sl._bikes)) return null;
+  const out: Record<string, number> = {};
+  for (const ty of ["Road", "Hybrid", "Mountain", "Kids", "Road Carbon", "Gravel"]) {
+    const v = sl[ty];
+    const n = typeof v === "number" ? v : v && typeof v === "object" ? Object.values(v as Record<string, unknown>).reduce<number>((a, x) => a + (Number(x) || 0), 0) : null;
+    if (n != null && Number.isFinite(n)) out[ty] = n;
+  }
+  return Object.keys(out).length ? out : null;
+}
+/** The bikes out of service by type (out_bikes), whole positive counts only. */
+function outByOf(r: Row): Record<string, number> {
+  let o = r.out_bikes;
+  if (typeof o === "string") { try { o = JSON.parse(o); } catch { o = null; } }
+  if (!o || typeof o !== "object" || Array.isArray(o)) return {};
+  return Object.fromEntries(Object.entries(o as Record<string, unknown>).map(([k, v]) => [k, Math.floor(Number(v))] as const).filter(([, n]) => n > 0));
+}
+
 function outOf(r: Row): Pick<RideSession, "out"> {
   if (!("out_bikes" in r)) return {};
   let o = r.out_bikes;
@@ -459,6 +485,8 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...breakfastOf(r),
     ...(bfMembersOf(r.bike_slots) ? { bfMembers: true } : {}),
     ...(fewOf(r) ? { few: true as const } : r.status === "open" && fewAtOf(r.bike_slots) ? { fewAt: fewAtOf(r.bike_slots) } : {}),
+    // each type's own places, where staff cap them, and its bikes out of service (the booking steps' Full on a type)
+    ...((tp) => (tp && !(community && r.needs_approval !== false) ? { typePlaces: tp, ...("out_bikes" in r ? { outBy: outByOf(r) } : {}) } : {}))(typePlacesOf(r.bike_slots)),
     ...((h) => (h ? { ig: h } : {}))(igOf(r.bike_slots)),
     ...revealOf(r),
     ...publicAtOf(r),
@@ -560,6 +588,8 @@ export const SESSION_COLS_SPOTS = "spots"; // staging: already in SESSION_COLS (
 // members may book the session. Riders may read it with the row; a group of its own, so a database without it reads as
 // before: nobody held.
 export const SESSION_COLS_PUBLIC_AT = "public_at";
+/** The add-ons a session sells (sessions.addons), for the booking wizard's review. */
+export const SESSION_COLS_ADDONS = "addons";
 /** The sessions the lists of the sessions ahead show (a PostgREST filter): open and full ones, and the closed ones whose
  *  settings carry the Full, no waitlist mark (bike_slots is text; toSession reads the mark itself and the rest of fbkOf). */
 export const SESSION_STATUS_SHOWN = "or=(status.in.(open,full),and(status.eq.closed,bike_slots.like.*_fbk*))";

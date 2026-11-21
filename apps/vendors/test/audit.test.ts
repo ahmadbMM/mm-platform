@@ -6,7 +6,8 @@ import {
   arrivalWindow, canCancelSeries, canEditVenue, canRequest, dayStatus, e164, emailOk, insights, passwordProblem, pickable, rideTimes, within48h,
   type CalDay, type Mine, type SharedRatings, type Tier,
 } from "../src/client/model";
-import { STRINGS } from "../src/client/strings";
+import { LANGS, STRINGS } from "../src/client/strings";
+import { deviceLang } from "../src/client/app";
 
 const mine = (o: Partial<Mine> = {}): Mine => ({ id: 1, status: "confirmed", kind: "single", series_id: null, note: "", staff_note: "", ...o });
 const tier: Tier = { id: "multi", name_en: "Multi", name_ar: "", modes: ["single", "multi"], max_per_month: 2, horizon_days: 120, min_lead_days: 7, cancel_cutoff_days: 5, benefits: [] };
@@ -33,14 +34,46 @@ describe("plurals", () => {
     expect(plural("ar", "previewSummary", 2, { ok: 1 })).toBe("يمكن طلب 1 من أصل تاريخين.");
   });
 
-  it("has an other form for every phrase in both languages, and the same phrases", () => {
+  it("has an other form for every phrase in every language, and the same phrases", () => {
     expect(Object.keys(PLURALS.ar).sort()).toEqual(Object.keys(PLURALS.en).sort());
-    for (const lang of ["en", "ar"] as const) for (const f of Object.values(PLURALS[lang])) expect(f.other).toBeTruthy();
+    expect(Object.keys(PLURALS.ms).sort()).toEqual(Object.keys(PLURALS.en).sort());
+    for (const lang of ["en", "ar", "ms"] as const) for (const f of Object.values(PLURALS[lang])) expect(f.other).toBeTruthy();
   });
 
-  it("every string key has both languages", () => {
-    expect(Object.keys(STRINGS.ar).sort()).toEqual(Object.keys(STRINGS.en).sort());
-    for (const [k, v] of Object.entries(STRINGS.ar)) expect(v, k).toBeTruthy();
+  it("every string key has every language", () => {
+    for (const lang of ["ar", "ms"] as const) {
+      expect(Object.keys(STRINGS[lang]).sort()).toEqual(Object.keys(STRINGS.en).sort());
+      for (const [k, v] of Object.entries(STRINGS[lang])) expect(v, `${lang}.${k}`).toBeTruthy();
+    }
+  });
+
+  it("words Malay counts with its one form, the noun the same for any number, with Western digits", () => {
+    expect([0, 1, 2, 5, 100].map((n) => pluralForm("ms", n))).toEqual(["other", "other", "other", "other", "other"]);
+    expect(plural("ms", "ridersBooked", 1)).toBe("1 penunggang telah menempah");
+    expect(plural("ms", "ridersBooked", 1200)).toBe("1,200 penunggang telah menempah");
+    expect(plural("ms", "previewSummary", 3, { ok: 2 })).toBe("2 daripada 3 tarikh boleh dimohon.");
+    expect(plural("ms", "days", 7)).toBe("7 hari");
+  });
+});
+
+describe("languages", () => {
+  it("offers English, Arabic and Malay, each by its own name, Arabic alone right to left", () => {
+    expect(LANGS.map((l) => l.code)).toEqual(["en", "ar", "ms"]);
+    expect(LANGS.map((l) => l.code).sort()).toEqual(Object.keys(STRINGS).sort());
+    expect(LANGS.map((l) => l.label)).toEqual(["English", "العربية", "Bahasa Melayu"]);
+    expect(LANGS.filter((l) => l.rtl).map((l) => l.code)).toEqual(["ar"]);
+  });
+
+  it("opens in the device's language when the portal has it, else English", () => {
+    expect(deviceLang("ms-MY")).toBe("ms");
+    expect(deviceLang("ms")).toBe("ms");
+    expect(deviceLang("ms_BN")).toBe("ms");
+    expect(deviceLang("ar-SA")).toBe("ar");
+    expect(deviceLang("en-US")).toBe("en");
+    expect(deviceLang("id-ID")).toBe("en"); // Indonesian is not Malay
+    expect(deviceLang("fr")).toBe("en");
+    expect(deviceLang(undefined)).toBe("en");
+    expect(deviceLang("")).toBe("en");
   });
 });
 

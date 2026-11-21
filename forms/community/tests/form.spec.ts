@@ -1766,7 +1766,7 @@ test('a signed-in account with a waiting application is given its status page; t
   await expect(page.locator('#acct-pending-a')).toBeVisible();
   await expect(page.locator('#acct-pending-a')).toHaveAttribute('href', new RegExp(`\\?track=${TRACK}&lang=en$`));
   const p2 = await page.context().newPage();
-  await p2.addInitScript((tok) => { try { localStorage.setItem('mm-community-track', JSON.stringify({ t: tok, at: Date.parse('2026-10-20T08:00:00Z') })); } catch (e) { /* none */ } }, TRACK);
+  await p2.addInitScript((tok) => { try { localStorage.setItem('mm-community-track', JSON.stringify({ t: tok, at: Date.parse('2026-10-20T08:00:00Z'), kept: Date.now() - 864e5 })); } catch (e) { /* none */ } }, TRACK);
   await open(p2, '?lang=en', {}, null, true);
   await expect(p2.locator('#track-seen')).toBeVisible();
   await expect(p2.locator('#track-seen-txt')).toHaveText('You sent an application on 20 October 2026.');

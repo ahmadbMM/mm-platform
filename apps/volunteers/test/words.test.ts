@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { LANGS } from "../src/client/i18n";
 
 // Every language has every word, its placeholders intact, and Latin digits (the booking app's rule).
 const dir = join(__dirname, "..", "src", "lang");
@@ -10,8 +11,13 @@ const others = readdirSync(dir).filter((f) => f !== "en.json");
 const holes = (s: string) => (s.match(/\{\d+\}/g) ?? []).sort();
 
 describe("the words", () => {
-  it("are in the booking app's ten languages", () => {
-    expect(others.map((f) => f.replace(".json", "")).sort()).toEqual(["ar", "bn", "es", "fr", "hi", "ne", "pt", "tl", "ur"]);
+  it("are in the booking app's ten languages and Malay", () => {
+    expect(others.map((f) => f.replace(".json", "")).sort()).toEqual(["ar", "bn", "es", "fr", "hi", "ms", "ne", "pt", "tl", "ur"]);
+  });
+
+  it("are offered in the language menu, each by its own name", () => {
+    expect(LANGS.map((l) => l.code).sort()).toEqual(["en", ...others.map((f) => f.replace(".json", ""))].sort());
+    expect(LANGS.find((l) => l.code === "ms")).toEqual({ code: "ms", label: "Bahasa Melayu" });
   });
   for (const f of others) {
     it(`${f} has every key, its placeholders and no other digits`, () => {

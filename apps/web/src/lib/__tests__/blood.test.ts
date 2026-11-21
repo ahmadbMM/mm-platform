@@ -33,6 +33,7 @@ import { bloodDone, countdownMoments, fmtClock, icsFor, icsPlace, meetsAt, place
 import { waiverKind, waiverVersion } from "../waiver";
 import { walletDue } from "../wallet";
 import AccountPage from "../../app/[locale]/account/[[...part]]/page";
+import BookingsPage from "../../app/[locale]/bookings/page";
 import RideRecord from "@/components/account/RideRecord";
 import RideMore from "@/components/account/RideMore";
 import AccountParts from "@/components/account/AccountParts";
@@ -343,7 +344,7 @@ describe("on Events, once a session exists", () => {
 });
 
 // ── The ticket on My Account ─────────────────────────────────────────────────────────────────────────────────
-describe("its ticket on My Account", () => {
+describe("its ticket on Bookings", () => {
   const s = ticketSession(BD)!;
   const entry = (o: Record<string, unknown> = {}) => ticketRow({ id: "bd1abcdef", session_id: BD.id, session_date: BD.session_date, session_day: "Thursday", status: "waiting", queue_num: 12, price: 0, paid: false, name: "Test Donor", type_preference: "None", ...o })!;
   const card = (rows: TicketRow[], o: { rewards?: Map<string, BloodReward> | null; past?: boolean; locale?: string; today?: string; session?: typeof s | undefined; noSession?: boolean } = {}) => {
@@ -444,12 +445,15 @@ describe("its ticket on My Account", () => {
   });
 
   describe("the page asks for the free ride only when it has to", () => {
-    const account = async (rows: unknown[], rewards: () => Response, part?: string[]) => {
+    // the tickets are on Bookings (/bookings, 2026-11-19); the record is My Account's Stats and Badges
+    const account = async (rows: unknown[], rewards: () => Response, part?: string[] | "account") => {
       jar.account = `c1~${TOKEN}`;
       const f = db([BD], (url) => (url.includes("/rpc/customer_profile") ? json([{ name: "Test Donor", email: "donor@example.test", phone: "+966500000000" }])
         : url.includes("/rpc/my_bookings") ? json(rows) : url.includes("/rpc/customer_blood_rewards") ? rewards() : null));
       vi.stubGlobal("fetch", f);
-      const page = await AccountPage({ params: Promise.resolve({ locale: "en", part }), searchParams: Promise.resolve({}) });
+      const page = part === undefined
+        ? await BookingsPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) })
+        : await AccountPage({ params: Promise.resolve({ locale: "en", part: part === "account" ? undefined : part }), searchParams: Promise.resolve({}) });
       return { asked: f.mock.calls.some((c) => String(c[0]).includes("/rpc/customer_blood_rewards")), cards: findAll(page, TicketCard), page };
     };
     const row = (o: Record<string, unknown> = {}) => ({ id: "bd1abcdef", session_id: BD.id, session_date: BD.session_date, session_day: "Thursday", status: "waiting", queue_num: 12, price: 0, paid: false, name: "Test Donor", type_preference: "None", ...o });
@@ -496,12 +500,13 @@ describe("its ticket on My Account", () => {
       }
       expect(bloodDone([done, row({ id: "x", status: "done", session_id: "2001-11-08", session_date: "2001-11-08" })], "2099-01-01").map((g) => g.sessionId)).toEqual(["2001-11-05-bd"]);
     });
-    // The account page's three parts (2026-11-09): the tickets on Account, the record on Stats and Badges, each
-    // reading only what it draws; any other part is not a page.
+    // The account page's three parts (2026-11-09): the menu on Account (the tickets are on Bookings since 2026-11-19),
+    // the record on Stats and Badges, each reading only what it draws; any other part is not a page.
     it("draws Account, Stats and Badges at their addresses, each with the switch", async () => {
       const parts = (page: unknown) => findAll(page, AccountParts).map((x) => (x.props as { part: string }).part);
-      const acct = await account([row({ status: "done", blood_role: "visitor" })], absent);
+      const acct = await account([row({ status: "done", blood_role: "visitor" })], absent, "account");
       expect(parts(acct.page)).toEqual(["account"]);
+      expect(acct.cards).toHaveLength(0);
       expect(findAll(acct.page, RideRecord)).toHaveLength(0);
       const stats = await account([row({ status: "done", blood_role: "visitor" })], absent, ["stats"]);
       expect(parts(stats.page)).toEqual(["stats"]);

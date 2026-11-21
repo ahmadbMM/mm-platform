@@ -283,15 +283,16 @@ describe.skip("the Farm House Night on Experiences, to a signed-in community mem
     // drawn, never an emoji
     expect(html).not.toMatch(/\p{Extended_Pictographic}/u);
   });
-  it("hands over on its summary in the booking app's rust plate, saying the family is added there", async () => {
+  it("opens the booking steps on this site from its summary in the booking app's rust plate (the user, 2026-11-19)", async () => {
     const p = await experiences([FH]);
     const html = draw(p, 3, comm(p), farmOf(p));
     expect(html).toContain('<div class="xs-sum-head xs-fh-head"><span class="xs-logo small xs-farm-logo"><img src="/site/farm-logo.jpg" alt="" width="150" height="150"/></span>');
     expect(html).toContain('<strong class="xs-fh-name">Nawar Farm House Night</strong>');
     expect(html).toContain("Arrival <bdi>4:30 PM</bdi> · Dinner <bdi>8:30 PM</bdi>");
     expect(html).toContain('<span class="xs-fh-sub">Members and their families</span>');
-    expect(html).toMatch(/<a class="xs-go ev-farm" href="https:\/\/experiences\.micromobility\.sa\/\?lang=en&amp;ev=community&amp;session=2099-11-19-fh">/);
-    expect(html).toContain('<p class="xs-handoff">The booking app opens on this date: sign in, add the participants and confirm.</p>');
+    // booked on this site now: the steps on this date (BookingFlow), where the member adds their family by name; no hand-over line
+    expect(html).toMatch(/<a class="xs-go ev-farm" href="\/experiences\?ev=community&amp;session=2099-11-19-fh">/);
+    expect(html).not.toContain('class="xs-handoff"');
     expect(text(/<section aria-labelledby="xs-h3">.*<\/section>/.exec(html)?.[0])).not.toMatch(BIKE_WORDS);
   });
 });
@@ -356,10 +357,10 @@ describe("a Farm House Night ticket (My Account)", () => {
     expect(html).toContain("Reserved - the participant list is being finalised");
     expect(html).toMatch(/class="tk-total"><span>Total<\/span><strong>Free<\/strong>/);
     expect(html).not.toContain("tk-rider-pay"); // a ride staff approve: no price for each place
-    // the member adds or drops family members in the booking app (its Edit), as there; Reschedule and Cancel too
-    expect(html).toContain('<a class="tk-btn solid" href="https://book.example.test/?ev=community&amp;session=2099-11-19-fh">Edit</a>');
-    expect(html).toContain(" Reschedule</a>");
-    expect(html).toContain(">Cancel</a>");
+    // the member takes family members off by name on the website (its Edit, the booking app's _fhDropOpen, 2026-11-19), and
+    // cancels; never Reschedule: a ride staff approve is never moved (the database refuses a move off one)
+    expect(html).toContain('<div class="tk-manage"><button type="button" class="tk-btn solid" aria-haspopup="dialog">Edit</button><button type="button" class="tk-btn red" aria-haspopup="dialog">Cancel</button></div>');
+    expect(html).not.toContain("Reschedule");
     expect(html).toContain(`href="${MAP}"`);
     expect(html.replace(/<[^>]*>/g, " ")).not.toMatch(BIKE_WORDS);
     expect(decodeURIComponent(/href="data:text\/calendar;charset=utf-8,([^"]*)"/.exec(html)?.[1] ?? "")).not.toMatch(BIKE_WORDS);

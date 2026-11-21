@@ -136,7 +136,7 @@ describe("the card", () => {
     expect(first.indexOf('class="club-int"')).toBeLessThan(first.indexOf('class="club-att"'));
     const end = renderToStaticMarkup(createElement(MembersArea, { ...props, interests: { saved: true, keys: ["road"], suggested: [], offered: ALL } }));
     expect(end.indexOf('class="club-int"')).toBeGreaterThan(end.indexOf('class="club-up"'));
-    expect(end).toMatch(/<\/section><\/div>$/);
+    expect(end).toMatch(/<\/section><\/div><\/div>$/); // the end of the Sessions part, the only part here (2026-11-20)
   });
   it("has its words in all 16 languages, the booking app's own where it speaks them", () => {
     for (const l of LOCALES) {

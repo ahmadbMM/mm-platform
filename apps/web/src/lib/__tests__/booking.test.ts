@@ -4,7 +4,8 @@ import {
   needsWaiver, regSteps, rentalTotal, riderPrices, sessionAddons, typeOptions, validateRiders, waiverKind, type AddonItem, type BookSession, type Rider,
 } from "../booking";
 import { accountFrom, asksOf, bookingEntries, checkBooking, liveSession, readInput, waitlistRefused, waiverVersionFor } from "../booking-server";
-import { groupKm, waitlistCap, addonIds, type RideKind } from "../rides";
+import { waitlistCap, addonIds, type RideKind } from "../rides";
+import { rideGroupKm as groupKm } from "../kind-theme";
 import { POST as book } from "../../app/api/booking/route";
 import { POST as promoRoute } from "../../app/api/booking/promo/route";
 import { POST as profileRoute } from "../../app/api/booking/profile/route";
@@ -25,7 +26,12 @@ describe("the steps", () => {
     expect(regSteps(base)).toEqual([1, 2, 3]);
     expect(regSteps({ kind: "swim" })).toEqual([1, 3]);
     expect(regSteps({ kind: "workshop" })).toEqual([1, 3]);
+    // an event's seats, the Farm House Night's family, a run, a race and the donor have a step of their own (_regSteps);
+    // yoga, like the pool, goes straight to the review
+    // staging: its own booking flow keeps step 2 for the bikes alone (lib/booking.ts regSteps)
     expect(regSteps({ kind: "event" })).toEqual([1, 3]);
+    expect(regSteps({ kind: "farm" })).toEqual([1, 3]);
+    expect(regSteps({ kind: "yoga" })).toEqual([1, 3]);
     expect(nextStep({ kind: "workshop" }, 1)).toBe(3);
     expect(prevStep({ kind: "workshop" }, 3)).toBe(1);
     expect(prevStep({ kind: "swim" }, 3)).toBe(1);
@@ -200,7 +206,13 @@ describe("validation", () => {
     expect(refusalOf({ code: "P0001", message: "SESSION_CLOSED" })).toBe("closed");
     expect(refusalOf({ message: "FIX_FIRST" })).toBe("fix_first");
     expect(refusalOf({ code: "22023", message: "PICK_TYPE" })).toBe("pick_type");
-    expect(refusalOf({ code: "P0001", message: "TYPE_CLOSED", details: "Road" })).toBe("pick_type");
+    expect(refusalOf({ code: "P0001", message: "TYPE_CLOSED", details: "Road" })).toBe("type_closed");
+    expect(refusalOf({ code: "P0001", message: "TYPE_FULL: Road", details: "Road" })).toBe("type_full");
+    expect(refusalOf({ code: "P0001", message: "MEMBERS_FIRST", details: "2099-01-01T00:00:00Z" })).toBe("members_first");
+    expect(refusalOf({ code: "P0001", message: "WAITLIST_FULL" })).toBe("waitlist_full");
+    expect(refusalOf({ code: "P0001", message: "MEMBER_BIKES_FULL" })).toBe("member_bikes_full");
+    expect(refusalOf({ code: "P0001", message: "VL_TEAM_FULL" })).toBe("vl_team_full");
+    expect(refusalOf({ code: "P0001", message: "VL_SOMETHING_NEW" })).toBe("vl_details");
     expect(refusalOf({ message: "x", details: "MEMBERS_ONLY" })).toBe("members");
     expect(refusalOf({ message: "One place per person on this session." })).toBe("one_per_session");
     expect(refusalOf({ message: "Up to 2 riders per booking on this ride.", details: "GROUP_CAP" })).toBe("group_cap");
@@ -383,7 +395,7 @@ describe("api/booking", () => {
   });
   it("says each refusal in the app's terms", async () => {
     db({ customer_create_booking: () => json({ code: "P0001", message: "This ride is for community members only.", details: "MEMBERS_ONLY" }, 400) });
-    expect(await (await post(book, "/api/booking", body)).json()).toEqual({ ok: false, error: "members" });
+    expect(await (await post(book, "/api/booking", body)).json()).toMatchObject({ ok: false, error: "members" });
     db({ customer_create_booking: () => json({ code: "P0001", message: "FIX_FIRST" }, 400) });
     expect((await (await post(book, "/api/booking", body)).json()).error).toBe("fix_first");
     // the last place went to another device: the rider is asked, nothing was kept
@@ -490,7 +502,7 @@ describe("men only, women only or mixed (the owner, 2026-10-27)", () => {
     expect(calls.some((c) => c.fn === "customer_create_booking")).toBe(false);
     const f = globalThis.fetch as unknown as { mock: { calls: [string, RequestInit | undefined][] } };
     const read = f.mock.calls.find(([u]) => String(u).includes("/rpc/list_sessions"))!;
-    expect(String(read[0])).toContain(",gender_only&id=eq.");
+    expect(String(read[0])).toContain(",gender_only,closed_types&id=eq.");
     expect(JSON.parse(String(read[1]?.body))).toEqual({ p_id: "c1", p_token: TOKEN });
   });
   it("books a session for the account's own gender, and says the database's refusal in the same words", async () => {
@@ -498,7 +510,7 @@ describe("men only, women only or mixed (the owner, 2026-10-27)", () => {
     expect((await (await post(book, "/api/booking", body)).json()).ok).toBe(true);
     expect(calls.some((c) => c.fn === "customer_create_booking")).toBe(true);
     calls = db({ customer_create_booking: () => json({ code: "P0001", message: "GENDER_ONLY", details: "male" }, 400) });
-    expect(await (await post(book, "/api/booking", body)).json()).toEqual({ ok: false, error: "men_only" });
+    expect(await (await post(book, "/api/booking", body)).json()).toMatchObject({ ok: false, error: "men_only" });
   });
 });
 
@@ -599,7 +611,13 @@ describe("the waiver wording (the booking app's 2026-11-v4)", () => {
       expect(waiverKind({ kind })).toBe("activity");
       expect(waiverVersionFor({ kind })).toBe("activity-2026-11-v4");
     }
-    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("activity-2026-11-v4");
+    // a kind this list does not know reads as a ride (the booking app's _kindHas): the ride's waiver
+    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("2026-11-v4");
+    // the Farm House Night's own waiver, and the Blood Donation event's for a donor and a visitor (the booking app's versions)
+    expect(waiverVersionFor({ kind: "farm" })).toBe("farm-2026-11-v1");
+    expect(waiverVersionFor({ kind: "yoga" })).toBe("activity-2026-11-v4");
+    expect(waiverVersionFor({ kind: "blood" })).toBe("blood-2026-11-v1");
+    expect(waiverVersionFor({ kind: "blood" }, true)).toBe("blood-2026-11-v2");
     expect(waiverKind({ kind: "swim" })).toBe("swim");
     expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-11-v4");
     for (const kind of ["jcc", "saturday", "petromin", "snd96"] as const) expect(waiverVersionFor({ kind })).toBe("2026-11-v4");

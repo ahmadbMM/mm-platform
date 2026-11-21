@@ -1,9 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useLocalize } from "@/i18n/TxProvider";
+import "./signup.css";
+import { useCallback, useEffect, useId, useState, useSyncExternalStore } from "react";
+import { useLocalize, useTxLocale } from "@/i18n/TxProvider";
+import { SIGNUP_PATH, herePath, safeNext, withNext } from "@/lib/signup";
 import { T } from "./SignIn.text";
+import { signupWords } from "./Signup.words";
 import ChangePassword from "./ChangePassword";
+import ForgotPanel from "./ForgotPanel";
 import { forgetQuiet } from "./quiet";
 import Turnstile, { TURNSTILE_SITE_KEY } from "./Turnstile";
 import { PasskeySignIn, offerPasskeyNext } from "./PasskeyParts";
@@ -14,9 +18,23 @@ import { PasskeySignIn, offerPasskeyNext } from "./PasskeyParts";
 // way to ChangePassword until the rider has chosen their own.
 // `passkeys` (the page's server says site_content 'account.passkeys' is on, N06): "Sign in with a passkey" under the
 // form, and a password sign-in marks the offer to add one (components/account/PasskeyParts.tsx).
+//
+// As the booking app's sign-in (2026-11-19): "New to MicroMobility? Create account" right above the form, to the site's
+// own sign-up (/signup) coming back to this page, and "Forgot password?" beside Password, which shows the booking app's
+// forgotten-password panel (ForgotPanel.tsx) in place of the form. A sign-in on a page that was given ?next= (a path on
+// this site: /account?next=/ask/x, from the sign-up's "Already have an account? Sign in") goes there once signed in.
+
+const never = () => () => {};
+/** Where the sign-up comes back to (lib/signup.ts herePath). */
+const here = () => herePath(window.location.pathname, window.location.search);
 
 export default function SignIn({ locale, passkeys = false }: { locale: string; passkeys?: boolean }) {
   const t = useLocalize(T);
+  const w = signupWords(useTxLocale());
+  const pid = useId();
+  const [forgot, setForgot] = useState(false);
+  // This page's address, for the way back from the sign-up: known once the page is up (none while it is drawn on the server).
+  const page = useSyncExternalStore(never, here, () => "");
   const [check, setCheck] = useState("");
   const [again, setAgain] = useState(0); // a new Turnstile check after a failed try
   const onToken = useCallback((tok: string) => setCheck(tok), []);
@@ -29,7 +47,13 @@ export default function SignIn({ locale, passkeys = false }: { locale: string; p
   // Only a visitor who is signed out sees this form: the pop-ups' quiet minutes were another
   // account's (./quiet.ts).
   useEffect(() => forgetQuiet(), []);
-  const signedIn = (byPassword = true) => { forgetQuiet(); if (passkeys && byPassword) offerPasskeyNext(); window.location.reload(); };
+  const signedIn = (byPassword = true) => {
+    forgetQuiet();
+    if (passkeys && byPassword) offerPasskeyNext();
+    const next = safeNext(new URLSearchParams(window.location.search).get("next"));
+    if (next) window.location.assign(next);
+    else window.location.reload();
+  };
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
@@ -56,16 +80,23 @@ export default function SignIn({ locale, passkeys = false }: { locale: string; p
     setBusy(false);
   }
   if (held) return <ChangePassword onDone={() => signedIn()} onBack={() => setHeld(false)} />;
+  // (the check is drawn again with the form, so the one it had goes)
+  if (forgot) return <ForgotPanel onBack={() => { setCheck(""); setForgot(false); }} />;
   return (
     <>
     <form className="ac-form" onSubmit={submit} noValidate>
+      <p className="su-switch">{w.newTo} <a href={withNext(SIGNUP_PATH, page)}>{w.create}</a></p>
       <label>{t.id}<input value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" inputMode="email" dir="ltr" maxLength={254} /></label>
-      <label>{t.pwd}
+      <div className="su-pwd-field">
+        <div className="su-pwd-lbl">
+          <label htmlFor={`${pid}pwd`}>{t.pwd}</label>
+          <button type="button" className="su-forgot" onClick={() => { setErr(""); setForgot(true); }}>{w.forgotLink}</button>
+        </div>
         <span className="ac-pwd">
-          <input type={show ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" dir="ltr" maxLength={200} />
+          <input id={`${pid}pwd`} type={show ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" dir="ltr" maxLength={200} />
           <button type="button" onClick={() => setShow((s) => !s)}>{show ? t.hide : t.show}</button>
         </span>
-      </label>
+      </div>
       <Turnstile locale={locale} onToken={onToken} resetKey={again} />
       {err && <p className="ac-err" role="alert">{err}</p>}
       <button type="submit" className="ac-go" disabled={busy}>{busy ? t.busy : t.go}</button>

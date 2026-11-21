@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import RatingGate from "./RatingGate";
+import FixGateLoader from "./FixGateLoader";
 import { RATE_QUIET, BUSY, BUSY_RETRY_MS, isQuiet } from "./quiet";
 import type { RatingForm as Form } from "@/lib/rating";
 
@@ -16,6 +17,9 @@ import type { RatingForm as Form } from "@/lib/rating";
 // to share their details: WaiverGateLoader mounts ShareGateLoader once no waiver waits, and that
 // mounts this once no run waits either.
 // The ten quiet minutes are the signed-in account's: every sign-in and sign-out forgets them (./quiet.ts).
+// With no ride to rate (or none known: signed out, a quiet window), the details the account owes come next (FixGateLoader,
+// the booking app's 3ebaf706), and then the one-time ask about an old comment (TestimonialAskLoader, testimonials
+// 2026-11-18); both ask only a signed-in rider.
 // `restaurant` (2026-10-05): where a Saturday ride's breakfast was, by name in the page's language; an
 // answer from before it reads as none. `rgLow` (2026-10-09): the booking app's rg_low, the score at or
 // under which the form asks why; an answer without it reads as the default.
@@ -44,6 +48,7 @@ export default function RatingGateLoader({ locale }: { locale: string }) {
   const [pending, setPending] = useState<Pending | null>(null);
   const [round, setRound] = useState(0); // bumped once a rating lands, to ask for the next ride
   const [retry, setRetry] = useState(0); // bumped to ask again after the meter turned a check away
+  const [clear, setClear] = useState(false); // asked, and no ride waits to be rated
 
   useEffect(() => {
     if (pending) return;
@@ -51,12 +56,13 @@ export default function RatingGateLoader({ locale }: { locale: string }) {
     let wait: ReturnType<typeof setTimeout> | undefined;
     check(locale).then((p) => {
       if (!live) return;
-      if (p === BUSY) wait = setTimeout(() => setRetry((k) => k + 1), BUSY_RETRY_MS);
-      else if (p) setPending(p);
+      if (p === BUSY) { setClear(false); wait = setTimeout(() => setRetry((k) => k + 1), BUSY_RETRY_MS); }
+      else if (p) { setClear(false); setPending(p); }
+      else setClear(true);
     });
     return () => { live = false; clearTimeout(wait); };
   }, [path, locale, pending, round, retry]);
 
-  if (!pending) return null;
+  if (!pending) return clear ? <FixGateLoader locale={locale} /> : null;
   return <RatingGate key={pending.entryId} {...pending} onDone={() => { try { sessionStorage.removeItem(KEY); } catch { /* */ } setPending(null); setRound((n) => n + 1); }} />;
 }
