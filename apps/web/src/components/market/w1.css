@@ -1,0 +1,273 @@
+/* The Marketplace: browse, the listing page and the shop page (W1). This builder's own classes only, prefixed mk-w1-; the shared
+   tokens (--mk-*) and base classes are in market.css. Logical properties throughout, so Arabic and Urdu mirror it.
+   Mobile first (a 360px phone), then 600px, 900px (the listing's and the shop's two columns) and 1000px (the Filters
+   panel beside the grid). Every colour, radius and shadow is a token; white is the cards' own white, as market.css
+   writes it. Nothing is pinned to the bottom of the screen; what stays in view while a page scrolls (the Filters
+   panel, a listing's price column) stays under the header. Every tap target is 44px or more. */
+
+/* (A page's heading row, its name and "Sell an item", is market.css .mk-head.) */
+
+/* ── The keyword search ── */
+.mk-w1-search { position: relative; display: flex; gap: 8px; margin-block-end: 14px; }
+.mk-w1-search > .mk-ic { position: absolute; inset-block-start: 14px; inset-inline-start: 16px; color: var(--mk-ink-3); pointer-events: none; }
+.mk-w1-search input { flex: 1; min-width: 0; box-sizing: border-box; min-height: 48px; padding-block: 0; padding-inline: 46px 16px; border: 1px solid var(--mk-ctl); border-radius: 999px; background: #fff; color: var(--mk-ink); font: inherit; font-size: 16px; appearance: none; -webkit-appearance: none; transition: border-color .2s ease, box-shadow .2s ease; }
+/* what is typed reads in its own direction (a brand in Latin letters on an Arabic page, Arabic on an English one)
+   while the box keeps the page's, so the words never run under the mark at its start */
+.mk-w1-search input { unicode-bidi: plaintext; }
+.mk-w1-search input::placeholder { color: var(--mk-ink-3); }
+.mk-w1-search input:hover { border-color: var(--mk-ink-4); }
+.mk-w1-search input:focus-visible { outline: none; border-color: var(--mk-green); box-shadow: 0 0 0 3px var(--mk-green-soft); }
+.mk-w1-search .mk-btn2 { flex: none; padding-inline: 18px; }
+
+/* ── The sport chips, and who is selling (one choice of four, in a well) ── */
+.mk-w1-sports { margin-block-end: 12px; }
+.mk-w1-bar { display: flex; flex-direction: column; gap: 10px; margin-block-end: 20px; }
+.mk-chips.mk-w1-seg { align-self: flex-start; box-sizing: border-box; max-width: 100%; margin-inline: 0; padding: 4px; gap: 2px; flex-wrap: nowrap; overflow-x: auto; background: var(--mk-well); border-radius: 999px; }
+.mk-w1-seg .mk-chip { justify-content: center; min-width: 44px; padding-inline: 12px; border-color: transparent; background: none; color: var(--mk-ink-2) !important; }
+.mk-w1-seg .mk-chip:hover { background: none; color: var(--mk-ink) !important; }
+.mk-w1-seg .mk-chip[aria-current="true"] { background: #fff; border-color: var(--mk-line); color: var(--mk-ink) !important; box-shadow: var(--mk-sh-1); }
+/* the city, the order, Filters and "Clear all": two to a row on a phone, one row beside the sellers from 900px */
+.mk-w1-picks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: center; }
+.mk-w1-picks .mk-field :is(select) { min-height: 44px; padding-block: 8px; border-radius: 999px; font-size: 15px; font-weight: 600; }
+.mk-w1-fbtn { min-height: 44px; padding-inline: 18px; }
+.mk-w1-fbtn[aria-expanded="true"] { border-color: var(--mk-ink); }
+.mk-w1-clear { justify-self: start; padding-inline: 6px; }
+
+/* ── The grid, and the Filters panel beside it on a wide screen ── */
+.mk-w1-layout { display: block; }
+.mk-w1-results { min-width: 0; transition: opacity .2s ease; }
+/* new results are on their way: the old ones step back, and cannot be tapped by mistake */
+.mk-w1-wait { opacity: .45; pointer-events: none; }
+.mk-w1-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mk-w1-grid > li { display: flex; min-width: 0; }
+.mk-w1-grid > li > .mk-card { flex: 1; min-width: 0; }
+.mk-w1-more { display: flex; justify-content: center; margin: 28px 0 0; }
+.mk-w1-more .mk-btn2 { min-width: min(100%, 220px); }
+.mk-w1-more-err { margin-block-start: 16px; text-align: center; }
+.mk-w1-also { margin-block-start: 40px; }
+.mk .mk-w1-also h2 { margin-block-end: 16px; }
+/* where a search that found nothing can go next */
+.mk-w1-near { align-self: stretch; display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── A listing's card ── */
+.mk-w1-card { transition: box-shadow .25s ease, transform .25s var(--mk-ease); }
+.mk-w1-card-a { flex: 1; display: flex; flex-direction: column; border-radius: inherit; color: var(--mk-ink) !important; text-decoration: none; }
+.mk-w1-card-a:focus-visible { outline: 2px solid var(--mk-green); outline-offset: 2px; }
+@media (hover: hover) { .mk-w1-card:hover { box-shadow: var(--mk-sh-2); transform: translateY(-2px); } }
+.mk-w1-card-pic { position: relative; display: block; }
+.mk-w1-card-state { position: absolute; inset-block-start: 10px; inset-inline-start: 10px; box-shadow: var(--mk-sh-1); }
+.mk-w1-card-body { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 12px 12px 14px; min-width: 0; }
+.mk-w1-card-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font-size: 14px; font-weight: 600; line-height: 1.35; }
+.mk-w1-card-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 17px; font-weight: 800; letter-spacing: -.2px; line-height: 1.2; }
+.mk-w1-neg { font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--mk-ink-3); }
+/* a line of short facts with a dot between them. Every one carries its dot before it, and the line is cut where its
+   first one starts, so a fact that wraps to a new row never begins with a dot. */
+.mk-w1-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; margin: 0; margin-inline-start: -16px; clip-path: inset(0 0 0 16px); font-size: 13px; line-height: 1.4; color: var(--mk-ink-3); }
+[dir="rtl"] .mk-w1-meta { clip-path: inset(0 16px 0 0); }
+.mk-w1-meta > * { position: relative; padding-inline-start: 16px; }
+.mk-w1-meta > *::before { content: "\00B7"; position: absolute; inset-inline-start: 0; inset-block-start: 0; width: 16px; text-align: center; color: var(--mk-ink-4); }
+.mk-w1-meta .mk-ic { vertical-align: -2px; }
+/* a short text someone wrote (a title, a shop's name, a fact) reads in its own direction but starts on the page's
+   own side, in line with everything around it; a long one (a description) starts on its own side */
+[dir="ltr"] :is(.mk-w1-card-title, .mk-w1-card-shop, .mk-w1-sum h1, .mk-w1-shop-id h1, .mk-w1-facts dd, .mk-w1-seller-name) { text-align: left; }
+[dir="rtl"] :is(.mk-w1-card-title, .mk-w1-card-shop, .mk-w1-sum h1, .mk-w1-shop-id h1, .mk-w1-facts dd, .mk-w1-seller-name) { text-align: right; }
+.mk-w1-card .mk-tags { margin-block-start: auto; padding-block-start: 4px; }
+.mk-w1-card-shop { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 700; color: var(--mk-ink-2); }
+
+/* ── The further filters: one form, in the pop-up on a phone and in the side panel on a wide screen ── */
+.mk-w1-form { display: flex; flex-direction: column; gap: 18px; }
+/* (its groups and their chips are market.css .mk-set, .mk-opts and .mk-opt) */
+.mk-w1-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mk-w1-form-acts { display: flex; flex-wrap: wrap; gap: 10px; margin-block-start: 4px; }
+.mk-w1-form-acts > * { flex: 1 1 120px; padding-inline: 14px; }
+.mk-w1-side { gap: 0; padding: 20px; border-radius: var(--mk-r-card); }
+.mk .mk-w1-side .mk-pop-title { font-size: 20px; letter-spacing: 0; }
+.mk-w1-side .mk-pop-title:focus { outline: none; }
+
+/* ── Where a page sits ── */
+.mk-w1-crumbs { margin-block: -8px 12px; font-size: 13px; color: var(--mk-ink-3); }
+.mk-w1-crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; }
+.mk-w1-crumbs li { display: flex; align-items: center; min-width: 0; min-height: 44px; }
+.mk-w1-crumbs li + li::before { content: ""; flex: none; width: 6px; height: 6px; margin-inline: 8px 10px; border-block-start: 1.5px solid var(--mk-ink-4); border-inline-end: 1.5px solid var(--mk-ink-4); transform: rotate(45deg); }
+[dir="rtl"] .mk-w1-crumbs li + li::before { transform: rotate(-45deg); }
+.mk-w1-crumbs a { position: relative; display: inline-flex; align-items: center; min-height: 44px; color: var(--mk-ink-2) !important; font-weight: 600; text-decoration: none; }
+/* a short name (a five-letter sport, the section's name in Arabic) is still 44px wide to a finger: the link reaches
+   9px past its word on each side, into the 24px the mark between two steps takes, and nothing moves */
+.mk-w1-crumbs a::after { content: ""; position: absolute; inset-block: 0; inset-inline: -9px; }
+.mk-w1-crumbs a:hover { color: var(--mk-ink) !important; text-decoration: underline; }
+.mk-w1-crumbs [aria-current] > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* on a phone the page's own name is the heading right under the trail */
+@media (max-width: 599px) { .mk-w1-crumbs li[aria-current] { display: none; } }
+
+/* ── A listing's page ── */
+.mk-w1-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+.mk-w1-pics, .mk-w1-aside, .mk-w1-main { min-width: 0; }
+.mk-w1-aside-in { display: flex; flex-direction: column; gap: 20px; }
+.mk-w1-sum { display: flex; flex-direction: column; gap: 12px; }
+.mk-w1-sum > * { margin-block: 0; }
+.mk .mk-w1-sum h1 { margin: 0; font-size: clamp(24px, 3.2vw, 34px); line-height: 1.15; letter-spacing: -.6px; }
+.mk-w1-state { display: flex; }
+.mk-w1-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: clamp(26px, 3.4vw, 34px); font-weight: 800; letter-spacing: -.6px; line-height: 1.1; }
+.mk-w1-price .mk-w1-neg { font-size: 14px; }
+.mk-w1-sum .mk-w1-meta { font-size: 15px; color: var(--mk-ink-2); }
+.mk-w1-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 0 22px; }
+/* who is selling */
+.mk-w1-seller { gap: 12px; padding: 18px 20px; border-radius: var(--mk-r-card); }
+.mk .mk-w1-seller h2 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0; color: var(--mk-ink-3); }
+.mk-w1-seller-name { margin: 0; font-size: 17px; font-weight: 700; }
+.mk-w1-seller-shop { display: flex; align-items: center; gap: 12px; min-height: 48px; color: var(--mk-ink) !important; font-size: 17px; font-weight: 700; text-decoration: none; }
+.mk-w1-seller-shop > .mk-user { flex: 1; min-width: 0; }
+.mk-w1-seller-shop:hover > .mk-user { text-decoration: underline; }
+.mk-w1-seller-shop > .mk-ic { color: var(--mk-ink-3); }
+.mk-w1-logo { flex: none; width: 48px; height: 48px; border: 1px solid var(--mk-line); border-radius: var(--mk-r-ctl); box-sizing: border-box; }
+.mk-w1-nologo { display: inline-flex; align-items: center; justify-content: center; background: var(--mk-well); color: var(--mk-ink-3); }
+/* its seller's own strip: the state nobody else is shown, and the way to their listings */
+.mk-w1-own { display: flex; flex-direction: column; gap: 6px; margin-block-end: 20px; padding: 14px 18px; background: var(--mk-amber-soft); border: 1px solid var(--mk-line-2); border-radius: var(--mk-r-card); }
+.mk-w1-own p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--mk-ink); }
+.mk-w1-own-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.mk-w1-own-until { color: var(--mk-ink-2); }
+.mk-w1-own-acts { display: flex; flex-wrap: wrap; gap: 0 22px; }
+/* the item: its faults, its details, what the seller wrote */
+.mk-w1-sec { margin-block-end: 32px; }
+.mk .mk-w1-sec h2 { margin: 0 0 12px; font-size: 18px; letter-spacing: -.2px; }
+.mk-w1-sec p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--mk-ink-2); }
+.mk-w1-desc { white-space: pre-line; }
+.mk-w1-faults { padding: 16px 18px; background: var(--mk-amber-soft); border-radius: var(--mk-r-card); }
+.mk .mk-w1-faults h2 { margin-block-end: 6px; font-size: 15px; color: var(--mk-amber); }
+.mk-w1-faults p { color: var(--mk-ink); }
+.mk-w1-facts { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+.mk-w1-facts > div { display: grid; grid-template-columns: minmax(104px, 2fr) minmax(0, 3fr); gap: 12px; padding: 12px 0; border-block-end: 1px solid var(--mk-line-2); }
+.mk-w1-facts > div:last-child { border-block-end: 0; }
+.mk-w1-facts dt { font-size: 14px; line-height: 1.45; color: var(--mk-ink-3); }
+.mk-w1-facts dd { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 15px; font-weight: 600; line-height: 1.45; color: var(--mk-ink); }
+.mk-w1-serial { letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+.mk-w1-decl { margin-block-start: 18px; }
+.mk-w1-decl h3 { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--mk-ink-2); }
+.mk-w1-decl ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mk-w1-decl li { display: flex; align-items: flex-start; gap: 8px; font-size: 15px; line-height: 1.45; }
+.mk-w1-decl .mk-ic { margin-block-start: 2px; color: var(--mk-green); }
+/* the way to reach the seller once more, at the end of the page (in the page: never pinned) */
+.mk-w1-again { display: flex; }
+.mk-w1-again:empty { display: none; }
+.mk-w1-again > * { flex: 1; }
+
+/* ── A listing's photos ── */
+.mk-w1-gal { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.mk-w1-gal-main { position: relative; min-width: 0; }
+.mk-w1-gal-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; border-radius: var(--mk-r-panel); }
+.mk-w1-gal-track::-webkit-scrollbar { display: none; }
+.mk-w1-gal-slide { position: relative; flex: 0 0 100%; box-sizing: border-box; aspect-ratio: 4 / 3; scroll-snap-align: start; overflow: hidden; background: var(--mk-well); border: 1px solid var(--mk-line); border-radius: var(--mk-r-panel); }
+/* on a phone the next photo peeks in at the edge */
+.mk-w1-gal-many .mk-w1-gal-slide { flex-basis: calc(100% - 28px); }
+.mk-w1-gal-slide button { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.mk-w1-gal-slide button:focus-visible { outline: 2px solid var(--mk-green); outline-offset: -4px; border-radius: var(--mk-r-panel); }
+/* the whole photo, never cropped, never flipped */
+.mk-w1-gal-slide img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.mk-w1-gal-arrow { position: absolute; inset-block-start: 50%; transform: translateY(-50%); width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: #fff; color: var(--mk-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--mk-sh-2); }
+.mk-w1-gal-arrow:disabled { visibility: hidden; }
+.mk-w1-gal-prev { inset-inline-start: 8px; }
+.mk-w1-gal-next { inset-inline-end: 36px; } /* over the photo in view, not the one peeking in */
+.mk-w1-gal-zoom { position: absolute; inset-block-start: 12px; inset-inline-end: 12px; width: 34px; height: 34px; border-radius: 50%; background: #fff; color: var(--mk-ink-2); display: inline-flex; align-items: center; justify-content: center; pointer-events: none; box-shadow: var(--mk-sh-1); }
+.mk-w1-gal-many .mk-w1-gal-zoom { inset-inline-end: 40px; }
+.mk-w1-gal-dots { display: flex; justify-content: center; gap: 6px; min-height: 8px; }
+.mk-w1-gal-dots i { width: 6px; height: 6px; border-radius: 999px; background: var(--mk-ink-4); transition: width .3s var(--mk-ease), background-color .2s ease; }
+.mk-w1-gal-dots i[data-on] { width: 18px; background: var(--mk-ink); }
+.mk-w1-gal-thumbs { display: none; }
+
+/* ── The photos large: a dark viewer over the whole screen ── */
+.mk-w1-gal-viewing { position: relative; z-index: 10001; }
+.mk-w1-view { position: fixed; inset: 0; z-index: 10001; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--mk-ink); color: var(--mk-paper); }
+.mk-w1-view-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; }
+.mk-w1-view-n { padding-inline-start: 6px; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mk-w1-view-tools { display: inline-flex; gap: 8px; }
+.mk-w1-view-btn { width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--mk-paper) 14%, transparent); color: var(--mk-paper); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.mk-w1-view-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--mk-paper) 26%, transparent); }
+.mk-w1-view-btn:disabled { opacity: .35; cursor: default; }
+.mk-w1-view-stage { position: relative; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; display: flex; align-items: center; justify-content: center; padding: 0 12px 24px; }
+.mk-w1-view-stage img { max-width: min(100%, 1400px); max-height: 100%; object-fit: contain; border-radius: var(--mk-r-ctl); transform-origin: center; transition: transform .12s ease-out; will-change: transform; cursor: zoom-in; }
+.mk-w1-view-stage img.mk-w1-zoomed { cursor: grab; }
+.mk-w1-view-arrow { position: absolute; inset-block-start: 50%; transform: translateY(-50%); background: color-mix(in srgb, var(--mk-ink) 72%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--mk-paper) 30%, transparent); }
+.mk-w1-view-arrow:hover:not(:disabled) { background: var(--mk-ink); }
+.mk-w1-view-arrow:disabled { visibility: hidden; }
+.mk-w1-view-prev { inset-inline-start: 12px; }
+.mk-w1-view-next { inset-inline-end: 12px; }
+.mk-w1-view :focus-visible { outline: 2px solid var(--mk-paper); outline-offset: 2px; }
+
+/* ── A listing that is no longer shown ── */
+.mk-w1-gone { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
+.mk-w1-gone > * { margin-block: 0; max-width: 100%; }
+.mk .mk-w1-gone h1 { margin: 0; font-size: clamp(26px, 4vw, 40px); line-height: 1.1; letter-spacing: -.8px; }
+.mk-w1-gone > .mk-chips, .mk-w1-gone > .mk-w1-also { align-self: stretch; }
+.mk-w1-gone > .mk-w1-also { margin-block-start: 20px; }
+
+/* ── A shop's page ── */
+.mk-w1-shop-head { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 16px 20px; margin-block-end: 28px; }
+.mk-w1-shop-logo { flex: none; width: 72px; height: 72px; border: 1px solid var(--mk-line); border-radius: var(--mk-r-card); box-sizing: border-box; }
+.mk-w1-shop-id { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.mk .mk-w1-shop-id h1 { margin: 0; font-size: clamp(24px, 3.2vw, 36px); line-height: 1.15; letter-spacing: -.6px; }
+.mk-w1-shop-id .mk-w1-meta { font-size: 14px; color: var(--mk-ink-2); }
+.mk-w1-shop-contact { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 10px; }
+.mk-w1-shop-contact:empty { display: none; }
+.mk-w1-shop-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 24px; margin-block-end: 40px; }
+.mk-w1-shop-facts { gap: 4px; padding: 20px 22px; border-radius: var(--mk-r-card); }
+.mk .mk-w1-shop-facts h2 { margin: 0; font-size: 18px; letter-spacing: -.2px; }
+.mk-w1-shop-items .mk-head { margin-block-end: 14px; }
+
+@media (min-width: 600px) {
+  .mk-w1-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .mk-w1-card-body { padding: 14px 16px 16px; }
+  .mk-w1-card-title { font-size: 15px; }
+  .mk-w1-again > * { flex: 0 1 320px; }
+  .mk-w1-seg .mk-chip { padding-inline: 16px; }
+}
+@media (min-width: 900px) {
+  .mk-w1-bar { flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; }
+  .mk-w1-picks { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+  .mk-w1-picks .mk-field { width: 184px; }
+  /* a listing: the photos and the details on the reading side, the price column beside them, in view as the page scrolls */
+  .mk-w1-cols { grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); grid-template-areas: "pics aside" "main aside"; gap: 32px 40px; align-items: start; }
+  .mk-w1-pics { grid-area: pics; }
+  .mk-w1-aside { grid-area: aside; align-self: stretch; }
+  .mk-w1-main { grid-area: main; }
+  .mk-w1-aside-in { position: sticky; inset-block-start: 76px; }
+  /* one photo fills the frame; the others stand under it */
+  .mk-w1-gal-many .mk-w1-gal-slide { flex-basis: 100%; }
+  .mk-w1-gal-next { inset-inline-end: 12px; }
+  .mk-w1-gal-prev { inset-inline-start: 12px; }
+  .mk-w1-gal-many .mk-w1-gal-zoom { inset-inline-end: 12px; }
+  .mk-w1-gal-dots { display: none; }
+  .mk-w1-gal-thumbs { display: flex; gap: 10px; padding: 3px; overflow-x: auto; scrollbar-width: none; }
+  .mk-w1-gal-thumbs::-webkit-scrollbar { display: none; }
+  .mk-w1-gal-thumbs button { flex: none; width: 72px; height: 72px; padding: 0; border: 0; border-radius: var(--mk-r-ctl); overflow: hidden; background: var(--mk-well); cursor: pointer; box-shadow: 0 0 0 1px var(--mk-line-2); transition: box-shadow .2s ease; }
+  .mk-w1-gal-thumbs button:hover { box-shadow: 0 0 0 1px var(--mk-ink-4); }
+  .mk-w1-gal-thumbs button[aria-current="true"] { box-shadow: 0 0 0 2px var(--mk-ink); }
+  .mk-w1-gal-thumbs button:focus-visible { outline: 2px solid var(--mk-green); outline-offset: 2px; }
+  .mk-w1-gal-thumbs img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  /* a shop: what it says about itself, and its details as a business beside it */
+  .mk-w1-shop-contact { flex: 0 1 auto; }
+  /* Call, WhatsApp and Map on one row beside the name (they wrapped to two rows of uneven width) */
+  .mk-w1-shop-contact > * { flex-wrap: nowrap; }
+  .mk-w1-shop-contact > * > :is(a, button) { flex: 0 0 auto; min-width: 132px; }
+  .mk-w1-shop-cols { grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr); gap: 40px; align-items: start; }
+  .mk-w1-shop-cols > :only-child { grid-column: 1 / -1; max-width: 640px; }
+}
+@media (min-width: 1000px) {
+  .mk-w1-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+  .mk-w1-layout-side { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .mk-w1-side { position: sticky; inset-block-start: 76px; max-height: calc(100vh - 100px); overflow-y: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-w1-card, .mk-w1-results, .mk-w1-gal-dots i, .mk-w1-view-stage img { transition: none; }
+  .mk-w1-card:hover { transform: none; }
+  .mk-w1-gal-track { scroll-behavior: auto; }
+}
+
+/* ── The approved shops, under the grid of the plain browse page ── */
+.mk-w1-shops { margin-block-start: 40px; }
+.mk .mk-w1-shops h2 { margin-block-end: 16px; }
+.mk-w1-shops-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.mk .mk-w1-shops-a { display: flex; flex-direction: row; align-items: center; gap: 12px; min-height: 48px; padding: 12px 14px; color: var(--mk-ink) !important; text-decoration: none; }
+.mk-w1-shops-a:hover .mk-w1-shops-name { text-decoration: underline; }
+.mk-w1-shops-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mk-w1-shops-name { font-size: 16px; font-weight: 700; }
+.mk-w1-shops-city { font-size: 13px; color: var(--mk-ink-3); }

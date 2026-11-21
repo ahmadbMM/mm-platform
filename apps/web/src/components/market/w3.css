@@ -1,0 +1,129 @@
+/* The Marketplace: contact, the inbox, reports and blocks (W3). This builder's own classes only, prefixed mk-w3-; the shared
+   tokens (--mk-*) and base classes are in market.css. Logical properties throughout, so Arabic and Urdu mirror it.
+   (The unread number of the site's header has its own small file, w3/badge.css: the header is on every page.)
+   Inside a pop-up, market.css styles every paragraph (.mk-pop p), which outranks a single class: a rule here that
+   styles a paragraph of a pop-up names the pop-up too. */
+
+/* ── Small things more than one screen shows ── */
+/* waiting for an answer */
+.mk-w3-wait, .mk-pop .mk-w3-wait { margin: 0; min-height: 44px; display: flex; align-items: center; color: var(--mk-ink-3); font-size: 15px; }
+/* (a refusal inside a pop-up is market.css .mk-pop .mk-err) */
+/* the one safety sentence */
+.mk-w3-safety, .mk-pop .mk-w3-safety { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 12px 14px; border-radius: var(--mk-r-ctl); background: var(--mk-amber-soft); color: var(--mk-amber); font-size: 13px; line-height: 1.5; }
+.mk-w3-safety .mk-ic { margin-block-start: 1px; }
+/* quick replies: one row that scrolls sideways on a phone and wraps on a wider screen (market.css .mk-chips); the room
+   above and below is for the focus ring, which a scrolling row would cut off */
+.mk-chips.mk-w3-quick { margin-inline: 0; padding: 6px 0; }
+/* in the first-message pop-up the few replies wrap, whole, inside the card (a row cut off at the pop-up's edge looked broken) */
+.mk-w3-first .mk-chips.mk-w3-quick { flex-wrap: wrap; overflow: visible; }
+.mk-w3-first .mk-w3-quick .mk-chip { white-space: normal; text-align: start; }
+
+/* ── The first-message pop-up and the report pop-up ── */
+.mk-pop .mk-w3-about { margin: 0 0 14px; color: var(--mk-ink); font-size: 15px; font-weight: 600; }
+.mk-w3-first, .mk-w3-report { display: flex; flex-direction: column; gap: 14px; }
+:is(.mk-w3-first, .mk-w3-report) .mk-pop-acts { margin-block-start: 6px; }
+:is(.mk-w3-first, .mk-w3-report) .mk-field textarea { min-height: 96px; }
+/* (how the buyer is named is a market.css group of chips: .mk-set, .mk-opts, .mk-opt) */
+/* a report's reasons (a market.css .mk-set): one a row, each with its round mark (.mk-radio) */
+.mk-w3-reasons { display: flex; flex-direction: column; }
+.mk-w3-reason { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 2px 0; border-block-end: 1px solid var(--mk-line); color: var(--mk-ink); font-size: 15px; line-height: 1.35; cursor: pointer; }
+.mk-w3-reason:last-child { border-block-end: 0; }
+/* "Reported", where the Report control was */
+.mk-w3-reported { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--mk-ink-3); font-size: 14px; font-weight: 700; }
+
+/* ── A shop's contact buttons ── */
+.mk-w3-shop { display: flex; flex-wrap: wrap; gap: 10px; }
+.mk-w3-shop > :is(a, button) { flex: 1 1 130px; }
+.mk-w3-nums { display: flex; flex-direction: column; gap: 10px; }
+.mk-pop .mk-w3-nums p { margin: 0; }
+
+/* ── The inbox ── */
+.mk-w3-top { display: flex; flex-direction: column; align-items: flex-start; margin-block-end: 6px; }
+.mk-w3-filter { margin-block-end: 14px; }
+.mk-w3-rows { margin: 0; padding: 0; list-style: none; background: #fff; border: 1px solid var(--mk-line); border-radius: var(--mk-r-card); box-shadow: var(--mk-sh-1); overflow: hidden; }
+.mk-w3-rows > li + li { border-block-start: 1px solid var(--mk-line); }
+.mk-w3-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px; color: var(--mk-ink) !important; text-decoration: none; transition: background-color .2s ease; }
+.mk-w3-row:hover { background: var(--mk-well); }
+/* the site's focus ring sits outside a control (site.css); in a list or a scrolling box that cuts it off, it goes inside */
+.mm-site .mk .mk-w3-rows .mk-w3-row:focus-visible, .mm-site .mk .mk-w3-chat .mk-w3-log:focus-visible { outline-offset: -4px; }
+.mk-w3-row-ph { flex: none; width: 60px; border-radius: var(--mk-r-ctl); }
+.mk-w3-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mk-w3-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.mk-w3-row-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 600; }
+.mk-w3-row-when { flex: none; color: var(--mk-ink-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.mk-w3-row-title, .mk-w3-row-last { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; line-height: 1.4; }
+.mk-w3-row-title { color: var(--mk-ink-2); }
+.mk-w3-row-last { color: var(--mk-ink-3); }
+.mk-w3-row.is-unread .mk-w3-row-name { font-weight: 800; }
+.mk-w3-row.is-unread .mk-w3-row-last { color: var(--mk-ink); font-weight: 600; }
+.mk-w3-row-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-block-start: 6px; }
+.mk-w3-dot { flex: none; align-self: center; width: 10px; height: 10px; border-radius: 50%; background: var(--mk-green); }
+
+/* ── A thread ── */
+.mk-w3-thread { display: flex; flex-direction: column; gap: 14px; }
+.mk-w3-back { align-self: flex-start; }
+.mk-w3-who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.mk h1.mk-w3-h { margin: 0; font-size: clamp(24px, 4vw, 32px); line-height: 1.15; letter-spacing: -.5px; }
+/* the listing's card on top */
+.mk-w3-item { flex-direction: row; align-items: center; gap: 12px; padding: 10px; color: var(--mk-ink) !important; text-decoration: none; transition: box-shadow .2s ease; }
+a.mk-w3-item:hover { box-shadow: var(--mk-sh-2); }
+.mk-w3-item-ph { flex: none; width: 64px; border-radius: var(--mk-r-ctl); }
+.mk-w3-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.mk-w3-item-title { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 700; }
+.mk-w3-item-sub { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; color: var(--mk-ink-2); font-size: 14px; }
+.mk-w3-item-go { margin-inline-end: 4px; color: var(--mk-ink-3); }
+/* "Share my WhatsApp", first in the row of quick replies: an action, not words for the box */
+.mk-chip.mk-w3-wa-chip { border-color: transparent; background: var(--mk-green-soft); color: var(--mk-green) !important; font-weight: 700; }
+.mk-chip.mk-w3-wa-chip:hover { background: var(--mk-green-soft); border-color: var(--mk-green); }
+/* Block and Report, under the conversation */
+.mk-w3-acts { display: flex; flex-wrap: wrap; gap: 0 22px; }
+.mk-w3-shared { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 14px; margin: 0; padding: 2px 14px; border-radius: var(--mk-r-ctl); background: var(--mk-green-soft); color: var(--mk-ink-2); font-size: 14px; line-height: 1.4; }
+.mk-w3-shared > span { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+/* the messages and the box under them: one card, the list scrolling inside it (nothing is pinned to the screen) */
+.mk-w3-chat { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--mk-line); border-radius: var(--mk-r-card); box-shadow: var(--mk-sh-1); overflow: hidden; scroll-margin-block-end: 16px; }
+/* the list is as tall as lets the whole card - the list and the box under it - fit on the screen below the site's header */
+.mk-w3-log { display: flex; flex-direction: column; gap: 10px; min-height: 200px; max-height: clamp(200px, calc(100svh - 270px), 560px); padding: 16px 14px; overflow-y: auto; overscroll-behavior: contain; }
+.mk-w3-older { align-self: center; }
+.mk-w3-turn { display: flex; flex-direction: column; gap: 10px; }
+.mk-w3-day { align-self: center; margin: 4px 0; padding: 3px 12px; border-radius: 999px; background: var(--mk-well); color: var(--mk-ink-3); font-size: 12px; font-weight: 600; }
+.mk-w3-msg { display: flex; flex-direction: column; align-items: flex-start; align-self: flex-start; gap: 3px; max-width: 82%; }
+.mk-w3-msg.is-mine { align-items: flex-end; align-self: flex-end; }
+.mk-w3-bubble { margin: 0; padding: 10px 14px; border-radius: 18px; border-end-start-radius: 6px; background: var(--mk-well); color: var(--mk-ink); font-size: 15px; line-height: 1.45; }
+.mk-w3-msg.is-mine .mk-w3-bubble { border-end-start-radius: 18px; border-end-end-radius: 6px; background: var(--mk-green); color: var(--mk-paper); }
+/* the words keep their own direction inside the bubble (an English message on an Arabic page); the bubble keeps the
+   page's, so its small corner stays on its writer's side whatever language the message is in */
+.mk-w3-bubble > .mk-user { display: block; }
+.mk-w3-msg.is-pending .mk-w3-bubble { opacity: .6; }
+.mk-w3-msg.is-failed .mk-w3-bubble { background: var(--mk-red-soft); color: var(--mk-ink); box-shadow: inset 0 0 0 1px var(--mk-red); }
+.mk-w3-when { color: var(--mk-ink-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+.mk-w3-fail { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0 6px; color: var(--mk-red); font-size: 12px; font-weight: 600; }
+.mk-w3-fail .mk-link { margin-inline-start: 6px; font-size: 13px; }
+.mk-w3-send { display: flex; flex-direction: column; gap: 6px; padding: 8px 14px 14px; border-block-start: 1px solid var(--mk-line); }
+.mk-w3-box { display: flex; align-items: flex-end; gap: 8px; }
+.mk-w3-box textarea { flex: 1; min-width: 0; box-sizing: border-box; min-height: 48px; max-height: 160px; padding: 12px 16px; border: 1px solid var(--mk-ctl); border-radius: 24px; background: #fff; color: var(--mk-ink); font: inherit; font-size: 16px; line-height: 1.4; resize: none; overflow-y: auto; transition: border-color .2s ease, box-shadow .2s ease; }
+.mk-w3-box textarea::placeholder { color: var(--mk-ink-4); }
+.mk-w3-box textarea:focus-visible { border-color: var(--mk-green); box-shadow: 0 0 0 3px var(--mk-green-soft); }
+.mk-w3-box textarea[aria-invalid="true"] { border-color: var(--mk-red); }
+.mk-w3-go { flex: none; width: 48px; padding: 0; }
+.mk-w3-closed { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-block-start: 1px solid var(--mk-line); color: var(--mk-ink-2); font-size: 14px; line-height: 1.45; }
+.mk-w3-closed p { margin: 0; }
+.mk-w3-closed .mk-btn2 { align-self: flex-start; margin-block-start: 6px; }
+/* a page that could not show its thread */
+.mk-w3-none { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+
+@media (max-width: 599px) {
+  /* the quick replies run to the card's edges while they scroll */
+  .mk-w3-send .mk-chips.mk-w3-quick { margin-inline: -14px; padding-inline: 14px; }
+}
+@media (min-width: 600px) {
+  .mk-w3-row { padding: 16px 18px; gap: 14px; }
+  .mk-w3-row-ph { width: 68px; }
+  .mk-w3-item { padding: 12px; }
+  .mk-w3-item-ph { width: 72px; }
+  .mk-w3-log { padding: 20px 18px; }
+  .mk-w3-send { padding: 14px 18px 18px; }
+  .mk-w3-msg { max-width: 72%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-w3-row, .mk-w3-item, .mk-w3-box textarea { transition: none; }
+}

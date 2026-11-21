@@ -45,6 +45,7 @@ const WORDS: Record<string, string> = {
   routes: "maps where to ride paths مسارات خرائط",
   journal: "blog articles news tips guides مقالات مدونة نصائح أدلة",
   testimonials: "reviews ratings stars opinions what riders say شهادات آراء تقييمات نجوم",
+  marketplace: "used second hand pre-owned buy sell selling listings gear bikes مستعمل مستعملة بيع شراء سوق إعلانات أغراض",
   privacy: "data policy personal بيانات خصوصية",
   account: "sign in login bookings profile تسجيل الدخول حجوزاتي حساب",
   terms: "conditions rules legal policy returns refund الشروط الأحكام سياسة استرجاع",

@@ -24,13 +24,17 @@ const wideLimiter = () => limiter("API_WIDE_LIMIT");
  *  bike report...) are counted per account too (bug hunt 2026-11-18: fifteen members on a venue's Wi-Fi used up one
  *  thirty between them, and the pop-ups a rider cannot skip were let through), and the connection as a whole gets a
  *  wider ceiling (API_WIDE_LIMIT, 600 a minute), so a script that makes up a new account id for each request is still
- *  held. */
-export async function withinLimit(req: Request, kind: "log-error" | "account-check" | "claim" | "pay" | "ask", get: () => Limiter | undefined = limiter, who = "", wide: () => Limiter | undefined = wideLimiter): Promise<boolean> {
+ *  held. The Marketplace's routes ("market", and "market-photo" for its photo uploads, counted apart so a listing's ten
+ *  photos never use up the thirty its other requests have; lib/market/route.ts) are counted the same way: per account,
+ *  under the connection's wider ceiling. */
+export type LimitKind = "log-error" | "account-check" | "claim" | "pay" | "ask" | "market" | "market-photo";
+const PER_ACCOUNT: readonly LimitKind[] = ["account-check", "market", "market-photo"];
+export async function withinLimit(req: Request, kind: LimitKind, get: () => Limiter | undefined = limiter, who = "", wide: () => Limiter | undefined = wideLimiter): Promise<boolean> {
   const l = get();
   const ip = clientIp(req);
   if (!l || !ip) return true;
   const net = ipNet(ip); // an IPv6 visitor by its /64
-  if (kind === "account-check" && who) {
+  if (PER_ACCOUNT.includes(kind) && who) {
     const w = wide();
     try { if (w && !(await w.limit({ key: `${kind}:${net}` })).success) return false; } catch { /* a limiter that fails holds nobody */ }
   }

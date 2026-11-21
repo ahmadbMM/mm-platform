@@ -13,6 +13,9 @@ export type NavLink = { key: string; href: string; en: string; ar: string; exter
 
 export const NAV_LINKS: NavLink[] = [
   { key: "store", href: "/store", ...phrase("Store", "المتجر"), external: true },
+  // The Marketplace (2026-11-20: people sell sports gear to each other), only while its launch switch is on
+  // (lib/site.ts hiddenPages); its pages open by their address whatever the switch says
+  { key: "marketplace", href: "/marketplace", ...phrase("Marketplace", "السوق") },
   { key: "bikes", href: "/bikes", ...phrase("Bikes", "الدراجات") },
   { key: "experiences", href: "/experiences", ...phrase("Experiences", "التجارب") },
   { key: "workshop", href: "/workshop", ...phrase("Workshop", "الورشة") },
@@ -33,7 +36,7 @@ export const NAV_LINKS: NavLink[] = [
  *  use, and every page reachable from it. Bikes (the catalogue, 2026-09-27) sits next to the
  *  store it sells for. Help is not a header section - the footer and the search reach it. */
 export const COMMUNITY = { key: "community", ...phrase("Community", "المجتمع"), pages: ["club", "ambassadors", "events", "routes", "gallery", "journal", "testimonials"] };
-export const HEADER: string[] = ["store", "bikes", "experiences", "workshop", "community", "business", "about"];
+export const HEADER: string[] = ["store", "marketplace", "bikes", "experiences", "workshop", "community", "business", "about"];
 
 
 /** The page a link on this site opens ("/business#x" → "business", an old "/ar/club" → "club");

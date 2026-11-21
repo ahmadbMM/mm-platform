@@ -10,6 +10,7 @@ import { siteSchema } from "@/content/pages/site";
 import { termsSchema } from "@/content/pages/terms";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
+import { marketSearch } from "@/lib/market/hooks";
 import { pageState } from "@/lib/page-state";
 import { loadCats, loadStore, storeOpen } from "@/lib/store";
 import { riyadhToday } from "@/lib/store-delivery";
@@ -75,6 +76,8 @@ export async function searchIndex(locale: string): Promise<SearchItem[]> {
     // "Only N left" as the store's cards say it (store.showStock)
     if (store) items.push(...storeSearchItems({ products: withRules(store.products, storeRules(content), riyadhToday(), Date.now()) }, L, serverLocalize(StoreT, L), cats));
   }
+  // the Marketplace's listings and shops, while its launch switch is on (lib/market/hooks.ts)
+  if (on("marketplace")) items.push(...(await marketSearch(L)));
   kept.set(key, { at: Date.now(), items });
   return items;
 }

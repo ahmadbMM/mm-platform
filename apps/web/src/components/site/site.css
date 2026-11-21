@@ -85,6 +85,19 @@ html:is([lang="ar"], [lang="ur"]) .mm-nav-sheet-group > p { letter-spacing: 0; }
   .mm-nav-links { display: none; }
   .mm-nav-burger { display: inline-flex; }
 }
+/* With the Marketplace link (its launch switch on) the bar holds eight sections. Under 1400px they sit centred between
+   the logo and the icons, not on the page's centre, where the longest languages ran under the icons, and a little
+   closer together: the logo (28px) and 12px on one side, the five icons (208px) and 12px on the other. Measured at
+   1181px in all sixteen languages: the longest bar (Tagalog) keeps 29px on each side. */
+@media (min-width: 1181px) and (max-width: 1399px) {
+  .mm-nav-links.mm-nav-links-8 { inset-inline: calc(clamp(16px, 4vw, 40px) + 40px) calc(clamp(16px, 4vw, 40px) + 220px); gap: 20px; }
+}
+/* Staging: with the site's own store open, Saved can sit beside the cart, six icons (254px) instead of five. The eight
+   sections then sit between the logo and the icons up to 1499px (centred on the page from 1400px, the longest bar ran
+   into the sixth icon) and 16px apart, which gives back the 46px the sixth icon takes at 1181px. */
+@media (min-width: 1181px) and (max-width: 1499px) {
+  .mm-nav-links.mm-nav-links-8.mm-nav-links-8s { inset-inline: calc(clamp(16px, 4vw, 40px) + 40px) calc(clamp(16px, 4vw, 40px) + 266px); gap: 16px; }
+}
 /* Wider, the sheet is never shown (SiteNav also closes it when a screen turns wide, an iPad on its side). */
 @media not all and (max-width: 1180px) { .mm-nav-sheet { display: none; } }
 /* On a phone the language menu hangs from the bar's own edge, not from the globe, so all of it is on

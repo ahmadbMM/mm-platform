@@ -1,0 +1,133 @@
+/* The Marketplace: the shop application, My shop and the rules page (W4). This builder's own classes only, prefixed mk-w4-; the shared
+   tokens (--mk-*) and base classes are in market.css. Logical properties throughout, so Arabic and Urdu mirror it.
+   Mobile first, from a 360px phone; wider screens add columns. Every colour, radius and shadow is a token. */
+
+/* ── The two shop pages: one column of boxes under the page's heading ── */
+.mk-w4-wrap { display: flex; flex-direction: column; gap: 20px; }
+/* (the heading's size is a task page's, market.css .mk-narrow h1; waiting is market.css .mk-skel) */
+.mk .mk-w4-wrap h1 { margin: 0; }
+.mk-w4-wrap h1:focus { outline: none; }
+.mk .mk-w4-wrap h2 { font-size: 18px; line-height: 1.3; letter-spacing: -.2px; margin: 0; }
+.mk-w4-acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.mk-w4-acts > * { flex: 1 1 200px; }
+
+/* ── The application's state: a mark, a chip, one sentence, staff's reason ── */
+.mk-w4-state { gap: 18px; }
+.mk-w4-state-top { display: flex; align-items: flex-start; gap: 14px; }
+.mk-w4-state-ic { flex: none; width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--mk-well); color: var(--mk-ink-2); }
+.mk-w4-state-ic .mk-ic { vertical-align: 0; }
+.mk-w4-state-pending .mk-w4-state-ic { background: var(--mk-amber-soft); color: var(--mk-amber); }
+.mk-w4-state-approved .mk-w4-state-ic { background: var(--mk-green-soft); color: var(--mk-green); }
+:is(.mk-w4-state-rejected, .mk-w4-state-suspended) .mk-w4-state-ic { background: var(--mk-red-soft); color: var(--mk-red); }
+.mk-w4-state-words { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.mk .mk-w4-wrap .mk-w4-state-words h2 { font-size: 20px; }
+.mk-w4-state-words p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--mk-ink-2); }
+.mk-w4-reason { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: var(--mk-r-ctl); background: var(--mk-well); }
+.mk-w4-reason > span { font-size: 12px; font-weight: 700; color: var(--mk-ink-3); }
+.mk-w4-reason p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--mk-ink); }
+.mk-w4-saved { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--mk-green); }
+.mk-w4-saved .mk-ic { vertical-align: 0; }
+.mk-w4-count { margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; background: #fff; border: 1px solid var(--mk-line); border-radius: var(--mk-r-card); box-shadow: var(--mk-sh-1); font-size: 15px; color: var(--mk-ink-2); }
+.mk-w4-count bdi { color: var(--mk-ink); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ── The shop's details as sent: logo and name, then a row per value ── */
+.mk-w4-facts { gap: 18px; }
+.mk-w4-id { display: flex; align-items: center; gap: 14px; }
+.mk-w4-id-logo { flex: none; display: flex; width: 64px; height: 64px; border: 1px solid var(--mk-line-2); border-radius: var(--mk-r-ctl); background: #fff; overflow: hidden; }
+.mk-w4-id-logo .mk-photo { width: 100%; background: #fff; }
+.mk-w4-id-logo .mk-photo img, .mk-w4-logo-box .mk-photo img { object-fit: contain; }
+.mk-w4-id-mark { width: 100%; display: flex; align-items: center; justify-content: center; background: var(--mk-well); color: var(--mk-ink-3); }
+.mk-w4-id-names { flex: 1; min-width: 0; }
+.mk .mk-w4-wrap .mk-w4-id-names h2 { font-size: 20px; }
+.mk-w4-id-names p { margin: 2px 0 0; font-size: 15px; color: var(--mk-ink-2); }
+.mk-w4-facts dl { margin: 0; display: flex; flex-direction: column; }
+.mk-w4-facts dl > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding-block: 12px; border-block-start: 1px solid var(--mk-line); }
+.mk-w4-facts dl > div:last-child { padding-block-end: 0; }
+.mk-w4-facts dt { font-size: 13px; font-weight: 700; color: var(--mk-ink-3); }
+.mk-w4-facts dd { margin: 0; min-width: 0; font-size: 15px; line-height: 1.55; color: var(--mk-ink); }
+.mk-w4-facts dd .mk-link { font-weight: 600; text-align: start; }
+.mk-w4-num { font-variant-numeric: tabular-nums; }
+.mk-w4-url { overflow-wrap: anywhere; }
+
+/* ── The form: boxes of fields, one column on a phone and two beside each other from 600px ── */
+.mk-w4-form { display: flex; flex-direction: column; gap: 16px; }
+.mk-w4-sec { gap: 16px; }
+.mk-w4-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.mk-w4-opt { margin-inline-start: 8px; font-size: 12px; font-weight: 500; color: var(--mk-ink-3); }
+.mk-w4-form .mk-field textarea { min-height: 112px; }
+.mk-w4-form .mk-field :is(input, select, textarea):disabled { opacity: .6; }
+/* the logo: its picture, then the button that chooses one (the file control itself is under the button, still
+   reached by the keyboard) and the way to take it off */
+.mk-w4-logo { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.mk-w4-logo-box { flex: none; display: flex; width: 88px; height: 88px; border: 1px solid var(--mk-line-2); border-radius: var(--mk-r-card); background: #fff; overflow: hidden; }
+.mk-w4-logo-box .mk-photo { width: 100%; background: #fff; }
+.mk-w4-logo-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; }
+.mk-w4-file { position: relative; overflow: hidden; min-height: 44px; }
+.mk-w4-form .mk-field .mk-w4-file input { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; }
+.mk-w4-file:focus-within { border-color: var(--mk-green); box-shadow: 0 0 0 3px var(--mk-green-soft); }
+.mk-w4-file.is-off { opacity: .45; pointer-events: none; }
+/* the end of the form: the tick with its two links, what stands in the way, the buttons */
+.mk-w4-end { gap: 14px; }
+.mk-w4-agree { display: flex; flex-direction: column; gap: 2px; }
+.mk-w4-links { margin: 0; padding-inline-start: 32px; display: flex; flex-wrap: wrap; gap: 0 20px; }
+.mk-w4-alert { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.mk-w4-alert:empty { display: none; }
+
+/* ── The rules: a heading, the contents, and the text at a reading width ── */
+.mk-w4-rules-head { margin-block-end: 24px; }
+.mk .mk-w4-rules-head h1 { margin: 0 0 12px; }
+.mk-w4-rules-date { margin: 0; font-size: 14px; line-height: 1.6; color: var(--mk-ink-3); }
+.mk-w4-rules-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+.mk-w4-toc { padding: 16px 18px 8px; background: #fff; border: 1px solid var(--mk-line); border-radius: var(--mk-r-card); box-shadow: var(--mk-sh-1); }
+.mk .mk-w4-toc h2 { margin: 0 0 4px; font-size: 13px; line-height: 1.4; letter-spacing: 0; font-weight: 700; color: var(--mk-ink-3); }
+.mk-w4-toc ol { list-style: none; margin: 0; padding: 0; counter-reset: mk-w4-toc; display: grid; grid-template-columns: minmax(0, 1fr); }
+.mk-w4-toc li { counter-increment: mk-w4-toc; min-width: 0; }
+.mk-w4-toc a { display: flex; align-items: center; gap: 10px; min-height: 44px; color: var(--mk-ink) !important; font-size: 15px; font-weight: 600; line-height: 1.3; text-decoration: none; }
+.mk-w4-toc a::before { content: counter(mk-w4-toc); flex: none; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--mk-well); color: var(--mk-ink-2); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mk-w4-toc a:hover { color: var(--mk-green) !important; }
+.mk-w4-toc a:hover::before { background: var(--mk-green-soft); color: var(--mk-green); }
+
+.mk-w4-rules-body { min-width: 0; font-size: 16px; line-height: 1.65; color: var(--mk-ink-2); }
+.mk-w4-lead { margin: 0; font-size: 18px; line-height: 1.6; color: var(--mk-ink); text-wrap: pretty; }
+/* a section opens under the site's fixed header when its address is followed */
+.mk-w4-rule { margin-block-start: 28px; padding-block-start: 28px; border-block-start: 1px solid var(--mk-line-2); scroll-margin-block-start: 64px; }
+.mk .mk-w4-rule h2 { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; font-size: clamp(20px, 2.4vw, 24px); line-height: 1.25; color: var(--mk-ink); }
+.mk-w4-n { flex: none; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--mk-green-soft); color: var(--mk-green); font-size: 14px; font-weight: 700; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.mk-w4-rule h3 { margin: 22px 0 8px; font-size: 16px; line-height: 1.35; letter-spacing: 0; color: var(--mk-ink); }
+.mk-w4-rule p { margin: 0 0 12px; }
+.mk-w4-rule > :last-child { margin-block-end: 0; }
+.mk-w4-rule ul { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.mk-w4-rule li { position: relative; padding-inline-start: 22px; }
+.mk-w4-rule li::before { content: ""; position: absolute; inset-inline-start: 4px; inset-block-start: .68em; width: 6px; height: 6px; border-radius: 50%; background: var(--mk-green); }
+.mk-w4-rule a { color: var(--mk-green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.mk-w4-rule a:hover { color: var(--mk-green-2); }
+/* what may not be sold: a card per group */
+.mk-w4-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-block: 4px 16px; }
+.mk-w4-group { padding: 16px 18px; background: #fff; border: 1px solid var(--mk-line); border-radius: var(--mk-r-card); box-shadow: var(--mk-sh-1); }
+.mk-w4-rule .mk-w4-group h3 { margin: 0 0 10px; font-size: 15px; }
+.mk-w4-rule .mk-w4-group ul { margin: 0; gap: 6px; font-size: 15px; line-height: 1.5; }
+.mk-w4-rule .mk-w4-group li::before { background: var(--mk-red); }
+/* staying safe: the list stands out as one panel */
+.mk-w4-rule-safety > ul { padding: 18px; background: #fff; border: 1px solid var(--mk-line); border-radius: var(--mk-r-card); box-shadow: var(--mk-sh-1); color: var(--mk-ink); }
+/* staff's own words on how the commission is paid */
+.mk-w4-rule .mk-w4-how { padding: 12px 14px; border-radius: var(--mk-r-ctl); background: var(--mk-well); color: var(--mk-ink); }
+
+@media (min-width: 600px) {
+  .mk-w4-wrap { gap: 24px; }
+  .mk-w4-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mk-w4-wide { grid-column: 1 / -1; }
+  .mk-w4-acts > * { flex: 0 1 auto; }
+  .mk-w4-facts dl > div { grid-template-columns: 190px minmax(0, 1fr); gap: 16px; }
+  .mk-w4-toc ol { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+  .mk-w4-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mk-w4-rule-safety > ul { padding: 22px 24px; }
+}
+@media (min-width: 1000px) {
+  .mk-w4-rules-head { margin-block-end: 36px; }
+  .mk-w4-rules-cols { grid-template-columns: 300px minmax(0, 720px); gap: 64px; align-items: start; }
+  .mk-w4-toc { position: sticky; inset-block-start: 76px; max-height: calc(100vh - 100px); overflow-y: auto; }
+  .mk-w4-toc ol { grid-template-columns: minmax(0, 1fr); }
+}
+/* the shop's two names sit with the page, whichever alphabet each is written in */
+[dir="ltr"] .mk-w4-id-names :is(h2, p) { text-align: left; }
+[dir="rtl"] .mk-w4-id-names :is(h2, p) { text-align: right; }

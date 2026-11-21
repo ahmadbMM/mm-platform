@@ -10,6 +10,8 @@ import { footerColumns, keptTrust, legalParts, policyLinks } from "@/lib/policie
 import { loadSiteContent } from "@/lib/site";
 import { storeLegal } from "@/lib/store-settings";
 import { POLICY } from "@/lib/store-policy";
+import { w4FooterWithRules } from "@/lib/market/w4";
+import { T as MARKET } from "@/components/market/Market.text";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { localeInfo } from "@/i18n/locales";
 import { phrase } from "@/i18n/tx";
@@ -28,6 +30,10 @@ import { riyadhClock } from "@/lib/workshop-days";
 // one return sentence under the trust line (X03, lib/store-policy.ts), linking to the Returns page; and the seller's legal
 // identity as one grey line (L01: legal name, CR, the e-store's CR, VAT number, from lib/store-settings.ts storeLegal, the
 // invoice's own reading). `trust` holds the staff list item for item (an empty one too), so its English can be matched.
+// One link is not left to the lists: while the Marketplace is on, its rules are one tap from every
+// page. The built-in third column carries the link (content/pages/site.ts); when the lists staff
+// saved lead nowhere to /marketplace/rules, it joins the last column (lib/market/w4.ts
+// w4FooterWithRules). Staff place or reword it by keeping a link to that address in any column.
 export type FooterLink = { label: string; href: string };
 export type FooterContent = {
   contact: { address: string; mapsHref: string; jccName: string; jccAddress: string; jccHref: string; email: string; phone: string; supportPhone: string; hoursText: string };
@@ -62,7 +68,8 @@ export default async function SiteFooter({ locale, c, hidden = [], booking = BOO
   const socials = SOCIAL_ORDER.map((id) => [id, c.social[id]] as const).filter(([, href]) => !!href);
   const link = (l: FooterLink) => (pageOf(l.href) === "account" && hidden.includes("account") ? { ...l, href: bookingLink(booking, locale) } : l.href.startsWith(BOOKING_URL) || l.href.startsWith(booking) ? { ...l, href: bookingLink(l.href, locale) } : l);
   const policies = { title: t.policies, links: policyLinks(hidden).map((p) => ({ label: t[p.key], href: p.href })) };
-  const columns = footerColumns(c.columns, policies, (links) => links.map(link).filter((l) => l.label && l.href && !(pageOf(l.href) && pageOf(l.href) !== "account" && hidden.includes(pageOf(l.href)))));
+  const shown = footerColumns(c.columns, policies, (links) => links.map(link).filter((l) => l.label && l.href && !(pageOf(l.href) && pageOf(l.href) !== "account" && hidden.includes(pageOf(l.href)))));
+  const columns = hidden.includes("marketplace") ? shown : w4FooterWithRules(shown, serverLocalize(MARKET, locale).rules);
   // The trust line as staff keep it, read in English too, so a replaced line is known in any language.
   const enList = resolvePage(siteSchema, content, "en").footer.trust as unknown;
   const trustEn = (Array.isArray(enList) ? (enList as Record<string, unknown>[]) : []).map((x) => (typeof x.text === "string" ? x.text : ""));
