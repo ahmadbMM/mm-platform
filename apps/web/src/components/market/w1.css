@@ -245,6 +245,9 @@
   .mk-w1-gal-thumbs img { display: block; width: 100%; height: 100%; object-fit: cover; }
   /* a shop: what it says about itself, and its details as a business beside it */
   .mk-w1-shop-contact { flex: 0 1 auto; }
+  /* Call, WhatsApp and Map on one row beside the name (they wrapped to two rows of uneven width) */
+  .mk-w1-shop-contact > * { flex-wrap: nowrap; }
+  .mk-w1-shop-contact > * > :is(a, button) { flex: 0 0 auto; min-width: 132px; }
   .mk-w1-shop-cols { grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr); gap: 40px; align-items: start; }
   .mk-w1-shop-cols > :only-child { grid-column: 1 / -1; max-width: 640px; }
 }

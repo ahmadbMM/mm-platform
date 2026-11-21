@@ -308,7 +308,7 @@ export default function ThreadView({ initial, fmt }: { initial: MkThreadGet; fmt
         <MkModal title={w.phoneTitle} onClose={() => setPop("")}>
           <p>{w.phoneBody}</p>
           <div className="mk-pop-acts">
-            {canShare && <button type="button" className="mk-btn" onClick={() => { setPopErr(""); setPop("share"); }}>{w.shareWa}</button>}
+            {canShare && <button type="button" className="mk-btn" onClick={() => { setPopErr(""); setPop("share"); }}><MkIcon name="whatsapp" size={18} />{w.shareWa}</button>}
             <button type="button" className={canShare ? "mk-btn2" : "mk-btn"} onClick={() => setPop("")}>{w.ok}</button>
           </div>
         </MkModal>

@@ -150,7 +150,6 @@ a.mk-w2-item-top:hover .mk-w2-item-title { text-decoration: underline; }
 .mk-w2-item-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .mk-w2-act { min-height: 44px; padding-inline: 16px; font-size: 14px; }
 .mk-w2-mine .mk-w2-item-acts .mk-w2-act { flex: 1 1 auto; }
-.mk-w2-note { margin: 0; font-size: 15px; line-height: 1.5; color: var(--mk-ink-2); }
 .mk-w2-reason { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 10px 12px; border-radius: var(--mk-r-ctl); background: var(--mk-red-soft); font-size: 14px; line-height: 1.5; color: var(--mk-ink); }
 .mk-w2-reason b { font-size: 12px; font-weight: 700; color: var(--mk-red); }
 .mk-w2-soldfor { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; margin: 0; font-size: 14px; color: var(--mk-ink-2); }

@@ -835,9 +835,10 @@ describe("the selling pages", () => {
   it("write no line under a choice or beside a chip beyond the ones the build names", () => {
     // the condition's definitions are the only lines written inside an option: "No name" stands alone
     expect(read("components/market/w2/SellForm.tsx").match(/className="mk-w2-def"/g)?.length).toBe(1);
-    // a held or removed listing's chip already says which it is: one line for a held one, staff's reason for a removed one
+    // a held or removed listing's chip already says which it is: no line under a held one, staff's reason for a removed one
     const mineSrc = read("components/market/w2/MyListings.tsx");
-    expect(mineSrc.match(/className="mk-w2-note"/g)?.length).toBe(1);
+    expect(mineSrc).not.toContain('className="mk-w2-note"');
+    expect(mineSrc).not.toContain("m.heldBody");
     expect(Object.keys(T.en)).not.toEqual(expect.arrayContaining(["heldNote"]));
     expect(Object.keys(T.en)).not.toEqual(expect.arrayContaining(["hiddenNote"]));
   });

@@ -194,7 +194,6 @@ export default function MyListings({ locale, items, error, how, now }: MyListing
                 )}
               </div>
               {acts.includes("view") ? <Link className="mk-w2-item-top" href={listingHref(l.id)}>{top}</Link> : <div className="mk-w2-item-top">{top}</div>}
-              {l.status === "held" && <p className="mk-w2-note">{m.heldBody}</p>}
               {l.status === "hidden" && l.hidden_reason?.trim() && <p className="mk-w2-reason"><b>{m.reason}</b><span className="mk-user" dir="auto">{l.hidden_reason}</span></p>}
               {l.status === "sold" && l.sold_price !== null && (
                 <p className="mk-w2-soldfor">

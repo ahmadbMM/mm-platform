@@ -14,6 +14,9 @@
 /* quick replies: one row that scrolls sideways on a phone and wraps on a wider screen (market.css .mk-chips); the room
    above and below is for the focus ring, which a scrolling row would cut off */
 .mk-chips.mk-w3-quick { margin-inline: 0; padding: 6px 0; }
+/* in the first-message pop-up the few replies wrap, whole, inside the card (a row cut off at the pop-up's edge looked broken) */
+.mk-w3-first .mk-chips.mk-w3-quick { flex-wrap: wrap; overflow: visible; }
+.mk-w3-first .mk-w3-quick .mk-chip { white-space: normal; text-align: start; }
 
 /* ── The first-message pop-up and the report pop-up ── */
 .mk-pop .mk-w3-about { margin: 0 0 14px; color: var(--mk-ink); font-size: 15px; font-weight: 600; }
@@ -111,8 +114,6 @@ a.mk-w3-item:hover { box-shadow: var(--mk-sh-2); }
 @media (max-width: 599px) {
   /* the quick replies run to the card's edges while they scroll */
   .mk-w3-send .mk-chips.mk-w3-quick { margin-inline: -14px; padding-inline: 14px; }
-  /* and to the pop-up's edges in the first-message pop-up */
-  .mk-w3-first .mk-chips.mk-w3-quick { margin-inline: -24px; padding-inline: 24px; }
 }
 @media (min-width: 600px) {
   .mk-w3-row { padding: 16px 18px; gap: 14px; }
