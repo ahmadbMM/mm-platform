@@ -32,7 +32,7 @@ import type { MtFeed } from "@/lib/mentorship";
 import { fill } from "@/i18n/tx";
 import { ratingFinWords } from "@/components/account/RatingFin.words";
 import { CHALLENGE_KEYS, communityWords, mentorWords, pickWords, YEAR_KEYS } from "./Community.words";
-import { ClubGoalCard, FirstFiveCard, ReportCard, SeasonGoalCard, TipCard, VolunteerCallCard } from "./HubCards";
+import { ChatButton, ClubGoalCard, FirstFiveCard, ReportCard, SeasonGoalCard, TipCard, VolunteerCallCard } from "./HubCards";
 import ChallengeCard from "./ChallengeCard";
 import YearCard from "./YearCard";
 import Mentorship from "./Mentorship";
@@ -68,6 +68,8 @@ import ClubParts from "./ClubParts";
 // the recap, the Build-up plan, My interests, the upcoming sessions, the member's rides, the staff card), Challenges (the
 // year, My month, the challenge, Plan my Saturdays, the season challenges, the club goal) and Club (the title, Ask,
 // Mentorship, Volunteers needed, Suggest a ride, the invitation); the card, its tier bar and the birthday stay above them.
+// The Community chat is a round button at the bottom corner of the area (ChatButton), as the booking app's is since
+// 2026-11-20 (it was the Club part's first card).
 type Props = {
   locale: string;
   L: Locale;
@@ -98,6 +100,8 @@ type Props = {
    *  chosen; absent on a database without it. The list of members itself lives in the booking app. */
   title?: MemberTitle | null;
   communityHref?: string;
+  /** The booking app's Community chat (/members?hv=chat there): the corner button that opens it; none: no button. */
+  chatHref?: string;
   accountHref?: string;
   /** The open Ask pages this member may answer (lib/ask-server.ts readAskList); none: no section. */
   asks?: AskCard[];
@@ -126,7 +130,7 @@ type Props = {
   invite?: string | null;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions, season, hub, recap, yearKinds, p5, mentor, invite }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, chatHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions, season, hub, recap, yearKinds, p5, mentor, invite }: Props) {
   const t = serverLocalize(T, locale);
   const ask = serverLocalize(ASK_T, locale);
   const N = (n: number) => fmtNum(n, locale);
@@ -267,6 +271,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
       <p className="club-mine-next">{a.tier >= 2 || !a.next ? t.top : t.toNext(N(Math.max(0, a.next - a.credits)), tierNames[a.tier + 1])}</p>
 
       <ClubParts parts={{ sess, ...(goals ? { goals } : {}), ...(club ? { club } : {}) }} labels={{ sess: cw.secSess, goals: cw.secGoals, club: cw.secClub }} label={t.title} />
+      {chatHref && <ChatButton href={chatHref} label={memberHubWords(locale).chtTitle} />}
     </div>
     </InterestsBox>
   );

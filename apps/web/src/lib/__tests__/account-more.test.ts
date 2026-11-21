@@ -117,6 +117,7 @@ describe("Notifications and Updates", () => {
         { id: -2, kind: "info", title: "", body: "", at: "", url: "", unread: false }]);
     expect(updatesOf({ ok: false })).toBeNull();
     expect(updLang("ar")).toBe("ar");
+    expect(updLang("ms")).toBe("ms");
     expect(updLang("de")).toBe("en");
   });
   it("sends a row where the app's would go, on this site", () => {

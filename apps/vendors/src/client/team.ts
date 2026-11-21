@@ -3,6 +3,7 @@
 
 import { rpc } from "./api";
 import { announce, app, busy, button, errorNote, note, t } from "./app";
+import { localeTag } from "./dates";
 import { clear, h, uid } from "./dom";
 import { roleText } from "./venue";
 
@@ -12,7 +13,7 @@ function stamp(iso: string | null): string {
   if (!iso) return t("teamNever");
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return t("teamNever");
-  return new Intl.DateTimeFormat(`${app.lang === "ar" ? "ar-SA" : "en-GB"}-u-ca-gregory-nu-latn`, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(d);
+  return new Intl.DateTimeFormat(localeTag(app.lang), { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(d);
 }
 
 export async function renderTeam(main: HTMLElement): Promise<void> {

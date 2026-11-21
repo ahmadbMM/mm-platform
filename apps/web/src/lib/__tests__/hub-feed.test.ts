@@ -250,6 +250,16 @@ describe("the cards", () => {
     expect(p5.split("club-hub-report-h").length).toBe(3); // one report (its id and its aria-labelledby)
     // without the read: none of its cards
     expect(renderToStaticMarkup(createElement(MembersArea, props))).not.toContain("club-hub");
+    // the Community chat (2026-11-20): a round button at the corner, outside the three parts, named in the page's language;
+    // no card for it in Club any more, and with no address no button
+    const href = "https://experiences.micromobility.sa/members?hv=chat";
+    const chat = renderToStaticMarkup(createElement(MembersArea, { ...props, hub: f, chatHref: href }));
+    expect(chat).toContain(`<a class="club-chat-fab" href="${href}" aria-label="Community chat" title="Community chat">`);
+    expect(chat.indexOf("club-chat-fab")).toBeGreaterThan(chat.lastIndexOf("club-pane-"));
+    expect(chat).not.toContain("club-hub-chat");
+    expect(chat).not.toContain("Open the chat");
+    expect(renderToStaticMarkup(createElement(MembersArea, { ...props, L: "ar" as never, locale: "ar", hub: f, chatHref: href }))).toContain('aria-label="دردشة المجتمع"');
+    expect(html).not.toContain("club-chat-fab");
   });
 });
 

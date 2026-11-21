@@ -107,6 +107,19 @@ export function VolunteerCallCard({ id, w }: { id: string; w: CommunityWords }) 
   );
 }
 
+/** The Community chat's button (the booking app's corner button, 2026-11-20: "show the chat in booking app as an icon at
+ *  the bottom corner of the page"; it was a card in the Club part): round, at the bottom end corner of the members' area,
+ *  opening the chat in the booking app, where each message carries its writer's full name. The site keeps no copy of the
+ *  chat, so it shows no count. */
+export const CHAT = "M20.4 11.6a8.2 8.2 0 0 1-12.1 7.2L3.6 20.4l1.6-4.5a8.2 8.2 0 1 1 15.2-4.3z";
+export function ChatButton({ href, label }: { href: string; label: string }) {
+  return (
+    <a className="club-chat-fab" href={href} aria-label={label} title={label}>
+      <svg viewBox="0 0 24 24" width={26} height={26} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={CHAT} /></svg>
+    </a>
+  );
+}
+
 /** The first five rides in the challenge's place (the app's _p5Html, new features F1): its name, the five marks, "2 of 5". */
 export function FirstFiveCard({ n, tg, name, of, w }: { n: number; tg: number; name: string; of: string; w: CommunityWords }) {
   return (

@@ -1,6 +1,6 @@
 // What the database answers, and the plain rules the page draws from it. Pure (tested).
 
-import { addDays, type Iso } from "./dates";
+import { addDays, localeTag, type Iso } from "./dates";
 import { plural } from "./plurals";
 import { fmt, type Key, type Lang } from "./strings";
 
@@ -203,11 +203,11 @@ export function arrivalWindow(start: string): [string, string] | null {
   return [at(ARRIVAL_AFTER_START[0]), at(ARRIVAL_AFTER_START[1])];
 }
 
-/** "06:15" as the page's language writes a time: "6:15 AM" / "6:15 ص". */
+/** "06:15" as the page's language writes a time: "6:15 am" / "6:15 ص" / "6:15 PG". */
 export function clockText(lang: Lang, hhmm: string): string {
   const m = /^(\d{2}):(\d{2})$/.exec(hhmm);
   if (!m) return hhmm;
-  return new Intl.DateTimeFormat(lang === "ar" ? "ar-SA-u-nu-latn" : "en-GB", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "UTC" })
+  return new Intl.DateTimeFormat(localeTag(lang), { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "UTC" })
     .format(new Date(Date.UTC(2000, 0, 1, Number(m[1]), Number(m[2]))));
 }
 
@@ -321,7 +321,7 @@ export function barClasses(value: number): [string, string] {
 
 /** "8.4", always with one decimal. */
 export function scoreText(lang: Lang, value: number): string {
-  return new Intl.NumberFormat(lang === "ar" ? "ar-SA-u-nu-latn" : "en-GB", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
+  return new Intl.NumberFormat(localeTag(lang), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
 }
 
 /** The comments grouped by question: the known questions in order, then any other keys as sent.

@@ -17,14 +17,14 @@ import { BOOKING_URL } from "./links";
 
 /** The key's shape, as the database writes it (calendar_feeds_key_shape). */
 export const CALF_KEY = /^[0-9a-f]{64}$/;
-/** The languages calendar_link writes the events in: the booking app's ten (any other is kept as stored). */
-export const CALF_LANGS = ["en", "ar", "fr", "es", "pt", "ur", "hi", "tl", "ne", "bn"] as const;
+/** The languages calendar_link writes the events in: the booking app's eleven (any other is kept as stored). */
+export const CALF_LANGS = ["en", "ar", "fr", "es", "pt", "ur", "hi", "tl", "ne", "bn", "ms"] as const;
 /** What the pop-up asks: the rider's key (made on the first ask), or a new one in its place. */
 export type CalfOp = "get" | "new";
 /** What the pop-up posts: a key's ask, or the club switch turned on or off. */
 export type CalfBody = { op: CalfOp; lang: string | null } | { op: "club"; on: boolean };
 
-/** The page's language as calendar_link takes it: one of the booking app's ten, else null (the stored one stays). */
+/** The page's language as calendar_link takes it: one of the booking app's eleven, else null (the stored one stays). */
 export const calfLang = (locale: unknown): string | null => (CALF_LANGS as readonly unknown[]).includes(locale) ? (locale as string) : null;
 
 /** Whether the section shows: calendar_link's 'peek' answered {ok: true}. No function, an error, a token that is no

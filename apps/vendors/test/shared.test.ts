@@ -51,6 +51,7 @@ describe("what riders said", () => {
     expect(scoreText("en", 8)).toBe("8.0");
     expect(scoreText("en", 8.4)).toBe("8.4");
     expect(scoreText("ar", 8.4)).toMatch(/^8.4$/);
+    expect(scoreText("ms", 8.4)).toBe("8.4");
     expect(fmt("en", "srScore", { label: fmt("en", "srFood"), score: scoreText("en", 8.4) })).toBe("Food 8.4 / 10");
   });
 
@@ -70,10 +71,11 @@ describe("what riders said", () => {
     expect(commentGroups(entry({ comments: undefined as unknown as SharedRatings["comments"] }))).toEqual([]);
   });
 
-  it("has every label in both languages", () => {
+  it("has every label in every language", () => {
     for (const k of ["srTitle", "srBreakfast", "srRestaurant", "srAtmosphere", "srFood", "srService", "srOther", "srAnonymous"] as const) {
       expect(STRINGS.en[k]).toBeTruthy();
       expect(STRINGS.ar[k]).toBeTruthy();
+      expect(STRINGS.ms[k]).toBeTruthy();
     }
     expect(STRINGS.en.srBreakfast).toBe("Breakfast overall");
   });

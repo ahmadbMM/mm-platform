@@ -1,5 +1,5 @@
 // The 2026-10-05 review of the portal, in a browser: an address the portal does not have answers a
-// page in both languages, "Skip to content" moves the focus without touching the address (the hash is
+// page in its three languages, "Skip to content" moves the focus without touching the address (the hash is
 // the router), a signed-out load asks "who am I" without an error in the console, and bookings and
 // open dates past 400 days are read, 400 days a call (the stub refuses more, as the database does).
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
@@ -27,7 +27,7 @@ async function ready(page: Page, request: APIRequestContext) {
   await expect(page.getByRole("heading", { name: "Breakfast calendar" })).toBeVisible();
 }
 
-test("an address the portal does not have answers 404 with a page in both languages, and leads back", async ({ page, request }) => {
+test("an address the portal does not have answers 404 with a page in the portal's three languages, and leads back", async ({ page, request }) => {
   const res = await request.get("/calendar");
   expect(res.status()).toBe(404);
   expect(res.headers()["content-type"]).toContain("text/html");
@@ -35,11 +35,14 @@ test("an address the portal does not have answers 404 with a page in both langua
   const body = await res.text();
   expect(body).toContain("Page not found");
   expect(body).toContain("الصفحة غير موجودة");
+  expect(body).toContain("Halaman tidak ditemui");
 
   const errors = watch(page);
   await page.goto("/no/such/page");
   await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "الصفحة غير موجودة" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Halaman tidak ditemui" })).toBeVisible();
+  await expect(page.locator(".notfound-ms")).toHaveAttribute("lang", "ms");
   await page.getByRole("link", { name: "Go to the vendor portal" }).click();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   expect(errors.filter((e) => !/status of 404/.test(e))).toEqual([]);
@@ -67,7 +70,7 @@ test("Skip to content moves the focus to the page and leaves the address alone, 
   await expect(page).toHaveURL(/#bookings$/);
   await expect(page.getByRole("heading", { name: "Upcoming" })).toBeVisible();
   await expect(page.locator("main#main")).toBeFocused();
-  await page.getByRole("button", { name: "Switch to Arabic" }).click();
+  await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
   await expect(page.locator("a.skip")).toHaveText("انتقل إلى المحتوى");
 });
 
@@ -98,5 +101,6 @@ test("a booking and an open date past 400 days, on a plan reaching 730: seen, ca
   for (const a of asked) expect(span(a.p_from, a.p_to)).toBeLessThanOrEqual(400);
   expect(asked.some((a) => a.p_to >= far.open)).toBe(true);
   await expect(page.getByRole("alert")).toHaveCount(0);
-  expect(errors).toEqual([]);
+  // A 429 is the sign-in meter's, which sign-in.ts waits out (a full run signs in more than ten times a minute).
+  expect(errors.filter((e) => !/status of 429/.test(e))).toEqual([]);
 });

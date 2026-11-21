@@ -77,11 +77,26 @@ html[dir="rtl"] .eyebrow { letter-spacing: 0; text-transform: none; font-size: 1
 .bar-tools { display: flex; gap: 4px; align-items: center; min-width: 0; }
 .venue-name { margin: 0 8px 0 0; color: rgba(10, 13, 9, .68); font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 html[dir="rtl"] .venue-name { margin: 0 0 0 8px; }
-/* The language switch and sign-out as the website's round header controls. */
+/* Sign-out as the website's round header controls. */
 .bar .btn { min-height: 40px; padding: 0 12px; border: 0; background: transparent; color: var(--ink); font-size: 14px; font-weight: 500; gap: 7px; }
 .bar .btn:hover { background: rgba(0, 0, 0, .07); }
 .bar .btn .icon { width: 19px; height: 19px; }
-.bar .lang:hover .icon path:nth-child(3) { transform-origin: 12px 12px; animation: mmGlobe 1.2s ease-in-out; }
+/* The language menu (main.ts langMenu) as one of them: a native menu drawn as the globe, the language's own name and a
+   chevron, as wide as the name shown where the browser can size it so; on a phone the globe alone (below). The globe
+   and the chevron let a tap through to the menu. */
+.lang-menu { position: relative; display: inline-flex; align-items: center; flex: none; border-radius: 999px; color: var(--ink); transition: background .2s ease; }
+.lang-menu:hover { background: rgba(0, 0, 0, .07); }
+.lang-menu .lang-pick, .lang-menu .lang-down { position: absolute; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.lang-menu .lang-pick { display: inline-flex; inset-inline-start: 12px; }
+.lang-menu .lang-pick .icon { width: 19px; height: 19px; }
+.lang-menu .lang-down { inset-inline-end: 10px; width: 14px; height: 14px; }
+.bar select.lang { width: auto; min-height: 40px; height: 40px; padding: 0 30px 0 38px; border: 0; border-radius: 999px; background: transparent; color: var(--ink);
+  font-size: 14px; font-weight: 500; line-height: 40px; cursor: pointer; -webkit-appearance: none; appearance: none; field-sizing: content; }
+html[dir="rtl"] .bar select.lang { padding: 0 38px 0 30px; }
+.bar select.lang option { color: var(--ink); background: var(--mm-white); }
+.lang-menu:hover .lang-pick .icon path:nth-child(3) { transform-origin: 12px 12px; animation: mmGlobe 1.2s ease-in-out; }
+/* A touch screen zooms into a menu whose text is under 16px as it opens. */
+@media (pointer: coarse) { .bar select.lang { font-size: 16px; } }
 @keyframes mmGlobe { to { transform: rotate(180deg); } }
 
 /* Tabs: the website's header links (rgba ink, green ink when current), on a white strip -------------- */
@@ -351,6 +366,9 @@ html[dir="rtl"] .foot-mark { -webkit-mask-position: right center; mask-position:
   .brand-name { display: none; }
   .bar .btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .bar .btn { width: 40px; padding: 0; border-radius: 50%; }
+  .bar select.lang, html[dir="rtl"] .bar select.lang { width: 40px; padding: 0; color: transparent; }
+  .lang-menu .lang-pick { inset-inline-start: 10.5px; }
+  .lang-menu .lang-down { display: none; }
   .venue-name { margin: 0 4px; font-size: 13.5px; }
   #app[data-screen="signin"] .brand-name, #app[data-screen="force"] .brand-name { display: inline; }
   .actions .btn { flex: 1 1 auto; }
@@ -401,7 +419,8 @@ main.narrow .forgot .actions .btn { flex: 0 1 auto; min-height: 44px; }
 .privacy-list { margin: 0; padding-inline-start: 1.2rem; display: grid; gap: 6px; }
 .foot-privacy { font-weight: 600; }
 
-/* The 404 page (static/404.html): English, then Arabic, on one card. */
+/* The 404 page (static/404.html): English, Arabic, then Malay, on one card. */
 .notfound-ar { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-family: "IBM Plex Sans Arabic", "Space Grotesk", system-ui, sans-serif; line-height: 1.7; }
 .notfound-ar :is(h1, h2) { letter-spacing: 0; line-height: 1.3; }
 .notfound-ar .eyebrow { letter-spacing: 0; text-transform: none; font-size: 13px; }
+.notfound-ms { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
