@@ -285,4 +285,7 @@
 .bk-appt-end:has(> :only-child.acm-btn) { justify-content: flex-end; }
 .bk-past { max-width: 40rem; }
 .bk-done { color: var(--acm-go); }
+/* "Safety feedback" on a past ride, for 7 days after it (lib/safety-feedback.ts): a link to the booking app's form, 44px tall */
+.bk-past > li .bk-sfy { margin-inline-start: auto; min-height: 44px; display: inline-flex; align-items: center; padding: 0 4px; font-size: 14px; font-weight: 600; color: var(--acm-go); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.bk-past > li .bk-sfy:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 4px; }
 .mm-nav-tk[aria-current="page"] { background: rgba(7, 122, 75, .1); }

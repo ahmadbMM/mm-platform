@@ -34,6 +34,7 @@ import { comingWords } from "./Coming.words";
 import { deskNoteWord } from "./DeskNote.words";
 import { bikeReportWords } from "./BikeReport.words";
 import { rideHelpWords } from "./RideHelp.words";
+import { safetyWords } from "./SafetyFeedback.words";
 import { comingCancelLink, stillComing } from "@/lib/still-coming";
 import { bikeReport } from "@/lib/bike-report";
 import { rideHelp } from "@/lib/ride-help";
@@ -106,7 +107,10 @@ type Props = {
   typeName: (type: string) => string;
   /** live: the live ride map (/live?session=), on the day of the ride only. share: what Share sends as its link
    *  (lib/tickets.ts shareLink), none for no Share. bookings: the booking app's My Bookings, the calendar entry's URL. */
-  links: { edit: string | null; manage: string; place: string | null; live?: string | null; share?: string | null; bookings?: string | null };
+  links: { edit: string | null; manage: string; place: string | null; live?: string | null; share?: string | null; bookings?: string | null;
+    /** "Safety feedback" (lib/safety-feedback.ts): the booking app's form for this booking, while it ended under 7 days
+     *  ago; null or absent for none. */
+    safety?: string | null };
   /** The route the ride follows (ticketRoute): a Routes page item, or the circuit drawn; null for none. */
   route?: TicketRoute | null;
   /** The bike handed over tonight, by name, when the public key can see it. */
@@ -188,6 +192,13 @@ const CodeMark = ({ k }: { k: CodeKind }) => (
 
 const Clock = () => (
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6" /><path d="M12 7.4V12l3.2 2" /></svg>
+);
+
+// the booking app's shield (_CU shield, its Safety feedback button), outlined as the card's other icons
+const Shield = () => (
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 3 19.5 6v5.6c0 4.6-3.2 8.2-7.5 9.9-4.3-1.7-7.5-5.3-7.5-9.9V6z" /><path d="m9 12 2.2 2.2L15.2 10" />
+  </svg>
 );
 
 const Cal = () => (
@@ -648,6 +659,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         {links.share && <TicketShare text={shareText} url={links.share} label={t.share} copied={t.vtCopied} />}
         {links.live && <a className="tk-btn solid tk-map" href={links.live}><Live />{t.liveMap}</a>}
       </div>}
+      {/* "Safety feedback" once the session is over, for 7 days (the booking app's _sfyBtn): its form is the app's */}
+      {links.safety && <div className="tk-actions tk-sfy"><a className="tk-btn" href={links.safety}><Shield />{safetyWords(locale).btn}</a></div>}
       {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out, and
           none on the DEFE 5KM Run or Arena Heros, which the passes do not know (the booking app's _walletOk); yoga's
           is offered, as the pool's (its passes know yoga since 2026-11-12). */}

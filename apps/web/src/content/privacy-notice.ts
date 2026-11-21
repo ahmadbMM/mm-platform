@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-20";
+export const PRIVACY_VERSION = "2026-11-21";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -138,6 +138,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Publishing what riders say about us on our website, with your consent. A photo is deleted as soon as our team decides not to publish it."
      ],
      [
+      "Safety feedback: after a ride or session, what happened (nothing, a near miss, feeling unsafe, a fall, a crash or an injury), where you or the rider you booked for were hurt and how seriously, the safety briefing, the helmet and bike, what caused it and what would have prevented it, your ratings of how our team responded, and your comments and ideas",
+      "Always optional: only if you send it, and you tick that we may use it. An injury’s details are health information, which we ask for only to look after riders and make our rides safer. Seen by our staff only; never shown to other riders or published.",
+      "Making our rides and sessions safer and our response faster, and following up with you about what happened; our reply shows on your booking"
+     ],
+     [
       "The mentorship programme (Community members only): if you register as a mentee, your university, field of study, city, country, starting year, the help you want, your goal and the mentor gender you prefer; if you register as a mentor, where and what you studied, your work, the places you know, how you can help and what you tell us",
       "Optional: only if you register. A mentee’s university and field of study are shown to Community members without their name; their city, country, starting year, the help wanted, their goal and the mentor gender they prefer are seen by our staff only. What a mentor tells us is seen by our staff only; a short line about their experience, without their name, is shown to the one student our staff propose them to. Once you both accept, we share your first name and WhatsApp number with that one person. You can step back at any time; we then stop sharing them.",
       "Matching students starting university with Community members who can help them, and following up on each match"
@@ -254,7 +259,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>To share a donor’s details with the partners and third parties of a blood donation event:</strong> your consent, which we ask for before you can register.",
     "<strong>To share a mentor’s or a mentee’s first name and WhatsApp number with their match:</strong> your consent, which we ask for when you register and which you withdraw by stepping back.",
     "<strong>To publish your testimonial on our website:</strong> your consent, the box you tick when you send it, which you withdraw by deleting it.",
-    "<strong>To show your full name with your messages in the Community chat:</strong> your consent, which we ask for with your first message; you withdraw it by taking your messages off the chat or by asking us to."
+    "<strong>To show your full name with your messages in the Community chat:</strong> your consent, which we ask for with your first message; you withdraw it by taking your messages off the chat or by asking us to.",
+    "<strong>Safety feedback, including any injury details:</strong> your explicit consent, given with the tick when you send it; you can ask us to delete it at any time."
    ]
   },
   {
@@ -407,6 +413,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>The Saturdays you plan to come:</strong> deleted when the month ends.",
     "<strong>Your interests:</strong> kept until you change them or your account is deleted.",
     "<strong>Testimonials:</strong> kept until you delete yours or our staff remove it; a photo is deleted as soon as our team decides not to publish it.",
+    "<strong>Safety feedback:</strong> kept 3 years from when you send it, then deleted.",
     "<strong>Community chat messages:</strong> shown to members for 6 hours. After that, and from the moment you remove one, only our staff can see it; we keep these messages and do not delete them."
    ]
   },
@@ -583,6 +590,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "لنشر ما يقوله الراكبون عنا على موقعنا الإلكتروني، بموافقتك. تُحذف الصورة فور أن يقرر فريقنا عدم نشر الشهادة."
      ],
      [
+      "ملاحظات السلامة: بعد الجولة أو الفعالية، ما حدث (لا شيء، أو كاد يقع حادث، أو شعور بعدم الأمان، أو سقوط، أو اصطدام، أو إصابة)، وموضع إصابتك أو إصابة من حجزت له ومدى خطورتها، وشرح السلامة، والخوذة والدراجة، وسبب ما حدث وما كان سيمنعه، وتقييمك لاستجابة فريقنا، وتعليقاتك وأفكارك",
+      "اختياري دائماً: فقط إن أرسلتها ووافقت على أن نستخدمها. تفاصيل الإصابة معلومات صحية، ولا نطلبها إلا للعناية بالراكبين وجعل جولاتنا أكثر أماناً. لا يراها إلا موظفونا، ولا تُعرض على راكبين آخرين ولا تُنشر.",
+      "لجعل جولاتنا وفعالياتنا أكثر أماناً واستجابتنا أسرع، ولمتابعة ما حدث معك؛ ويظهر ردّنا في حجزك"
+     ],
+     [
       "برنامج الإرشاد (لأعضاء المجتمع فقط): إن سجّلت كمسترشد: جامعتك وتخصصك ومدينتك ودولتك وسنة بدئك والمساعدة التي تريدها وهدفك وجنس المرشد الذي تفضّله؛ وإن سجّلت كمرشد: أين درست وماذا درست وعملك والأماكن التي تعرفها وكيف يمكنك المساعدة وما تخبرنا به",
       "اختياري: فقط إذا سجّلت. تُعرض جامعة المسترشد وتخصصه لأعضاء المجتمع دون اسمه، ولا يرى مدينته ودولته وسنة بدئه والمساعدة التي يريدها وهدفه وجنس المرشد الذي يفضّله إلا موظفونا. وما يخبرنا به المرشد لا يراه إلا موظفونا، ويُعرض سطر قصير عن خبرته، دون اسمه، على الطالب الوحيد الذي يقترحه عليه موظفونا. وبعد قبولكما كليكما، نشارك اسمك الأول ورقم واتساب الخاص بك مع ذلك الشخص وحده. ويمكنك الانسحاب في أي وقت، وعندها نتوقف عن مشاركتهما.",
       "مطابقة الطلاب الذين يبدؤون دراستهم الجامعية مع أعضاء المجتمع القادرين على مساعدتهم، ومتابعة كل مطابقة"
@@ -699,7 +711,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>لمشاركة بيانات المتبرع مع الشركاء والأطراف الثالثة لفعالية تبرع بالدم:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من التسجيل.",
     "<strong>لمشاركة الاسم الأول ورقم واتساب للمرشد أو المسترشد مع من تتم مطابقته معه:</strong> موافقتك، ونطلبها عند تسجيلك، وتسحبها بالانسحاب.",
     "<strong>لنشر شهادتك على موقعنا الإلكتروني:</strong> موافقتك، أي المربع الذي تضع عليه علامة عند إرسالها، وتسحبها بحذف الشهادة.",
-    "<strong>لإظهار اسمك الكامل مع رسائلك في دردشة المجتمع:</strong> موافقتك، ونطلبها مع أول رسالة ترسلها؛ وتسحبها بحذف رسائلك أو بطلب ذلك منا."
+    "<strong>لإظهار اسمك الكامل مع رسائلك في دردشة المجتمع:</strong> موافقتك، ونطلبها مع أول رسالة ترسلها؛ وتسحبها بحذف رسائلك أو بطلب ذلك منا.",
+    "<strong>ملاحظات السلامة، بما فيها تفاصيل أي إصابة:</strong> موافقتك الصريحة، وتمنحها بوضع العلامة عند الإرسال؛ ويمكنك أن تطلب منا حذفها في أي وقت."
    ]
   },
   {
@@ -852,6 +865,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>أيام السبت التي تنوي الحضور فيها:</strong> تُحذف بانتهاء الشهر.",
     "<strong>اهتماماتك:</strong> نحتفظ بها حتى تغيّرها أو يُحذف حسابك.",
     "<strong>الشهادات:</strong> نحتفظ بها حتى تحذف شهادتك أو يزيلها موظفونا؛ وتُحذف الصورة فور أن يقرر فريقنا عدم نشر الشهادة.",
+    "<strong>ملاحظات السلامة:</strong> نحتفظ بها 3 سنوات من تاريخ إرسالها، ثم تُحذف.",
     "<strong>رسائل دردشة المجتمع:</strong> تظهر للأعضاء لمدة 6 ساعات. بعد ذلك، ومنذ لحظة إزالتك لرسالة، لا يراها إلا موظفونا؛ ونحتفظ بهذه الرسائل ولا نحذفها."
    ]
   },

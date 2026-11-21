@@ -34,7 +34,7 @@ import { tmAboutOfKind } from "@/lib/testimonials";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
 import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtClock, fmtDayDate, lockersOf, lockerStart, lockerText, ownLockersOf, placeLink, shareLink, ticketRow,
-  type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
+  type TicketRow, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { bikeReport } from "@/lib/bike-report";
 import { bikeName } from "@/lib/ride-record-data";
@@ -46,6 +46,8 @@ import { phrase } from "@/i18n/tx";
 import { bizOf } from "@/lib/biz";
 import { ArrowIcon } from "@/components/site/Icons";
 import AccIcon from "@/components/account/AccIcon";
+import { safetyEntry, safetyHref } from "@/lib/safety-feedback";
+import { safetyWords } from "@/components/booking/SafetyFeedback.words";
 import type { VolunteerMe } from "@/components/account/VolunteerCard";
 
 // micromobility.sa/bookings - every booking the rider has, in one place (the user, 2026-11-19: "make sure to have a page
@@ -112,8 +114,8 @@ export default async function BookingsPage({ params, searchParams }: { params: P
   const toRate = unratedRides(rows, today).filter((r) => r.date < RATE_FROM && r.entryId !== gate?.entryId).reverse().slice(0, 5);
   // The rides done before today, newest first (the booking app's Past rides): one line each, the latest twenty.
   const doneBefore = (() => {
-    const seen = new Map<string, { sessionId: string; date: string }>();
-    for (const r of rows.map(ticketRow)) if (r && r.status === "done" && r.date < today && !seen.has(r.sessionId)) seen.set(r.sessionId, { sessionId: r.sessionId, date: r.date });
+    const seen = new Map<string, { sessionId: string; date: string; entryId: string }>();
+    for (const r of rows.map(ticketRow)) if (r && r.status === "done" && r.date < today && !seen.has(r.sessionId)) seen.set(r.sessionId, { sessionId: r.sessionId, date: r.date, entryId: r.id });
     return [...seen.values()].sort((x, y) => y.date.localeCompare(x.date)).slice(0, 20);
   })();
   // every booked session, whatever its state now (a Petromin night, one staff closed since), read with the account's token
@@ -167,6 +169,11 @@ export default async function BookingsPage({ params, searchParams }: { params: P
   const rideName = (s: TicketSession | undefined, sessionId: string) =>
     (s ? sessionName(s, names, enNames, L !== "en") : isNonBike(null, sessionId) ? tx("Session", "الفعالية") : tx("Ride", "جولة"));
   const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
+  // "Safety feedback" (2026-11-21, lib/safety-feedback.ts): the booking app's form, for 7 days after the session ends
+  const sfyLink = (rs: Pick<TicketRow, "id" | "status">[], s: TicketSession | undefined) => {
+    const id = safetyEntry(rs, s, drawn);
+    return id ? safetyHref(id, app, locale) : null;
+  };
   // "Report a bike problem" (2026-11-13): a booking holding more than one bike asks which one, by the bikes' names
   const brpBikes = [...new Set([...groups, ...past].flatMap((g) => {
     const o = bikeReport(g.rows, sessions.get(g.sessionId), drawn)?.options ?? [];
@@ -197,7 +204,7 @@ export default async function BookingsPage({ params, searchParams }: { params: P
         links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place,
           // the live map follows the ride leader: a bike session's only (2026-10-18)
           live: g.date === today && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null,
-          share: shareLink(app, ev, g.sessionId), bookings: myBookings }}
+          share: shareLink(app, ev, g.sessionId), bookings: myBookings, safety: sfyLink(g.rows, s) }}
         route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
         wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} bikeNames={bikeNames} account={acct.name} />
     ) };
@@ -299,7 +306,7 @@ export default async function BookingsPage({ params, searchParams }: { params: P
                 <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
                   name={rideName(s, g.sessionId)}
                   cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                  links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} bikeNames={bikeNames} account={acct.name} />
+                  links={{ edit: null, manage, place: null, safety: sfyLink(g.rows, s) }} route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} bikeNames={bikeNames} account={acct.name} />
               );
             })}
           </div>
@@ -326,9 +333,11 @@ export default async function BookingsPage({ params, searchParams }: { params: P
           <ul className="acm-card acm-card-list acm-lines bk-past">
             {doneBefore.map((x) => {
               const s = sessions.get(x.sessionId);
+              const sfy = sfyLink([{ id: x.entryId, status: "done" }], s);
               return (
                 <li key={x.sessionId}>
                   <span className="acm-line-main"><b><bdi>{rideName(s, x.sessionId)}</bdi></b><small><bdi>{fmtDayDate(x.date, locale)}</bdi></small></span>
+                  {sfy && <a className="bk-sfy" href={sfy}>{safetyWords(locale).btn}</a>}
                   <span className="acm-line-end"><AccIcon name="tick" size={18} className="bk-done" /></span>
                 </li>
               );
