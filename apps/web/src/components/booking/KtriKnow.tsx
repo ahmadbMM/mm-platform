@@ -12,10 +12,12 @@ import type { KtriRaceOpt, TriRace } from "@/lib/ktri";
 // `race` undefined: the read did not carry the column, so no race is said or asked. Its words come ready in the page's
 // language from the ticket (tickets.text.ts), each race's start and entry fee written there too.
 export type KtriKnowText = {
-  reportK: string; report: string; bikeK: string; bike: string; raceK: string; gateK: string; gateV: string; pick: string; saved: string; change: string; failed: string;
+  reportK: string; report: string; bikeK: string; bike: string; yourK: string; raceK: string; gateK: string; gateV: string; pick: string; saved: string; change: string; failed: string;
 };
 
-export default function KtriKnow({ entryId, race, done, races, t }: { entryId: string; race: TriRace | null | undefined; done: boolean; races: KtriRaceOpt[]; t: KtriKnowText }) {
+// `yours`: the member's bike ("Road · M · ⃁ 75, paid at the Sharafeyah branch", "Own bike"; lib/ktri.ts ktriBikeText), "" for
+// none; `rent`: a MicroMobility bike to collect, so the bike collection row shows (never for one's own bike or none).
+export default function KtriKnow({ entryId, race, done, races, yours = "", rent = false, t }: { entryId: string; race: TriRace | null | undefined; done: boolean; races: KtriRaceOpt[]; yours?: string; rent?: boolean; t: KtriKnowText }) {
   const [cur, setCur] = useState<TriRace | null>(race ?? null);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -46,8 +48,6 @@ export default function KtriKnow({ entryId, race, done, races, t }: { entryId: s
   return (
     <div className="tk-kt-know">
       <p><span className="tk-kt-k">{t.reportK}</span><span className="tk-kt-v">{t.report}</span></p>
-      {/* where and when the bikes are collected (2026-11-22), until the place is done */}
-      {!done && <p><span className="tk-kt-k">{t.bikeK}</span><span className="tk-kt-v">{t.bike}</span></p>}
       {known && sel && (
         <p className="tk-kt-race">
           <span className="tk-kt-k">{t.raceK}</span>
@@ -72,6 +72,9 @@ export default function KtriKnow({ entryId, race, done, races, t }: { entryId: s
           </div>
         </div>
       )}
+      {/* the member's bike, then where and when a rented one is collected until the place is done (2026-11-22) */}
+      {yours && <p><span className="tk-kt-k">{t.yourK}</span><span className="tk-kt-v tk-kt-bike">{yours}</span></p>}
+      {rent && !done && <p><span className="tk-kt-k">{t.bikeK}</span><span className="tk-kt-v">{t.bike}</span></p>}
       {note === "saved" && <p className="tk-kt-ok" role="status">{t.saved}</p>}
       {note === "failed" && <p className="tk-rr-err" role="alert">{t.failed}</p>}
       {!done && <p><span className="tk-kt-k">{t.gateK}</span><span className="tk-kt-v">{t.gateV}</span></p>}

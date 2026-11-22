@@ -26,7 +26,8 @@ import { bloodRewards, isBloodId, rewardGood } from "@/lib/blood";
 import { asLocale, resolvePage } from "@/lib/content";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { kindNames, sessionName } from "@/lib/rides";
+import { kindNames, loadRides, sessionName } from "@/lib/rides";
+import { ktriBike } from "@/lib/ktri";
 import { routeItems } from "@/lib/route-names";
 import { routePageOf } from "@/lib/route-track";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
@@ -160,6 +161,11 @@ export default async function BookingsPage({ params, searchParams }: { params: P
         .filter((x) => x && typeof x.entry_id === "string" && typeof x.partner === "string" && x.partner.trim())
         .map((x) => [x.entry_id as string, (x.partner as string).trim()] as const)))
     : null;
+  // A KAUST Triathlon member's rented bike is paid at the Sharafeyah branch at the type's usual fare (2026-11-22): the site's
+  // ride prices, read only while such a ticket is ahead
+  const typePrices = groups.some((g) => sessions.get(g.sessionId)?.kind === "ktri" && ktriBike(g.rows[0]?.type) === "rent")
+    ? Object.fromEntries(((await loadRides())?.prices ?? []).map((p) => [p.type, p.price] as const))
+    : null;
   // "You're next" on a numbered night: said on the ride's day only, as the booking app does.
   const ahead = await Promise.all(groups.map((g) => {
     const s = sessions.get(g.sessionId), first = g.rows.find((r) => r.status === "waiting" && r.queueNum != null);
@@ -206,7 +212,7 @@ export default async function BookingsPage({ params, searchParams }: { params: P
           live: g.date === today && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null,
           share: shareLink(app, ev, g.sessionId), bookings: myBookings, safety: sfyLink(g.rows, s) }}
         route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-        wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} bikeNames={bikeNames} account={acct.name} />
+        wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} bikeNames={bikeNames} account={acct.name} typePrices={typePrices}/>
     ) };
   });
   // the lockers taken without a booking, each evening with the QR the desk scans to hand the keys (2026-11-09); an

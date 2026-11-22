@@ -25,6 +25,8 @@ export type TicketRow = {
   /** When staff marked the rider as the ride's lead (queue_entries.led_at, rentals 20261106130000), else none. */
   ledAt?: string;
   waitlistNum: number | null; approval: string | null; price: number; paid: boolean; name: string; type: string;
+  /** The bike size staff or the rider set (queue_entries.size), when the read carries one: a KAUST Triathlon rental says it. */
+  size?: string;
   /** How the desk or the wallet took it, and how much of it the wallet holds (rentals 20261103140000). */
   payMethod?: string | null; walletPaid?: number;
   /** The desk's check-in and return (ISO), the minutes it timed on the bike, and the bike handed over. */
@@ -176,6 +178,7 @@ export function ticketRow(r: Row): TicketRow | null {
     id: S(r.id), sessionId: S(r.session_id) || date, date, day: S(r.session_day), queueNum: N(r.queue_num), status,
     waitlistNum: N(r.waitlist_num), approval: S(r.approval) || null, price: N(r.price) ?? 0, paid: r.paid === true, payMethod: S(r.pay_method) || null, walletPaid: N(r.wallet_paid) ?? 0,
     name: S(r.name), type: S(r.type_preference),
+    ...(/^[A-Za-z0-9 .-]{1,12}$/.test(S(r.size).trim()) ? { size: S(r.size).trim() } : {}),
     // the Blood Donation event: a visitor, and the club or community they gave (rentals 20261105140000, 20261105150000)
     ...(r.blood_role === "visitor" ? { bloodVisitor: true } : {}), ...(S(r.blood_club) ? { bloodClub: S(r.blood_club) } : {}),
     ...(S(r.led_at) ? { ledAt: S(r.led_at) } : {}), // the ride's lead, as staff marked it on Bookings (2026-11-06)

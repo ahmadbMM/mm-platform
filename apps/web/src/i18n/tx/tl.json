@@ -1970,5 +1970,8 @@
   "Your place in the MicroMobility group is booked. The race itself is entered and paid on the KAUST Triathlon registration website.": "Naka-book na ang puwesto mo sa grupo ng MicroMobility. Sa registration website ng KAUST Triathlon ang pagpaparehistro at pagbabayad sa mismong karera.",
   "Your race": "Ang karera mo",
   "Bike collection": "Pagkuha ng bisikleta",
-  "Sharafeyah branch · Thursday 3 Dec, during working hours": "Sangay sa Sharafeyah · Huwebes, 3 Dis, sa oras ng trabaho"
+  "Sharafeyah branch · Thursday 3 Dec, during working hours": "Sangay sa Sharafeyah · Huwebes, 3 Dis, sa oras ng trabaho",
+  "Your bike": "Ang bisikleta mo",
+  "{0}, paid at the Sharafeyah branch": "{0}, babayaran sa sangay sa Sharafeyah",
+  "Registering and paying on the KAUST Triathlon website is required. You are not in the race until you do. Answer Yes once you have.": "Kailangang magparehistro at magbayad sa website ng KAUST Triathlon. Wala ka pa sa karera hangga't hindi mo ito ginagawa. Sumagot ng Oo kapag tapos na."
 }

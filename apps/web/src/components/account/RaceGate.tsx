@@ -24,8 +24,11 @@ export type PendingRaceReg = {
   name: string; when: string; time: string; venue: string;
   /** Where the race itself is entered (Defe's page, or the KAUST Triathlon's registration website); Defe's when absent. */
   url?: string;
-  /** The question's words in the page's language (tickets.text.ts); `code` "" for a race without a discount code. */
-  t: { q: string; sub: string; noNote: string; code: string; link: string; yes: string; no: string; failed: string };
+  /** The question's words in the page's language (tickets.text.ts); `code` "" for a race without a discount code. `must`
+   *  (the KAUST Triathlon, 2026-11-22: "make sure to force them to register through kaust and pay the triathlon fees from
+   *  there"): that registering and paying there is required, said with the link at once; No then keeps the pop-up up (no
+   *  Done), Yes alone closes it, and it asks again on every visit until Yes. */
+  t: { q: string; sub: string; noNote: string; code: string; link: string; yes: string; no: string; failed: string; must?: string };
 };
 /** yes: answered Yes · later: No, passed with Done for this visit · stale: the place no longer asks (ask again). */
 export type RaceRegDone = "yes" | "later" | "stale";
@@ -102,8 +105,14 @@ export default function RaceGate({ onDone, ...w }: PendingRaceReg & { onDone: (r
           <p className="wg-ln"><Ic d={PIN} /><span>{w.venue}</span></p>
         </div>
         <p id={`${id}-sub`} className="wg-sub">{w.t.sub}</p>
+        {w.t.must && (
+          <div className="rr-no">
+            <p className="rr-note rr-must">{w.t.must}</p>
+            <a className="rr-link" href={url} target="_blank" rel="noopener">{w.t.link}</a>
+          </div>
+        )}
         <div className="rr-yn">{btn("yes", w.t.yes)}{btn("no", w.t.no)}</div>
-        {answer === "no" && (
+        {answer === "no" && !w.t.must && (
           <div className="rr-no">
             <p className="rr-note">{w.t.noNote}</p>
             {/* the discount code, bold and left to right in every language (none on the KAUST Triathlon) */}
@@ -112,7 +121,7 @@ export default function RaceGate({ onDone, ...w }: PendingRaceReg & { onDone: (r
           </div>
         )}
         {fail && <p className="wg-err" role="alert">{w.t.failed}</p>}
-        {answer === "no" && <button type="button" className="wg-btn" disabled={busy} onClick={() => onDone("later")}>{tx("Done", "تم")}</button>}
+        {answer === "no" && !w.t.must && <button type="button" className="wg-btn" disabled={busy} onClick={() => onDone("later")}>{tx("Done", "تم")}</button>}
         <button type="button" className="wg-out" onClick={leave} disabled={out || busy}>{tx("Sign out", "تسجيل الخروج")}</button>
       </div>
     </div>

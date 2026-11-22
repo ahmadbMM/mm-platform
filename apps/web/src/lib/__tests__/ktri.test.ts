@@ -25,6 +25,8 @@ import { isKtri, KTRI_MARK, KTRI_RACES, KTRI_REG_URL, ktriOut, ktriRaceOpts, ktr
 import ExperiencesPage from "../../app/[locale]/experiences/page";
 import EventsPage from "../../app/[locale]/events/page";
 import { POST } from "../../app/api/account/tri-race/route";
+import RaceGate from "@/components/account/RaceGate";
+import { ktriBike, ktriBikeText } from "../ktri";
 
 // cookies() is a request's; here it holds the account's cookie a test sets, or none, and whether the booking app's members'
 // check (community_member) says that account is a community member.
@@ -277,11 +279,11 @@ describe("the KAUST Triathlon on Events", () => {
 describe("a KAUST Triathlon ticket (My Account)", () => {
   const kt = ticketSession(KT)!;
   const base = { id: "q1abcdef", session_id: kt.id, session_date: kt.date, session_day: "Friday", status: "waiting", queue_num: 7, price: 0, paid: false, type_preference: "None", name: "Sara Haddad", race_reg: null };
-  const card = (rows: TicketRow[], ar = false) => renderToStaticMarkup(createElement(TicketCard, {
+  const card = (rows: TicketRow[], ar = false, typePrices: Record<string, number> | null = null) => renderToStaticMarkup(createElement(TicketCard, {
     locale: ar ? "ar" : "en", today: "2099-11-25", rows, session: kt, name: ar ? "ترايثلون كاوست" : "KAUST Triathlon", cue: ticketCue(rows, kt, null), t: ar ? TICKET.ar : TICKET.en,
     gather: "Gathering", start: "Start", typeName: (x: string) => x,
     links: { edit: null, manage: "https://book.example.test/?tab=bookings", place: placeLink(kt, "https://dir.example.test/jcc") },
-    now: Date.parse("2099-11-25T09:00:00Z"),
+    now: Date.parse("2099-11-25T09:00:00Z"), typePrices,
   })).replace(/^(<link [^>]*>)+/, "");
 
   it("has no bike, is free, reads its race, and still asks whether the race was entered", () => {
@@ -299,11 +301,29 @@ describe("a KAUST Triathlon ticket (My Account)", () => {
     expect(html).toContain('<span class="tk-kt-k">Report</span><span class="tk-kt-v">6 AM · KAUST Urban Beach</span>');
     expect(html).toContain("<b>Sprint</b> · <bdi>Starts 7:30 AM</bdi>");
     expect(html).toContain('<span class="tk-kt-k">Gate pass</span>');
-    expect(html).toContain('<span class="tk-kt-k">Bike collection</span><span class="tk-kt-v">Sharafeyah branch · Thursday 3 Dec, during working hours</span>');
+    // no bike rented (Future Champs, 'None'): no bike row, no collection
+    expect(html).not.toContain("Your bike");
+    expect(html).not.toContain("Bike collection");
     expect(html).toContain("You told us you registered on the KAUST Triathlon website.");
     expect(html).toMatch(/<div class="tk-total"><span>Total<\/span><strong>Free<\/strong>/);
     expect(html).not.toContain("tk-rider-pay"); // no price of 0 for the participant
     expect(html).not.toMatch(/>Edit<|>Reschedule</);
+  });
+  it("says a rented bike with its size and price paid at the Sharafeyah branch, and where and when it is collected", () => {
+    const html = card([ticketRow({ ...base, tri_race: "oly", type_preference: "Road", size: "M", race_reg: "yes" })!], false, { Road: 75 });
+    expect(html).toContain('<span class="tk-kt-k">Your bike</span><span class="tk-kt-v tk-kt-bike">Road · M · ⁦⃁ 75⁩, paid at the Sharafeyah branch</span>');
+    expect(html).toContain('<span class="tk-kt-k">Bike collection</span><span class="tk-kt-v">Sharafeyah branch · Thursday 3 Dec, during working hours</span>');
+    // no price the site knows: the type and size alone
+    expect(card([ticketRow({ ...base, tri_race: "oly", type_preference: "Road", size: "M" })!])).toContain('<span class="tk-kt-v tk-kt-bike">Road · M</span>');
+    // done: the bike said, nothing to collect
+    expect(card([ticketRow({ ...base, status: "done", tri_race: "oly", type_preference: "Road" })!], false, { Road: 75 })).not.toContain("Bike collection");
+  });
+  it("says Own bike for one's own bike, and nothing to collect", () => {
+    const html = card([ticketRow({ ...base, tri_race: "spr", type_preference: "Own", race_reg: "yes" })!], false, { Road: 75 });
+    expect(html).toContain('<span class="tk-kt-k">Your bike</span><span class="tk-kt-v tk-kt-bike">Own bike</span>');
+    expect(html).not.toContain("Bike collection");
+    expect([ktriBike("Hybrid"), ktriBike("Own"), ktriBike("None"), ktriBike(""), ktriBike("Any")]).toEqual(["rent", "own", null, null, null]);
+    expect(ktriBikeText("None", null, { typeName: (x) => x, pay: "{0}", own: "Own bike", price: "x" })).toBe("");
   });
   it("asks a member who has no race yet to pick one of the five", () => {
     const html = card([ticketRow({ ...base, tri_race: null })!]);
@@ -311,8 +331,10 @@ describe("a KAUST Triathlon ticket (My Account)", () => {
     expect(html.match(/class="tk-kt-opt/g)).toHaveLength(5);
     expect(html).toContain("Race entry ⁦⃁ 600⁩ per team");
   });
-  it("shows the race's registration website after No, with no discount code", () => {
+  it("shows the race's registration website and that it is required at once, with no discount code", () => {
     const html = card([ticketRow({ ...base, tri_race: "oly", race_reg: "no" })!]);
+    expect(html).toContain('<p class="tk-rr-sub tk-kt-must">Registering and paying on the KAUST Triathlon website is required.');
+    expect(html.match(/class="tk-rr-link"/g)).toHaveLength(1);
     expect(html).toContain(`<a class="tk-rr-link" href="${KTRI_REG_URL}" target="_blank" rel="noopener">Register on the KAUST Triathlon website</a>`);
     expect(html).not.toContain("tk-rr-code");
     expect(html).not.toContain("MICRO50");
@@ -330,6 +352,25 @@ describe("the race pop-up on a KAUST Triathlon place", () => {
     const kinds = new Map([["2099-12-04-kt", { kind: "ktri" as const }]]);
     expect(pendingRaceRegs([row], kinds, "2099-11-25", "c1").map((x) => x.entryId)).toEqual(["q1"]);
     expect(pendingRaceRegs([{ ...row, race_reg: "yes" }], kinds, "2099-11-25", "c1")).toEqual([]);
+  });
+});
+
+describe("the KAUST Triathlon's race pop-up (the user, 2026-11-22: \"make sure to force them to register through kaust and pay the triathlon fees from there\")", () => {
+  const w = { entryId: "q1abcdef", name: "KAUST Triathlon", when: "Fri 4 Dec", time: "6 AM – 11 AM", venue: "KAUST Urban Beach", url: KTRI_REG_URL };
+  const kt = { q: TICKET.en.ktRegQ, sub: TICKET.en.ktRegSub, noNote: TICKET.en.ktRegNoNote, code: "", must: TICKET.en.ktRegMust, link: TICKET.en.ktRegLink, yes: "Yes", no: "No", failed: "x" };
+  it("shows the registration link and that it is required at once, and never Done after No", () => {
+    for (const answer of [null, "no"] as const) {
+      const html = renderToStaticMarkup(createElement(RaceGate, { ...w, answer, t: kt, onDone: () => {} }));
+      expect(html).toContain('<p class="rr-note rr-must">Registering and paying on the KAUST Triathlon website is required.');
+      expect(html).toContain(`<a class="rr-link" href="${KTRI_REG_URL}" target="_blank" rel="noopener">Register on the KAUST Triathlon website</a>`);
+      expect(html).not.toContain(">Done<");
+      expect(html).toContain(">Sign out<");
+    }
+  });
+  it("keeps the DEFE run's Done after No", () => {
+    const html = renderToStaticMarkup(createElement(RaceGate, { ...w, url: undefined, answer: "no", t: { ...kt, must: undefined, code: TICKET.en.defeRegCode }, onDone: () => {} }));
+    expect(html).toContain(">Done<");
+    expect(html).not.toContain("rr-must");
   });
 });
 

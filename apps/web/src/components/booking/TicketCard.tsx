@@ -21,7 +21,7 @@ import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { YOGA_MARK, YOGA_MARK_SIZE, yogaKnow } from "@/lib/yoga";
 import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
-import { KTRI_MARK, KTRI_MARK_SIZE, KTRI_REG_URL, KTRI_REPORT, ktriRaceOpts } from "@/lib/ktri";
+import { KTRI_MARK, KTRI_MARK_SIZE, KTRI_REG_URL, KTRI_REPORT, ktriBike, ktriBikeText, ktriRaceOpts } from "@/lib/ktri";
 import { igUrl } from "@/lib/instagram";
 import { SOCIAL_ICONS } from "@/components/site/social-icons";
 import { genderChip } from "@/lib/session-gender";
@@ -155,6 +155,9 @@ type Props = {
   /** The signed-in account's name, which "Need help?"'s WhatsApp message gives first (the booking app's _rhOpen: the
    *  account's, else the booking's); the first rider's when not given. */
   account?: string | null;
+  /** The site's ride price for each bike type (ride_prices), which a KAUST Triathlon member's rented bike is paid at the
+   *  Sharafeyah branch; absent or missing a type: its price is not said. */
+  typePrices?: Record<string, number> | null;
 };
 
 const Bike = () => (
@@ -222,7 +225,7 @@ const PARTY_KINDS = ["event", "workshop", "petromin"];
 /** The bike types a rider picks from (lib/booking.ts RIDER_TYPES), named in the page's language for the edit's pills. */
 const RIDER_TYPES = ["Road", "Hybrid", "Mountain", "Kids", "Road Carbon", "Own"];
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, bikeNames = null, routePage = null, account = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, bikeNames = null, routePage = null, account = null, typePrices = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -629,11 +632,12 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           // _ktKnowHtml, _ktRegNoHtml)
           <>
             <KtriKnow entryId={primary.id} race={primary.triRace} done={primary.status === "done"}
-              races={ktriRaceOpts(t, clock, sar)}
-              t={{ reportK: t.ktReportK, report: `${clock(KTRI_REPORT)} · ${t.ktReportV}`, bikeK: t.ktBikeK, bike: t.ktBikeV, raceK: t.ktRaceK, gateK: t.ktGateK, gateV: t.ktGateV, pick: t.ktPick, saved: t.ktRaceSaved, change: t.change, failed: t.rrFailed }} />
+              races={ktriRaceOpts(t, clock, sar)} rent={ktriBike(primary.type) === "rent"}
+              yours={ktriBikeText(primary.type, primary.size, { typeName, pay: t.ktBikePay, own: t.ktOwnBike, price: typePrices?.[primary.type] != null ? sar(typePrices[primary.type]) : null })}
+              t={{ reportK: t.ktReportK, report: `${clock(KTRI_REPORT)} · ${t.ktReportV}`, bikeK: t.ktBikeK, bike: t.ktBikeV, yourK: t.ktBikeYourK, raceK: t.ktRaceK, gateK: t.ktGateK, gateV: t.ktGateV, pick: t.ktPick, saved: t.ktRaceSaved, change: t.change, failed: t.rrFailed }} />
             {raceRegAsked(primary, s, today) && (
               <RaceRegQuestion entryId={primary.id} initial={primary.raceReg ?? null} url={KTRI_REG_URL}
-                t={{ q: t.ktRegQ, sub: t.ktRegSub, noNote: t.ktRegNoNote, code: "", link: t.ktRegLink, yesNote: t.ktRegYesNote, yes: t.yes, no: t.no, change: t.change, failed: t.rrFailed }} />
+                t={{ q: t.ktRegQ, sub: t.ktRegSub, noNote: t.ktRegNoNote, code: "", must: t.ktRegMust, link: t.ktRegLink, yesNote: t.ktRegYesNote, yes: t.yes, no: t.no, change: t.change, failed: t.rrFailed }} />
             )}
           </>
         )}

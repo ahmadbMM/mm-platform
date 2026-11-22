@@ -23,7 +23,8 @@ import { riyadhClock } from "@/lib/workshop-days";
 // the sessions of the rows still to answer, to know which are the Defe run. `skip` is the places passed
 // with Done on this visit. The answer itself goes through POST /api/account/race-reg. A connection asks
 // 30 times a minute at most. A KAUST Triathlon place (2026-11-22) is asked too, in its own words, with the race's
-// registration website for its link and no discount code (`code` "").
+// registration website for its link and no discount code (`code` ""), and that registering and paying there is required
+// (`must`, 2026-11-22): its pop-up has no Done, so it asks again on every visit until Yes.
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -63,7 +64,7 @@ export async function GET(req: Request) {
       url: s.kind === "ktri" ? KTRI_REG_URL : DEFE_RACE_URL,
       // the question's words in the page's language, as the ticket has them (tickets.text.ts)
       t: s.kind === "ktri"
-        ? { q: t.ktRegQ, sub: t.ktRegSub, noNote: t.ktRegNoNote, code: "", link: t.ktRegLink, yes: t.yes, no: t.no, failed: t.rrFailed }
+        ? { q: t.ktRegQ, sub: t.ktRegSub, noNote: t.ktRegNoNote, code: "", must: t.ktRegMust, link: t.ktRegLink, yes: t.yes, no: t.no, failed: t.rrFailed }
         : { q: t.defeRegQ, sub: t.defeRegSub, noNote: t.defeRegNoNote, code: t.defeRegCode, link: t.defeRegLink, yes: t.yes, no: t.no, failed: t.rrFailed },
     },
   });

@@ -84,6 +84,21 @@ export function ktriTitle(name: string): { k: string | null; rest: string } {
   return m ? { k: "KAUST", rest: m[1] } : { k: null, rest: name };
 }
 
+/** The bike a KAUST Triathlon member races on (the booking app's _ktRent, _ktBikeTxt; the user, 2026-11-22): the booking
+ *  app asks every member but Future Champs to rent a MicroMobility bike (its type on the row's type_preference, paid at
+ *  the Sharafeyah branch at the type's usual price) or bring their own ('Own'); 'None' (Future Champs) or nothing: no bike. */
+export const ktriBike = (type: string | null | undefined): "rent" | "own" | null =>
+  !type || type === "None" || type === "Any" ? null : type === "Own" ? "own" : "rent";
+/** "Your bike" on the ticket: a rental's type, its size, and its price paid at the Sharafeyah branch (`pay`, "{0}, paid at
+ *  the Sharafeyah branch", with the type's fare when the site has one, else the type and size alone); "Own bike"; else "". */
+export function ktriBikeText(type: string | null | undefined, size: string | null | undefined, w: { typeName: (t: string) => string; pay: string; own: string; price: string | null }): string {
+  const b = ktriBike(type);
+  if (b === "own") return w.own;
+  if (b !== "rent") return "";
+  const head = `${w.typeName(type as string)}${size ? ` · ${size}` : ""}`;
+  return w.price ? `${head} · ${fill(w.pay, w.price)}` : head;
+}
+
 /** Whether a visitor is sent to the race's registration website in place of booking (the booking app's _ktGate): on a
  *  session for members alone (`members`: not open_to_all), anyone who is not a signed-in community member. A session open to
  *  everyone (the user, 2026-11-22: "allow everyone to be able to book it not only community"; open_to_all) sends nobody

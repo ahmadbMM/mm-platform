@@ -14,6 +14,9 @@ import { DEFE_RACE_CODE } from "@/lib/tickets";
 // it in its own words, with the race's registration website and no discount code (`code` "").
 export type RaceRegText = {
   q: string; sub: string; noNote: string; code: string; link: string; yesNote: string; yes: string; no: string; change: string; failed: string;
+  /** The KAUST Triathlon (the user, 2026-11-22: "make sure to force them to register through kaust and pay the triathlon fees
+   *  from there"): that registering and paying there is required, said with the link at once, before Yes or No. */
+  must?: string;
 };
 
 const Tick = () => (
@@ -64,8 +67,15 @@ export default function RaceRegQuestion({ entryId, initial, url, t }: { entryId:
     <div className="tk-rr" role="group" aria-labelledby={qId}>
       <p className="tk-rr-q" id={qId}>{t.q}</p>
       <p className="tk-rr-sub">{t.sub}</p>
+      {t.must && (
+        // the race's own registration and that it is required, at once (the booking app's kt-must-note)
+        <div className="tk-rr-no">
+          <p className="tk-rr-sub tk-kt-must">{t.must}</p>
+          <a className="tk-rr-link" href={url} target="_blank" rel="noopener">{t.link}</a>
+        </div>
+      )}
       <div className="tk-rr-yn">{btn("yes", t.yes)}{btn("no", t.no)}</div>
-      {view === "askNo" && (
+      {view === "askNo" && !t.must && (
         <div className="tk-rr-no">
           <p className="tk-rr-sub">{t.noNote}</p>
           {/* the discount code, bold and left to right in every language (the booking app's defe-reg-code); none on the KAUST
