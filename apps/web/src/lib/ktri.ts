@@ -3,7 +3,7 @@ import { ENTRY_ID } from "./rating";
 
 // The KAUST Triathlon (the user, 2026-11-22: "create a new featured session that shows for everyone but non community
 // members gets sent to the registration link directly and for our members put the registration link as the last step
-// needed to complete booking the same way we did before"; rentals migration 20261122120000): ride_kind 'ktri', event_kind
+// needed to complete booking the same way we did before"; rentals migration 20261122150000): ride_kind 'ktri', event_kind
 // 'community', session id '<date>-kt'. The first is on Friday 4 December 2026 at KAUST Urban Beach (report 6 AM; Olympic
 // 6:30, Sprint 7:30, Future Champs 9:00). The race itself is Coastline Recreation's, entered and paid on its own
 // registration website (KTRI_REG_URL). A date inside MicroMobility Experiences (the community card), never a card of its

@@ -49,7 +49,7 @@ export type TicketRow = {
    *  (queue_entries.race_reg, rentals 20261018150000): 'yes', 'no', or null before they answer (and on
    *  every other booking, and on a database without the column). */
   raceReg?: "yes" | "no" | null;
-  /** The KAUST Triathlon (2026-11-22, rentals 20261122120000; lib/ktri.ts): which race the member is doing
+  /** The KAUST Triathlon (2026-11-22, rentals 20261122150000; lib/ktri.ts): which race the member is doing
    *  (queue_entries.tri_race), null before they pick one; absent from a read without the column. */
   triRace?: TriRace | null;
   /** Victory Lap (2026-10-23, rentals 20261023160000; lib/vl-ticket.ts): whether the athlete already has a

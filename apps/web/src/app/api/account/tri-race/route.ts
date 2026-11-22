@@ -7,7 +7,7 @@ import { withinLimit } from "@/lib/rate-limit";
 
 // POST /api/account/tri-race {entryId, race}: a member on the KAUST Triathlon picks or changes their race on their ticket
 // (TicketCard, KtriKnow): 'oly', 'spr', 'oly_team', 'spr_team' or 'champs', through the booking app's customer_set_tri_race
-// (rentals migration 20261122120000) with the account cookie's id and token, as the booking app's own ticket does
+// (rentals migration 20261122150000) with the account cookie's id and token, as the booking app's own ticket does
 // (_ktRaceSet). The database checks the rest: the row is the account's, live, on a KAUST Triathlon session. Answers
 // {ok: true}, or {ok: false, error}, as /api/account/race-reg does: "invalid" for a body it cannot read, "absent" when
 // the database has no such function yet, "signin" when the account is signed out, "refused" when the database answered
