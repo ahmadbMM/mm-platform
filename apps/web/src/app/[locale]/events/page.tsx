@@ -110,7 +110,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const mfW = membersFirstWords(locale);
   const mfMs = (s: RideSession) => (s.fbk ? 0 : mfAt(s, drawn.getTime()));
   const mfLine = (s: RideSession) => fillAt(mfW.everyone, revealWhen(s.publicAt, locale, now.slice(0, 10), { today: tx("Today", "اليوم"), tomorrow: tx("Tomorrow", "غداً") }));
-  const bookLink = (s: RideSession) => (s.kind === "ktri" && ktriOut(member)
+  const bookLink = (s: RideSession) => (s.kind === "ktri" && ktriOut(s, member)
     // the KAUST Triathlon to anyone but a member: the race's own registration, in a new tab (the booking app's ktCardReg)
     ? <a href={KTRI_REG_URL} target="_blank" rel="noopener">{tx("Register on the race website", "سجّل عبر موقع السباق")}</a>
     : <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>);
@@ -156,6 +156,8 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {/* the KAUST Triathlon: when to report, never its window (the booking app's _ktReportTxt), and where */}
                         {s.kind === "ktri" && <span>{tx("Report", "الحضور")} <bdi>{clock(KTRI_REPORT)}</bdi></span>}
                         {s.kind === "ktri" && <span><bdi>{s.location && s.location !== "JCC" ? s.location : KTRI_VENUE}</bdi></span>}
+                        {/* and where and when the bikes are collected (the user, 2026-11-22) */}
+                        {s.kind === "ktri" && <span>{tx("Bike collection", "استلام الدراجة")}: <bdi>{tx("Sharafeyah branch · Thursday 3 Dec, during working hours", "فرع الشرفية · الخميس 3 ديسمبر، خلال ساعات العمل")}</bdi></span>}
                         {s.kind !== "ktri" && s.times && (s.gather && !oneTime(s.times)
                           ? <span>{s.kind === "farm" ? fw.arrive : S(d.gather)} <bdi>{clock(s.times[0])}</bdi> · {s.kind === "farm" ? fw.dinner : S(d.start)} <bdi>{clock(s.times[1])}</bdi></span>
                           : <span><bdi>{timesText(s.times, false, clock, { gather: "", start: "" })}</bdi></span>)}

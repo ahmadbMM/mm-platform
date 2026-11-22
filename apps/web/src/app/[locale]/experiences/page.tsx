@@ -315,6 +315,9 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     racesK: tx("Races", "السباقات"), racesV: tx("Olympic {0} · Sprint {1} · Future Champs {2}", "الأولمبي {0} · السريع {1} · أبطال المستقبل {2}"), feesK: tx("Race entry", "رسوم السباق"), feesV: tx("Individual {0} · Relay team {1} · Future Champs {2}", "فردي {0} · فريق تتابع {1} · أبطال المستقبل {2}"),
     closesK: tx("Registration closes", "يغلق التسجيل"), closesV: tx("Wed 2 Dec · 11:50 PM", "الأربعاء 2 ديسمبر · 11:50 م"), gateK: tx("Gate pass", "تصريح الدخول"), gateV: tx("Not living at KAUST? After you register, apply for your gate pass with the link the organisers send you. Without it you cannot enter KAUST.", "لا تسكن في كاوست؟ بعد التسجيل، قدّم على تصريح الدخول عبر الرابط الذي يرسله المنظمون. بدونه لا يمكنك دخول كاوست."),
     regLink: tx("Registration website", "موقع التسجيل"),
+    // where the bikes are collected, and when (the booking app's ktBikeK, ktBikeV; the user, 2026-11-22: "mention that bikes
+    // are gonna be collected from sharafeyah branch on thursday working hours")
+    bikeK: tx("Bike collection", "استلام الدراجة"), bikeV: tx("Sharafeyah branch · Thursday 3 Dec, during working hours", "فرع الشرفية · الخميس 3 ديسمبر، خلال ساعات العمل"),
   };
   const ktReport = `${ktWords.report} ${clock(KTRI_REPORT)}`;
   // The Saturday ride's sunrise over the Corniche that day, in the page's clock (lib/kind-theme.ts), and its two routes'
@@ -374,8 +377,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
       // the KAUST Triathlon's own card (the booking app's _ktSessCard, 2026-11-22): its name as the poster sets it, SWIM · BIKE ·
       // RUN, when to report and where, and what a tap does along the foot; anyone but a member is sent to the race's
       // registration website on the last step, in place of the hand-over (the booking app's _ktGate)
-      ...(s.kind === "ktri" ? { ktri: { title: ktriTitle(sessionName(s, kindName, enName, L !== "en", L === "ar")), sbr: ktWords.sbr, meta: [ktReport, place.name].filter(Boolean), foot: ktriOut(member) ? ktWords.cardReg : ktWords.cardMem, step: ktWords.step,
-        out: ktriOut(member) ? { url: KTRI_REG_URL, msg: ktWords.outMsg, btn: ktWords.outBtn } : null } } : {}),
+      ...(s.kind === "ktri" ? { ktri: { title: ktriTitle(sessionName(s, kindName, enName, L !== "en", L === "ar")), sbr: ktWords.sbr, meta: [ktReport, place.name].filter(Boolean), bike: { k: ktWords.bikeK, v: ktWords.bikeV }, foot: ktriOut(s, member) ? ktWords.cardReg : ktWords.cardMem, step: ktWords.step,
+        out: ktriOut(s, member) ? { url: KTRI_REG_URL, msg: ktWords.outMsg, btn: ktWords.outBtn } : null } } : {}),
       // a featured date (the booking app's _featCardHtml, 2026-11-13): its day as its Featured card's tile, and how long
       // yoga runs, which that card says after its time
       ...(s.featured ? { feat: { ...fmtDayTile(s.date, locale), len: s.kind === "yoga" ? yogaLength(s.times, ygWords.min) || null : null } } : {}),
@@ -434,6 +437,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
         ...(s.kind === "ktri" ? {
           more: [
             { k: ktWords.report, v: clock(KTRI_REPORT) },
+            { k: ktWords.bikeK, v: ktWords.bikeV },
             { k: ktWords.racesK, v: fillAt(ktWords.racesV, clock(KTRI_RACES[0].start), clock(KTRI_RACES[1].start), clock(KTRI_RACES[4].start)) },
             { k: ktWords.feesK, v: fillAt(ktWords.feesV, sar(KTRI_RACES[0].fee), sar(KTRI_RACES[2].fee), sar(KTRI_RACES[4].fee)) },
             { k: ktWords.closesK, v: ktWords.closesV },

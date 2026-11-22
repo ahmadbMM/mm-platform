@@ -154,9 +154,9 @@ export type StepSession = {
   farm?: { meta: string[]; line: string; arrive: string; dinner: string };
   /** The KAUST Triathlon's own date card (the booking app's _ktSessCard, 2026-11-22): its name as the poster sets it ("KAUST"
    *  heavy, the rest after it; `k` null for a title staff changed), the SWIM · BIKE · RUN line, when to report and where
-   *  ("Report 6:00 AM · KAUST Urban Beach"), its foot (what a tap does), the line under a member's hand-over, and for a
+   *  ("Report 6:00 AM · KAUST Urban Beach"), where and when the bikes are collected (its summary says it), its foot (what a tap does), the line under a member's hand-over, and for a
    *  visitor who is not a community member where they register instead (`out`, null for a member); absent on any other date. */
-  ktri?: { title: { k: string | null; rest: string }; sbr: string; meta: string[]; foot: string; step: string; out: { url: string; msg: string; btn: string } | null };
+  ktri?: { title: { k: string | null; rest: string }; sbr: string; meta: string[]; bike: { k: string; v: string }; foot: string; step: string; out: { url: string; msg: string; btn: string } | null };
   /** What the signed-in visitor already holds on the date (lib/held.ts, 2026-11-13): "ok" Booked, "wl" On the waitlist,
    *  "rsv" Reserved; absent when they hold nothing there, and for a visitor who is not signed in. */
   held?: Held;
@@ -1064,6 +1064,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
             </div>
             {!sess.ktri?.out && tags(sess)}
             {sess.ktri && <p className="xs-kt-meta">{sess.ktri.meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</p>}
+            {sess.ktri && <p className="xs-kt-meta">{sess.ktri.bike.k}: <bdi>{sess.ktri.bike.v}</bdi></p>}
             {sess.defe && <p className="xs-defe-cause"><Ribbon /><span>{sess.defe.cause}</span></p>}
             {sess.yoga && <p className="xs-yg-with">{sess.yoga.with}</p>}
             {ev.blood && <p className="xs-bld-cause">{ev.blood.cause}</p>}

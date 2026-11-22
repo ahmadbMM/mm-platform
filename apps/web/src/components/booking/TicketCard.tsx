@@ -630,7 +630,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           <>
             <KtriKnow entryId={primary.id} race={primary.triRace} done={primary.status === "done"}
               races={ktriRaceOpts(t, clock, sar)}
-              t={{ reportK: t.ktReportK, report: `${clock(KTRI_REPORT)} · ${t.ktReportV}`, raceK: t.ktRaceK, gateK: t.ktGateK, gateV: t.ktGateV, pick: t.ktPick, saved: t.ktRaceSaved, change: t.change, failed: t.rrFailed }} />
+              t={{ reportK: t.ktReportK, report: `${clock(KTRI_REPORT)} · ${t.ktReportV}`, bikeK: t.ktBikeK, bike: t.ktBikeV, raceK: t.ktRaceK, gateK: t.ktGateK, gateV: t.ktGateV, pick: t.ktPick, saved: t.ktRaceSaved, change: t.change, failed: t.rrFailed }} />
             {raceRegAsked(primary, s, today) && (
               <RaceRegQuestion entryId={primary.id} initial={primary.raceReg ?? null} url={KTRI_REG_URL}
                 t={{ q: t.ktRegQ, sub: t.ktRegSub, noNote: t.ktRegNoNote, code: "", link: t.ktRegLink, yesNote: t.ktRegYesNote, yes: t.yes, no: t.no, change: t.change, failed: t.rrFailed }} />

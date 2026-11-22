@@ -154,8 +154,11 @@ describe("the races (lib/ktri.ts)", () => {
   it("sets the name as the poster does, and sends anyone but a member to register", () => {
     expect(ktriTitle("KAUST Triathlon")).toEqual({ k: "KAUST", rest: "Triathlon" });
     expect(ktriTitle("ترايثلون كاوست")).toEqual({ k: null, rest: "ترايثلون كاوست" });
-    expect(ktriOut(false)).toBe(true);
-    expect(ktriOut(true)).toBe(false);
+    expect(ktriOut({ members: true }, false)).toBe(true);
+    expect(ktriOut({ members: true }, true)).toBe(false);
+    // open to everyone (open_to_all, the user 2026-11-22: "allow everyone to be able to book it not only community"): nobody
+    expect(ktriOut({ members: false }, false)).toBe(false);
+    expect(ktriOut({ members: false }, true)).toBe(false);
   });
 });
 
@@ -168,7 +171,8 @@ describe("the KAUST Triathlon on Experiences", () => {
     expect(s).toMatchObject({ kind: "ktri", name: "KAUST Triathlon", members: true, free: true, paid: false });
     expect(s.here).toBeUndefined(); // handed to the booking app, which asks which race
     expect(s.ktri).toEqual({
-      title: { k: "KAUST", rest: "Triathlon" }, sbr: "Swim · Bike · Run", meta: ["Report 6 AM", "KAUST Urban Beach"], foot: "Register on the race website",
+      title: { k: "KAUST", rest: "Triathlon" }, sbr: "Swim · Bike · Run", meta: ["Report 6 AM", "KAUST Urban Beach"],
+      bike: { k: "Bike collection", v: "Sharafeyah branch · Thursday 3 Dec, during working hours" }, foot: "Register on the race website",
       step: "Which race are you doing? Pick one. You enter and pay for the race itself on the KAUST Triathlon website, as the last step.",
       out: { url: KTRI_REG_URL, msg: "Registration for the race is on the KAUST Triathlon website. Booking a place in the MicroMobility group is for our community members.", btn: "Go to registration" },
     });
@@ -183,9 +187,10 @@ describe("the KAUST Triathlon on Experiences", () => {
     const i = ktOf(await experiences([KT])).info;
     expect(i.text).toMatch(/^The KAUST Triathlon at KAUST Urban Beach/);
     expect(i).toMatchObject({ who: "Community members book a place in our group. Anyone can enter the race on the KAUST Triathlon website.", place: "KAUST Urban Beach", distance: null });
-    expect(i.more?.map((x) => x.k)).toEqual(["Report", "Races", "Race entry", "Registration closes", "Gate pass"]);
-    expect(i.more?.[1].v).toBe("Olympic 6:30 AM · Sprint 7:30 AM · Future Champs 9 AM");
-    expect(i.more?.[3].v).toBe("Wed 2 Dec · 11:50 PM");
+    expect(i.more?.map((x) => x.k)).toEqual(["Report", "Bike collection", "Races", "Race entry", "Registration closes", "Gate pass"]);
+    expect(i.more?.[1].v).toBe("Sharafeyah branch · Thursday 3 Dec, during working hours");
+    expect(i.more?.[2].v).toBe("Olympic 6:30 AM · Sprint 7:30 AM · Future Champs 9 AM");
+    expect(i.more?.[4].v).toBe("Wed 2 Dec · 11:50 PM");
     expect(i.race).toEqual({ label: "Race registration", link: "Registration website", url: KTRI_REG_URL });
   });
   it("says it in Arabic in the booking app's words, and in a language the booking app does not speak (German)", async () => {
@@ -197,6 +202,19 @@ describe("the KAUST Triathlon on Experiences", () => {
     expect(de.ktri?.sbr).toBe("Schwimmen · Rad · Laufen");
     expect(de.ktri?.foot).toBe("Auf der Rennwebsite anmelden");
     expect(de.info.text).toMatch(/^Der KAUST Triathlon/);
+  });
+  it("is everyone's to book when open to all: the usual hand-over, its own words, and Everyone for who", async () => {
+    const p = await experiences([{ ...KT, open_to_all: true }]);
+    const s = ktOf(p);
+    expect(s.members).toBe(false);
+    expect(s.ktri?.out).toBeNull();
+    expect(s.ktri?.foot).toBe("Book your place in our group");
+    expect(s.info.who).toBe("Everyone");
+    const html = draw(p, 3, comm(p), s);
+    expect(html).toMatch(/<a class="xs-go ev-ktri" href="[^"]*ev=community&amp;session=2099-12-04-kt[^"]*">/);
+    expect(html).toContain("Bike collection: <bdi>Sharafeyah branch · Thursday 3 Dec, during working hours</bdi>");
+    expect(html).not.toContain(KTRI_REG_URL);
+    expect(await eventsPage([{ ...KT, open_to_all: true }])).not.toContain(KTRI_REG_URL);
   });
   it("draws its date card in Red Sea Dawn: the sea, the mark, KAUST in heavy blue, SWIM · BIKE · RUN, no Members tag nor note", async () => {
     const p = await experiences([KT, SAT]);
@@ -244,6 +262,7 @@ describe("the KAUST Triathlon on Events", () => {
     expect(html).toContain("KAUST Triathlon");
     expect(html).toContain("--kind:#1565b4");
     expect(html).toContain("<span>Report <bdi>6 AM</bdi></span>");
+    expect(html).toContain("<span>Bike collection: <bdi>Sharafeyah branch · Thursday 3 Dec, during working hours</bdi></span>");
     expect(html).toContain("<span><bdi>KAUST Urban Beach</bdi></span>");
     expect(html).toContain(`<a href="${KTRI_REG_URL}" target="_blank" rel="noopener">Register on the race website</a>`);
   });
@@ -280,6 +299,7 @@ describe("a KAUST Triathlon ticket (My Account)", () => {
     expect(html).toContain('<span class="tk-kt-k">Report</span><span class="tk-kt-v">6 AM · KAUST Urban Beach</span>');
     expect(html).toContain("<b>Sprint</b> · <bdi>Starts 7:30 AM</bdi>");
     expect(html).toContain('<span class="tk-kt-k">Gate pass</span>');
+    expect(html).toContain('<span class="tk-kt-k">Bike collection</span><span class="tk-kt-v">Sharafeyah branch · Thursday 3 Dec, during working hours</span>');
     expect(html).toContain("You told us you registered on the KAUST Triathlon website.");
     expect(html).toMatch(/<div class="tk-total"><span>Total<\/span><strong>Free<\/strong>/);
     expect(html).not.toContain("tk-rider-pay"); // no price of 0 for the participant

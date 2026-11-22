@@ -84,6 +84,8 @@ export function ktriTitle(name: string): { k: string | null; rest: string } {
   return m ? { k: "KAUST", rest: m[1] } : { k: null, rest: name };
 }
 
-/** Whether a visitor is sent to the race's registration website in place of booking (the booking app's _ktGate): anyone
- *  who is not a signed-in community member. */
-export const ktriOut = (member: boolean): boolean => !member;
+/** Whether a visitor is sent to the race's registration website in place of booking (the booking app's _ktGate): on a
+ *  session for members alone (`members`: not open_to_all), anyone who is not a signed-in community member. A session open to
+ *  everyone (the user, 2026-11-22: "allow everyone to be able to book it not only community"; open_to_all) sends nobody
+ *  there: everyone books a place in the group, a visitor who is not signed in signing in in the booking app. */
+export const ktriOut = (s: { members: boolean }, member: boolean): boolean => s.members && !member;

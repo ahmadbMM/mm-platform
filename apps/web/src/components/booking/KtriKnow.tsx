@@ -5,13 +5,14 @@ import type { KtriRaceOpt, TriRace } from "@/lib/ktri";
 
 // The KAUST Triathlon's place on the ticket (2026-11-22; the booking app's _ktKnowHtml, _ktRaceEdit, _ktRaceSet): when to
 // report and where, the member's race with its start and distances and Change, or "Pick your race" with the five races
-// when none is picked yet (a write right after the booking that failed, or a place staff added), and the gate pass for
+// when none is picked yet (a write right after the booking that failed, or a place staff added), where and when the bikes
+// are collected (Sharafeyah branch, the Thursday before; 2026-11-22), and the gate pass for
 // anyone not living at KAUST. A pick saves at once through /api/account/tri-race (customer_set_tri_race) and shows at
 // once; a save that fails puts the last race back and says so. A place that is done says the race and nothing to change.
 // `race` undefined: the read did not carry the column, so no race is said or asked. Its words come ready in the page's
 // language from the ticket (tickets.text.ts), each race's start and entry fee written there too.
 export type KtriKnowText = {
-  reportK: string; report: string; raceK: string; gateK: string; gateV: string; pick: string; saved: string; change: string; failed: string;
+  reportK: string; report: string; bikeK: string; bike: string; raceK: string; gateK: string; gateV: string; pick: string; saved: string; change: string; failed: string;
 };
 
 export default function KtriKnow({ entryId, race, done, races, t }: { entryId: string; race: TriRace | null | undefined; done: boolean; races: KtriRaceOpt[]; t: KtriKnowText }) {
@@ -45,6 +46,8 @@ export default function KtriKnow({ entryId, race, done, races, t }: { entryId: s
   return (
     <div className="tk-kt-know">
       <p><span className="tk-kt-k">{t.reportK}</span><span className="tk-kt-v">{t.report}</span></p>
+      {/* where and when the bikes are collected (2026-11-22), until the place is done */}
+      {!done && <p><span className="tk-kt-k">{t.bikeK}</span><span className="tk-kt-v">{t.bike}</span></p>}
       {known && sel && (
         <p className="tk-kt-race">
           <span className="tk-kt-k">{t.raceK}</span>
