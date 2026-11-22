@@ -1,6 +1,7 @@
 import Qr from "./Qr";
 import Countdown from "./Countdown";
 import RaceRegQuestion from "./RaceRegQuestion";
+import KtriKnow from "./KtriKnow";
 import WalletPay from "./WalletPay";
 import { walletWords } from "@/components/account/Wallet.words";
 import { walletDue } from "@/lib/wallet";
@@ -20,6 +21,7 @@ import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { YOGA_MARK, YOGA_MARK_SIZE, yogaKnow } from "@/lib/yoga";
 import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
+import { KTRI_MARK, KTRI_MARK_SIZE, KTRI_REG_URL, KTRI_REPORT, ktriRaceOpts } from "@/lib/ktri";
 import { igUrl } from "@/lib/instagram";
 import { SOCIAL_ICONS } from "@/components/site/social-icons";
 import { genderChip } from "@/lib/session-gender";
@@ -87,6 +89,13 @@ import { gpxFileName, type RoutePage } from "@/lib/route-track";
 // or drops family members there. Its wallet pass is offered as the pool's is (the booking app's passes know the farm).
 // A session that carries its venue's Instagram (bike_slots._ig, 2026-11-13; lib/instagram.ts), the Farm House Night's
 // @thefarmhouse.jed first, links it under the place while the night is ahead, in a new tab.
+// A KAUST Triathlon ticket (2026-11-22; lib/ktri.ts) wears the booking app's "Red Sea Dawn" look (its th-ktri): the sky going
+// pale to white with the sea along its foot, the sun-over-the-water mark as its logo, blue where the night ticket is neon;
+// while it is ahead it says when to report and where (6 AM at KAUST Urban Beach), the member's race with its start and
+// distances and Change, or "Pick your race" with the five (KtriKnow, through customer_set_tri_race), the gate pass for
+// anyone not living at KAUST, then "Have you registered through the KAUST Triathlon registration website?" as the DEFE
+// run's ticket keeps it (No shows the race's registration website, no code). Free, no price of 0 for the participant;
+// cancel only, as one place per account with no bike; its wallet pass is offered as yoga's is.
 // "Need help?" (2026-11-16; lib/ride-help.ts, TicketHelp) stands above "Report a bike problem" on a booking that holds a
 // place, from an hour before the session until 3 hours after it, never on the Blood Donation event: WhatsApp us with what
 // is wrong, the rider, the session and their location; Call us; the ambulance.
@@ -239,7 +248,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const vlap = s?.kind === "vlap"; // Victory Lap: an athlete's number, the race and team, how to pay
   const arena = s?.kind === "arena"; // Arena Heros: an athlete's number, the race, division and team, payment announced later
   const yoga = s?.kind === "yoga"; // yoga: its mark, who leads it, the level and what to bring (2026-11-12)
-  const ygFree = yoga && !!s?.free; // a free yoga place says Free, never a price of 0 (the booking app's _ygFree)
+  const ktri = s?.kind === "ktri"; // the KAUST Triathlon: its mark, when to report, the race, the gate pass (2026-11-22)
+  // a free yoga place says Free, never a price of 0 (the booking app's _ygFree); so does a KAUST Triathlon place
+  const ygFree = (yoga || ktri) && !!s?.free;
   const farm = s?.kind === "farm"; // the Farm House Night: its mark, Arrival and Dinner, Edit for the family (2026-11-13)
   // The Blood Donation event, by its id on a session that did not load: a donor's number, no price anywhere (2026-11-03)
   const donor = s ? s.kind === "blood" : isBloodId(primary.sessionId);
@@ -350,6 +361,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             : defe ? <span className="tk-logo tk-logo-defe" aria-hidden="true"><img src="/site/defe-logo.svg" alt="" decoding="async" /></span>
             : yoga ? <span className="tk-logo tk-logo-yoga" aria-hidden="true"><img src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} decoding="async" /></span>
             : farm ? <span className="tk-logo tk-logo-farm" aria-hidden="true"><img src={FARM_MARK} alt="" width={FARM_MARK_SIZE.width} height={FARM_MARK_SIZE.height} decoding="async" /></span>
+            : ktri ? <span className="tk-logo tk-logo-ktri" aria-hidden="true"><img src={KTRI_MARK} alt="" width={KTRI_MARK_SIZE.width} height={KTRI_MARK_SIZE.height} decoding="async" /></span>
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {ahHeld && !allWl && <p className="tk-label">{t.ahHoldTitle}</p>}
           {!hideNum && (allWl
@@ -609,6 +621,19 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             {raceRegAsked(primary, s, today) && (
               <RaceRegQuestion entryId={primary.id} initial={primary.raceReg ?? null} url={DEFE_RACE_URL}
                 t={{ q: t.defeRegQ, sub: t.defeRegSub, noNote: t.defeRegNoNote, code: t.defeRegCode, link: t.defeRegLink, yesNote: t.defeRegYesNote, yes: t.yes, no: t.no, change: t.change, failed: t.rrFailed }} />
+            )}
+          </>
+        )}
+        {ktri && !past && (
+          // when to report, the race (picked or changed here) and the gate pass, then the race question (the booking app's
+          // _ktKnowHtml, _ktRegNoHtml)
+          <>
+            <KtriKnow entryId={primary.id} race={primary.triRace} done={primary.status === "done"}
+              races={ktriRaceOpts(t, clock, sar)}
+              t={{ reportK: t.ktReportK, report: `${clock(KTRI_REPORT)} · ${t.ktReportV}`, raceK: t.ktRaceK, gateK: t.ktGateK, gateV: t.ktGateV, pick: t.ktPick, saved: t.ktRaceSaved, change: t.change, failed: t.rrFailed }} />
+            {raceRegAsked(primary, s, today) && (
+              <RaceRegQuestion entryId={primary.id} initial={primary.raceReg ?? null} url={KTRI_REG_URL}
+                t={{ q: t.ktRegQ, sub: t.ktRegSub, noNote: t.ktRegNoNote, code: "", link: t.ktRegLink, yesNote: t.ktRegYesNote, yes: t.yes, no: t.no, change: t.change, failed: t.rrFailed }} />
             )}
           </>
         )}

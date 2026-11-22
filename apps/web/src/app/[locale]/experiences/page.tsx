@@ -34,6 +34,7 @@ import { AH_INFO_URL, ahConfig, ahPayLine } from "@/lib/arena";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { yogaKnow, yogaLength } from "@/lib/yoga";
 import { farmForMembers } from "@/lib/farm";
+import { KTRI_REG_URL, KTRI_REPORT, KTRI_RACES, ktriOut, ktriTitle } from "@/lib/ktri";
 import { igUrl } from "@/lib/instagram";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { ArrowIcon } from "@/components/site/Icons";
@@ -246,7 +247,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
-    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga), aboutFarm: fw.about,
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga), aboutFarm: fw.about, aboutKtri: S(d.aboutKtri),
     sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
   };
   const whoWords = {
@@ -256,6 +257,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     arena: tx("Community members, in teams of two", "أعضاء المجتمع، في فرق من شخصين"), // the booking app's infoWhoArena (2026-10-28)
     arenaAll: tx("Everyone, in teams of two. You must have a partner.", "الجميع، في فرق من شخصين. يجب أن يكون لديك شريك."), // infoWhoArenaAll (2026-11-02)
     farm: fw.who, // the Farm House Night (the booking app's fhWho, 2026-11-13)
+    ktri: tx("Community members book a place in our group. Anyone can enter the race on the KAUST Triathlon website.", "يحجز أعضاء المجتمع مكانهم في مجموعتنا، ويمكن لأي شخص التسجيل في السباق عبر موقع ترايثلون كاوست."), // the KAUST Triathlon (the booking app's ktWho, 2026-11-22)
   };
   // Victory Lap's races and divisions, in the booking app's words (vlRace_*, vlDiv_*)
   const vlWords = {
@@ -303,6 +305,18 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     levelK: tx("Level", "المستوى"), levelV: tx("All levels, no yoga experience needed", "جميع المستويات، ولا تلزم خبرة سابقة في اليوغا"),
     bringK: tx("Bring", "أحضر معك"), bringV: tx("Your yoga mat, and wear comfortable clothing", "سجادة اليوغا الخاصة بك، وارتدِ ملابس مريحة"),
   };
+  // The KAUST Triathlon (2026-11-22; lib/ktri.ts), in the booking app's words (ktSwimBikeRun, ktReportK, ktCardMem, ktCardReg,
+  // ktOutMsg, ktOutBtn, ktStepMsg, ktWho, ktRacesK, ktRacesV, ktFeesK, ktFeesV, ktClosesK, ktClosesV, ktGateK, ktGateV,
+  // ktRegLinkShort): its card's line and foot, the last step for a member and for anyone else, and its Details' rows
+  const ktWords = {
+    sbr: tx("Swim · Bike · Run", "سباحة · دراجة · جري"), report: tx("Report", "الحضور"),
+    cardMem: tx("Book your place in our group", "احجز مكانك في مجموعتنا"), cardReg: tx("Register on the race website", "سجّل عبر موقع السباق"),
+    outMsg: tx("Registration for the race is on the KAUST Triathlon website. Booking a place in the MicroMobility group is for our community members.", "التسجيل في السباق يكون عبر موقع ترايثلون كاوست، أما حجز مكان في مجموعة مايكروموبيليتي فهو لأعضاء مجتمعنا."), outBtn: tx("Go to registration", "اذهب إلى التسجيل"), step: tx("Which race are you doing? Pick one. You enter and pay for the race itself on the KAUST Triathlon website, as the last step.", "في أي سباق ستشارك؟ اختر واحدًا. التسجيل في السباق نفسه ودفع رسومه يكون عبر موقع ترايثلون كاوست، وهي الخطوة الأخيرة."),
+    racesK: tx("Races", "السباقات"), racesV: tx("Olympic {0} · Sprint {1} · Future Champs {2}", "الأولمبي {0} · السريع {1} · أبطال المستقبل {2}"), feesK: tx("Race entry", "رسوم السباق"), feesV: tx("Individual {0} · Relay team {1} · Future Champs {2}", "فردي {0} · فريق تتابع {1} · أبطال المستقبل {2}"),
+    closesK: tx("Registration closes", "يغلق التسجيل"), closesV: tx("Wed 2 Dec · 11:50 PM", "الأربعاء 2 ديسمبر · 11:50 م"), gateK: tx("Gate pass", "تصريح الدخول"), gateV: tx("Not living at KAUST? After you register, apply for your gate pass with the link the organisers send you. Without it you cannot enter KAUST.", "لا تسكن في كاوست؟ بعد التسجيل، قدّم على تصريح الدخول عبر الرابط الذي يرسله المنظمون. بدونه لا يمكنك دخول كاوست."),
+    regLink: tx("Registration website", "موقع التسجيل"),
+  };
+  const ktReport = `${ktWords.report} ${clock(KTRI_REPORT)}`;
   // The Saturday ride's sunrise over the Corniche that day, in the page's clock (lib/kind-theme.ts), and its two routes'
   // words; null on any other kind.
   const sunrise = (s: RideSession) => (s.kind === "saturday" ? ((v) => (v ? clock(v) : null))(sunriseHhmm(s.date)) : null);
@@ -357,6 +371,11 @@ export default async function ExperiencesPage({ params, searchParams }: { params
       // the Farm House Night's own card (the booking app's _fhSessCard, 2026-11-13): arrival and dinner, where, and who it is
       // for along the foot; and the words its two times are said with wherever its time shows
       ...(s.kind === "farm" ? { farm: { meta: [timesText(s.times, true, clock, { gather: fw.arrive, start: fw.dinner }), place.name].filter(Boolean), line: fw.line, arrive: fw.arrive, dinner: fw.dinner } } : {}),
+      // the KAUST Triathlon's own card (the booking app's _ktSessCard, 2026-11-22): its name as the poster sets it, SWIM · BIKE ·
+      // RUN, when to report and where, and what a tap does along the foot; anyone but a member is sent to the race's
+      // registration website on the last step, in place of the hand-over (the booking app's _ktGate)
+      ...(s.kind === "ktri" ? { ktri: { title: ktriTitle(sessionName(s, kindName, enName, L !== "en", L === "ar")), sbr: ktWords.sbr, meta: [ktReport, place.name].filter(Boolean), foot: ktriOut(member) ? ktWords.cardReg : ktWords.cardMem, step: ktWords.step,
+        out: ktriOut(member) ? { url: KTRI_REG_URL, msg: ktWords.outMsg, btn: ktWords.outBtn } : null } } : {}),
       // a featured date (the booking app's _featCardHtml, 2026-11-13): its day as its Featured card's tile, and how long
       // yoga runs, which that card says after its time
       ...(s.featured ? { feat: { ...fmtDayTile(s.date, locale), len: s.kind === "yoga" ? yogaLength(s.times, ygWords.min) || null : null } } : {}),
@@ -410,6 +429,18 @@ export default async function ExperiencesPage({ params, searchParams }: { params
         ...(s.kind === "defe5k" ? { kit: { label: defeWords.kitLabel, text: defeWords.kit }, race: { label: defeWords.regLabel, link: defeWords.regLink, url: DEFE_RACE_URL } } : {}),
         // yoga: who leads it, how long, the level and what to bring, after where (the booking app's _infoFacts)
         ...(s.kind === "yoga" ? { more: yogaKnow(ygWords, yogaLength(s.times, ygWords.min)).map(([k, v]) => ({ k, v })) } : {}),
+        // the KAUST Triathlon: when to report, the races and their starts, the entry fees, when entries close, the race's
+        // registration website and the gate pass (the booking app's _infoFacts, 2026-11-22)
+        ...(s.kind === "ktri" ? {
+          more: [
+            { k: ktWords.report, v: clock(KTRI_REPORT) },
+            { k: ktWords.racesK, v: fillAt(ktWords.racesV, clock(KTRI_RACES[0].start), clock(KTRI_RACES[1].start), clock(KTRI_RACES[4].start)) },
+            { k: ktWords.feesK, v: fillAt(ktWords.feesV, sar(KTRI_RACES[0].fee), sar(KTRI_RACES[2].fee), sar(KTRI_RACES[4].fee)) },
+            { k: ktWords.closesK, v: ktWords.closesV },
+            { k: ktWords.gateK, v: ktWords.gateV },
+          ],
+          race: { label: defeWords.regLabel, link: ktWords.regLink, url: KTRI_REG_URL },
+        } : {}),
         // the venue's Instagram, a row after where it is (the booking app's _infoFacts, 2026-11-13): the Farm House Night's
         // @thefarmhouse.jed, whose Details a member alone reads
         ...(s.ig ? { ig: { label: tx("Instagram", "إنستغرام"), handle: s.ig, url: igUrl(s.ig) } } : {}),

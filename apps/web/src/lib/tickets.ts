@@ -11,6 +11,7 @@ import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 import { AH_VENUE, ahConfig, ahEntry, ahHold, isArenaId, type AhConfig, type AhEntry } from "./arena";
 import { isBloodId } from "./blood";
 import { igOf } from "./instagram";
+import { KTRI_VENUE, triRaceOf, type TriRace } from "./ktri";
 import { sessionGender, type SessionGender } from "./session-gender";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
@@ -48,6 +49,9 @@ export type TicketRow = {
    *  (queue_entries.race_reg, rentals 20261018150000): 'yes', 'no', or null before they answer (and on
    *  every other booking, and on a database without the column). */
   raceReg?: "yes" | "no" | null;
+  /** The KAUST Triathlon (2026-11-22, rentals 20261122120000; lib/ktri.ts): which race the member is doing
+   *  (queue_entries.tri_race), null before they pick one; absent from a read without the column. */
+  triRace?: TriRace | null;
   /** Victory Lap (2026-10-23, rentals 20261023160000; lib/vl-ticket.ts): whether the athlete already has a
    *  ticket ('have') or buys one by bank transfer ('buy'), null before they answer; undefined when the
    *  database has no such column yet (the question then steps aside). */
@@ -183,6 +187,8 @@ export function ticketRow(r: Row): TicketRow | null {
     vl: ah === undefined ? vlEntry(r.vl) : null,
     ...(ah !== undefined ? { ah } : {}),
     raceReg: r.race_reg === "yes" || r.race_reg === "no" ? r.race_reg : null,
+    // the KAUST Triathlon's race (2026-11-22), only from a read that carries the column
+    ...("tri_race" in r ? { triRace: triRaceOf(r.tri_race) } : {}),
     ...("vl_ticket" in r ? { vlTicket: r.vl_ticket === "have" || r.vl_ticket === "buy" ? r.vl_ticket : null, vlReceiptAt: S(r.vl_receipt_at) || null } : {}),
     // the codes it was booked with (2026-11-08): letters, digits and dashes as the database keeps them, else none
     promoCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.promo_code)) ? S(r.promo_code) : null,
@@ -390,7 +396,7 @@ export function ticketSession(r: Row): TicketSession | null {
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga" && kind !== "farm",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga" && kind !== "farm" && kind !== "ktri",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -567,7 +573,7 @@ export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | {
 export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
   if (s?.approval && s.meetUrl && !(s.kind === "farm" && s.location)) return { kind: "meet" };
   if (s?.kind === "yoga" && !s.location && s.meetUrl) return { kind: "meet" };
-  const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : s?.kind === "blood" ? "JCC" : "");
+  const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : s?.kind === "blood" ? "JCC" : s?.kind === "ktri" ? KTRI_VENUE : "");
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : loc === AH_VENUE ? { kind: "gym" } : { kind: "text", text: loc };
 }
 
@@ -595,11 +601,11 @@ export function placeLink(s: (Pick<TicketSession, "approval" | "kind" | "meetUrl
   // Club, a ride with a place to that place, the DEFE 5K and a ride with none to the booth (bug hunt 2026-11-11: no button)
   if (s && meetsAt(s) && s.meetUrl) return s.meetUrl;
   if (s?.kind === "arena") return s.meetUrl;
-  if (s?.kind === "yoga" && s.meetUrl) return s.meetUrl;
+  if ((s?.kind === "yoga" || s?.kind === "ktri") && s.meetUrl) return s.meetUrl; // the KAUST Triathlon's beach pin too (2026-11-22)
   if (s?.kind === "blood") return s.meetUrl ?? circuit;
   // Any other named place is searched by its name (the booking app's _dirBtnHtml, 2026-11-10): every booking away from
   // the circuit used to open the circuit's directions.
-  const loc = s?.location?.trim() || (s?.kind === "runher" ? "JYC" : "");
+  const loc = s?.location?.trim() || (s?.kind === "runher" ? "JYC" : s?.kind === "ktri" ? KTRI_VENUE : "");
   if (loc && loc !== "JCC") return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ICS_PLACES.get(loc) ?? loc)}`;
   return circuit;
 }
@@ -642,11 +648,14 @@ export const DEFE_RACE_URL = "https://in.njuko.com/defe5k?utm_id=97760_v0_s00_e0
 export const DEFE_RACE_CODE = "MICRO50";
 /** The DEFE 5KM Run, by the session's kind. */
 export const isDefe = (s: Pick<TicketSession, "kind"> | undefined): boolean => s?.kind === "defe5k";
-/** Whether a booked Defe place still asks "Have you registered for the race?": a live row (waiting, on the
- *  waitlist or checked in, never done; cancelled and no-show rows are never on a ticket) on the DEFE 5KM
- *  Run whose day has not passed (Riyadh). The place is booked whatever the answer. */
+/** The races whose places are asked whether the race itself was entered on the organiser's site (the booking app's
+ *  _isRaceRegSess): the DEFE 5KM Run, and the KAUST Triathlon since 2026-11-22. */
+export const isRaceRegKind = (s: Pick<TicketSession, "kind"> | undefined): boolean => s?.kind === "defe5k" || s?.kind === "ktri";
+/** Whether a booked Defe (or KAUST Triathlon) place still asks "Have you registered for the race?": a live row (waiting,
+ *  on the waitlist or checked in, never done; cancelled and no-show rows are never on a ticket) whose day has not passed
+ *  (Riyadh). The place is booked whatever the answer. */
 export const raceRegAsked = (r: Pick<TicketRow, "status" | "date"> | undefined, s: Pick<TicketSession, "kind"> | undefined, today: string): boolean =>
-  !!r && isDefe(s) && r.status !== "done" && r.date >= today;
+  !!r && isRaceRegKind(s) && r.status !== "done" && r.date >= today;
 
 // ── The ride night on the ticket (the booking app's 2026-10-01 round, 91816da) ─────────────
 
@@ -795,7 +804,7 @@ const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Bra
 export function icsPlace(s: TicketSession): string {
   if (meetsAt(s) && s.meetUrl) return s.meetUrl;
   if (s.kind === "yoga" && !s.location && s.meetUrl) return s.meetUrl; // a yoga date at its map, without a place's name: never the circuit
-  const loc = s.location || (s.kind === "runher" ? "JYC" : s.kind === "arena" ? AH_VENUE : s.kind === "blood" ? "JCC" : "");
+  const loc = s.location || (s.kind === "runher" ? "JYC" : s.kind === "arena" ? AH_VENUE : s.kind === "blood" ? "JCC" : s.kind === "ktri" ? KTRI_VENUE : "");
   return loc ? ICS_PLACES.get(loc) ?? loc : "";
 }
 

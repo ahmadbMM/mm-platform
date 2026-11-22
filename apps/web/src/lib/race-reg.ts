@@ -1,11 +1,13 @@
 import { SESSION_ID } from "./waiver";
-import { isDefe, type TicketSession } from "./tickets";
+import { isRaceRegKind, type TicketSession } from "./tickets";
 import { ENTRY_ID } from "./rating";
 
 // The DEFE 5KM Run's "Have you registered for the race?" (the owner, 2026-10-18; the booking app's
 // _defeRegHtml / _defeRegSet): a runner answers Yes or No on their ticket, saved on the booking
 // (queue_entries.race_reg) through customer_set_race_reg (app/api/account/race-reg). The place is
-// booked whatever the answer; it tells staff who still has to register with Defe.
+// booked whatever the answer; it tells staff who still has to register with Defe. The KAUST Triathlon (2026-11-22) asks the
+// same of its places ("Have you registered through the KAUST Triathlon registration website?"), with the race's own
+// registration link and no discount code (lib/ktri.ts).
 
 export type RaceRegAnswer = "yes" | "no";
 
@@ -48,9 +50,10 @@ export function raceRegCandidates(rows: Row[], today: string, customerId: string
   return out;
 }
 
-/** The places still to answer, soonest first: the candidates on a session the account can see that is the DEFE 5KM Run. */
+/** The places still to answer, soonest first: the candidates on a session the account can see that is the DEFE 5KM Run
+ *  or the KAUST Triathlon (isRaceRegKind). */
 export function pendingRaceRegs(rows: Row[], sessions: ReadonlyMap<string, Pick<TicketSession, "kind">>, today: string, customerId: string, skip: readonly string[] = []): PendingRaceRegRow[] {
   return raceRegCandidates(rows, today, customerId, skip)
-    .filter((x) => isDefe(sessions.get(x.sessionId)))
+    .filter((x) => isRaceRegKind(sessions.get(x.sessionId)))
     .sort((a, b) => a.date.localeCompare(b.date) || a.entryId.localeCompare(b.entryId));
 }

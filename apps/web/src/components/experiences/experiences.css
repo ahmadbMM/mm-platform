@@ -310,6 +310,23 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-feat-fh .xs-feat-mi > span::before { background: rgba(243, 199, 169, .5); }
 .xs-feat-fh .xs-feat-with { font-weight: 700; color: var(--fh-peach-lt); }
 .xs-feat-fh .xs-feat-go { color: var(--fh-peach); }
+/* the KAUST Triathlon's card (the booking app's .feat-kt): the sky going pale to white, the sea along its foot, the day on
+   white under a blue band, KAUST in heavy blue, the rest in navy, what a tap does in deep blue */
+.xs-feat-card.xs-feat-kt { position: relative; overflow: hidden; isolation: isolate; color: var(--kt-navy); padding-bottom: 22px; border-color: rgba(21, 101, 180, .3);
+  background: linear-gradient(180deg, var(--kt-sky) 0%, var(--kt-sky-2) 60%, #fff 100%); }
+.xs-feat-card.xs-feat-kt:hover { border-color: rgba(21, 101, 180, .6); box-shadow: 0 0 14px rgba(21, 101, 180, .12); }
+.xs-feat-card.xs-feat-kt:focus-visible { outline: 2px solid var(--kt-blue); }
+.xs-feat-kt .sc-kt-scene { height: 22px; }
+.xs-feat-kt .xs-feat-day { background: #fff; box-shadow: inset 0 0 0 1px rgba(21, 101, 180, .2); }
+.xs-feat-kt .xs-feat-day b { color: var(--kt-navy); }
+.xs-feat-kt .xs-feat-day span { color: var(--kt-ink-2); }
+.xs-feat-kt .xs-feat-day .xs-feat-wd { color: var(--mm-white); background: var(--kt-blue); }
+.xs-feat-kt .sc-dw { color: var(--kt-blue-dk); }
+.xs-feat-kt .xs-feat-name.sc-kt-title { font-size: 20px; }
+.xs-feat-kt .xs-feat-meta { font-weight: 600; color: var(--kt-ink-2); }
+.xs-feat-kt .xs-feat-mi > span::before { background: rgba(21, 101, 180, .35); }
+.xs-feat-kt .xs-feat-with { font-weight: 700; color: var(--kt-blue-dk); }
+.xs-feat-kt .xs-feat-go { color: var(--kt-blue); }
 @media (max-width: 767px) {
   .xs-feat { margin-bottom: 28px; }
   /* a phone with two or more: one row that scrolls sideways out to the screen's edges (.xp-wrap's 20px), the next card
@@ -324,6 +341,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
   .xs-feat-day b { font-size: 20px; }
   .xs-feat-yg .xs-feat-name.sc-yg-title { font-size: 18px; }
   .xs-feat-fh .xs-feat-name.sc-fh-title { font-size: 17px; }
+  .xs-feat-kt .xs-feat-name.sc-kt-title { font-size: 18px; }
 }
 
 /* A phone names only the step it is on; the others keep their names for screen readers. */
@@ -373,6 +391,23 @@ html:is([lang="ar"], [lang="ur"]) .xs-summary .xs-yg-name { font-family: var(--c
 .xs-info.ev-yoga .xs-info-go { background: var(--yg-clay); border-color: var(--yg-clay); color: #fff; }
 .xs-info.ev-yoga .xs-info-go:hover { background: var(--yg-clay-dk); border-color: var(--yg-clay-dk); }
 .xs-info.ev-yoga .xs-info-btns button:focus-visible { outline-color: rgba(180, 83, 47, .45); }
+/* The KAUST Triathlon (2026-11-22, the booking app's flow head .kt-flow-*): its summary's head is the sky plate with the sea
+   along its foot, the mark, its name as the poster sets it and SWIM · BIKE · RUN; when to report and where under it; for a
+   member the blue hand-over with the race step's line, for anyone else why and the race's registration website */
+.xs-kt-head { position: relative; overflow: hidden; isolation: isolate; display: flex; align-items: center; gap: 14px; min-width: 0; padding: 14px 16px 26px; border-radius: 12px;
+  background: linear-gradient(180deg, var(--kt-sky) 0%, var(--kt-sky-2) 60%, #fff 100%); border: 1px solid rgba(21, 101, 180, .26); border-inline-start: 3px solid var(--kt-blue); color: var(--kt-navy); }
+.xs-kt-mark { height: 40px; width: auto; flex: none; display: block; }
+.xs-kt-copy { min-width: 0; flex: 1 1 auto; display: grid; gap: 4px; }
+.xs-kt-head .xs-kt-name { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-size: 20px; font-weight: 800; line-height: 1.15; color: var(--kt-navy); overflow-wrap: anywhere; }
+.xs-kt-meta { margin: 0; font-size: 13px; font-weight: 600; color: var(--kt-ink-2); }
+.xs-kt-out { margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--kt-navy); }
+.xs .xs-go.ev-ktri { background: var(--kt-blue); color: #fff; }
+.xs .xs-go.ev-ktri:hover { background: var(--kt-blue-dk); }
+.xs .xs-info.ev-ktri .xs-info-facts a { color: var(--kt-blue-dk); }
+.xs-info.ev-ktri .xs-info-go { background: var(--kt-blue); border-color: var(--kt-blue); color: #fff; }
+.xs-info.ev-ktri .xs-info-go:hover { background: var(--kt-blue-dk); border-color: var(--kt-blue-dk); }
+.xs-info.ev-ktri .xs-info-btns button:focus-visible { outline-color: rgba(21, 101, 180, .45); }
+@media (max-width: 400px) { .xs-kt-mark { height: 34px; } }
 /* The Farm House Night (2026-11-13, the booking app's flow head .fh-flow-*): its summary's head is the venue's rust plate,
    the mark, its name in Rubik 800 peach, when in cream and who it is for under it; its button and its Details' link and
    button in rust */
@@ -461,6 +496,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
 .sc-wrap:has(> .sc-farm) > .orm-btn { color: var(--fh-peach); }
 .sc-wrap:has(> .sc-farm) > .orm-btn:hover { background: rgba(255, 255, 255, .1); }
 .sc-wrap:has(> .sc-yoga) > .orm-btn { color: var(--yg-clay-dk); }
+.sc-wrap:has(> .sc-ktri) > .orm-btn { color: var(--kt-blue-dk); }
 .sc-wrap:has(> .sc-defe) > .orm-btn { color: #a22b63; }
 @media (max-width: 560px) {
   .sc-wrap > .orm-btn { inset-inline-start: 19px; }

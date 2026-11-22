@@ -10,7 +10,8 @@ import { DEFE_RACE_CODE } from "@/lib/tickets";
 // Defe's registration page, where the race itself is entered. Yes leaves "You told us you are registered for the race through Defe website." with Change. The answer
 // is saved on the booking through /api/account/race-reg (customer_set_race_reg) and shows at once; a
 // save that fails puts the last answer back and says so. The place is booked whatever the answer.
-// Its words come ready in the page's language from the ticket (tickets.text.ts).
+// Its words come ready in the page's language from the ticket (tickets.text.ts). A KAUST Triathlon place (2026-11-22) asks
+// it in its own words, with the race's registration website and no discount code (`code` "").
 export type RaceRegText = {
   q: string; sub: string; noNote: string; code: string; link: string; yesNote: string; yes: string; no: string; change: string; failed: string;
 };
@@ -67,8 +68,9 @@ export default function RaceRegQuestion({ entryId, initial, url, t }: { entryId:
       {view === "askNo" && (
         <div className="tk-rr-no">
           <p className="tk-rr-sub">{t.noNote}</p>
-          {/* the discount code, bold and left to right in every language (the booking app's defe-reg-code) */}
-          <p className="tk-rr-code">{((parts) => <>{parts[0]}<strong dir="ltr">{DEFE_RACE_CODE}</strong>{parts[1] ?? ""}</>)(t.code.split("{0}"))}</p>
+          {/* the discount code, bold and left to right in every language (the booking app's defe-reg-code); none on the KAUST
+              Triathlon */}
+          {t.code && <p className="tk-rr-code">{((parts) => <>{parts[0]}<strong dir="ltr">{DEFE_RACE_CODE}</strong>{parts[1] ?? ""}</>)(t.code.split("{0}"))}</p>}
           <a className="tk-rr-link" href={url} target="_blank" rel="noopener">{t.link}</a>
         </div>
       )}

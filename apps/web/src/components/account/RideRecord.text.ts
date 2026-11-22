@@ -61,6 +61,7 @@ export const T = {
       t25: ["T25 Finisher", "Finished the T25 race in Jeddah", "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team."],
       ironman_703: ["Ironman 70.3 Finisher", "Finished an Ironman 70.3 triathlon", "For crossing the finish line of an Ironman 70.3, the half distance: a 1.9 km swim, 90 km on the bike and a 21.1 km run. Given by our team."],
       ironman_1406: ["Ironman 140.6 Finisher", "Finished a full Ironman 140.6 triathlon", "For crossing the finish line of a full Ironman: a 3.8 km swim, 180 km on the bike and a 42.2 km run. Given by our team."],
+      kaust_triathlon: ["KAUST Triathlon Finisher", "Finished the KAUST Triathlon", "For crossing the finish line of the KAUST Triathlon with the MicroMobility community: the Olympic race, the Sprint, a relay leg or the Future Champs run. Given by our team."], // the KAUST Triathlon (2026-11-22), staff-given
       senior_marshal: ["Senior Marshal", "Led, swept or helped run 10 rides or events", "Senior marshals look after a whole stretch of the track. Given by the team after ten rides or events helped."],
       chief_marshal: ["Chief Marshal", "Led, swept or helped run 25 rides or events", "The chief marshal leads every marshal on race day. Given by the team after twenty-five rides or events helped."],
       clerk_of_course: ["Clerk of the Course", "Led, swept or helped run 50 rides or events", "The clerk of the course runs the whole race meeting. Given by the team after fifty rides or events helped."],
@@ -189,6 +190,7 @@ export const T = {
       t25: ["إنجاز T25", "أنهيت سباق T25 في جدة", "لمن عبر خط النهاية في سباق T25 حين أُقيم في جدة. يمنحه فريقنا."],
       ironman_703: ["إنجاز آيرونمان 70.3", "أنهيت سباق آيرونمان 70.3", "لمن عبر خط النهاية في سباق آيرونمان 70.3، نصف المسافة: سباحة 1.9 كم، ودراجة 90 كم، وجري 21.1 كم. يمنحه فريقنا."],
       ironman_1406: ["إنجاز آيرونمان 140.6", "أنهيت سباق آيرونمان 140.6 الكامل", "لمن عبر خط النهاية في سباق آيرونمان الكامل: سباحة 3.8 كم، ودراجة 180 كم، وجري 42.2 كم. يمنحه فريقنا."],
+      kaust_triathlon: ["إنجاز ترايثلون كاوست", "أكمل ترايثلون كاوست", "لعبور خط النهاية في ترايثلون كاوست مع مجتمع مايكروموبيليتي: السباق الأولمبي أو السريع أو مرحلة في التتابع أو جري أبطال المستقبل. يمنحها فريقنا."],
       senior_marshal: ["كبير المنظّمين", "قدت أو تابعت مؤخرة أو ساعدت في تنظيم 10 جولات أو فعاليات", "كبار المنظّمين يتولّون جزءاً كاملاً من الحلبة. يمنحه الفريق بعد المساعدة في عشر جولات أو فعاليات."],
       chief_marshal: ["رئيس المنظّمين", "قدت أو تابعت مؤخرة أو ساعدت في تنظيم 25 جولة أو فعالية", "رئيس المنظّمين يقود جميع المنظّمين يوم السباق. يمنحه الفريق بعد المساعدة في خمس وعشرين جولة أو فعالية."],
       clerk_of_course: ["مدير المضمار", "قدت أو تابعت مؤخرة أو ساعدت في تنظيم 50 جولة أو فعالية", "مدير المضمار يدير يوم السباق بأكمله. يمنحه الفريق بعد المساعدة في خمسين جولة أو فعالية."],

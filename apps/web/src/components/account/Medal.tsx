@@ -28,6 +28,9 @@ const RACE: Record<string, [string, [string, string, string], string, string, [s
   // include the ironman logos with the total distance of the race besides it or under it")
   ironman_703: ["70.3", ["#fff", "#cfd5de", "#858f9e"], "#636b78", "#323946", ["#c8202f", "#8a141e"], 1],
   ironman_1406: ["140.6", ["#fff3b8", "#f3c431", "#b07c00"], "#7d5800", "#5c3f00", ["#c8202f", "#8a141e"], 1],
+  // The KAUST Triathlon (the booking app, 2026-11-22; staff give it to those who finished): the medal in the race poster's sky
+  // blue, KAUST struck on it, on a ribbon in the sea's two blues
+  kaust_triathlon: ["KAUST", ["#eaf4fc", "#5aa9e6", "#1d5fa8"], "#123f73", "#0d2f57", ["#0e959a", "#1565b4"]],
 };
 // The M-Dot (the booking app's BDG_MDOT): the IRONMAN mark's block M with the dot over it, centred on x 0, 35.4 wide and 49 tall
 const MDOT = "M-8.58 8.57a8.58 8.58 0 1 0 17.16 0a8.58 8.58 0 1 0-17.16 0zM-17.72 18.97H17.72V48.93H7.17V37.8L3.22 48.93H-3.22L-7.17 37.8V48.93H-17.72z";

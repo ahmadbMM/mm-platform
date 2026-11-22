@@ -10,7 +10,8 @@ import { withinLimit } from "@/lib/rate-limit";
 import { ENTRY_ID } from "@/lib/rating";
 import { pendingRaceRegs, raceRegCandidates } from "@/lib/race-reg";
 import { loadSiteContent } from "@/lib/site";
-import { fmtClock, fmtDayDate, venueOf, venueText } from "@/lib/tickets";
+import { DEFE_RACE_URL, fmtClock, fmtDayDate, venueOf, venueText } from "@/lib/tickets";
+import { KTRI_REG_URL } from "@/lib/ktri";
 import { loadTicketSessions } from "@/lib/tickets-data";
 import { riyadhClock } from "@/lib/workshop-days";
 
@@ -21,7 +22,8 @@ import { riyadhClock } from "@/lib/workshop-days";
 // out it answers from the cookie alone; signed in it reads the runner's own bookings (my_bookings), then
 // the sessions of the rows still to answer, to know which are the Defe run. `skip` is the places passed
 // with Done on this visit. The answer itself goes through POST /api/account/race-reg. A connection asks
-// 30 times a minute at most.
+// 30 times a minute at most. A KAUST Triathlon place (2026-11-22) is asked too, in its own words, with the race's
+// registration website for its link and no discount code (`code` "").
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -57,8 +59,12 @@ export async function GET(req: Request) {
       when: fmtDayDate(first.date, locale),
       time: timesText(s.times, s.gathers, clock, { gather: S(d.gather), start: S(d.start) }),
       venue: venueText(venueOf(s), t),
+      // where the race itself is entered: Defe's page, or the KAUST Triathlon's registration website
+      url: s.kind === "ktri" ? KTRI_REG_URL : DEFE_RACE_URL,
       // the question's words in the page's language, as the ticket has them (tickets.text.ts)
-      t: { q: t.defeRegQ, sub: t.defeRegSub, noNote: t.defeRegNoNote, code: t.defeRegCode, link: t.defeRegLink, yes: t.yes, no: t.no, failed: t.rrFailed },
+      t: s.kind === "ktri"
+        ? { q: t.ktRegQ, sub: t.ktRegSub, noNote: t.ktRegNoNote, code: "", link: t.ktRegLink, yes: t.yes, no: t.no, failed: t.rrFailed }
+        : { q: t.defeRegQ, sub: t.defeRegSub, noNote: t.defeRegNoNote, code: t.defeRegCode, link: t.defeRegLink, yes: t.yes, no: t.no, failed: t.rrFailed },
     },
   });
 }

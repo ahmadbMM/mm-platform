@@ -26,9 +26,10 @@ const arFace = Barlow_Condensed({ subsets: ["latin"], weight: "800", style: "ita
 // fetched only by a page that draws a yoga date's card, summary or ticket. Arabic and Urdu keep the site's Arabic face.
 const ygFace = Marcellus({ subsets: ["latin"], weight: "400", display: "swap", variable: "--cs-font-yg", preload: false });
 // The Farm House Night's name and ticket number (2026-11-13; the booking app's Rubik 800, its "Harvest Supper" look, as the
-// venue letters its own): one weight, not preloaded, fetched only by a page that draws a farm date's card, summary or
-// ticket. Its Arabic letters too, as the booking app's Rubik has them; a script it lacks falls back to the site's faces.
-const fhFace = Rubik({ subsets: ["latin", "arabic"], weight: "800", display: "swap", variable: "--cs-font-fh", preload: false });
+// venue letters its own): not preloaded, fetched only by a page that draws a farm date's card, summary or ticket. Its
+// Arabic letters too, as the booking app's Rubik has them; a script it lacks falls back to the site's faces. The KAUST
+// Triathlon's name (2026-11-22) wears it too, KAUST in its heaviest weight (900), as the race's poster sets it.
+const fhFace = Rubik({ subsets: ["latin", "arabic"], weight: ["800", "900"], display: "swap", variable: "--cs-font-fh", preload: false });
 
 // Cloudflare Web Analytics, which the Privacy Notice names: cookie-free page counts. Its beacon is
 // added here when the site token is set (NEXT_PUBLIC_CF_BEACON_TOKEN at build; DEPLOY.md

@@ -19,6 +19,10 @@ describe("the race pop-up's place", () => {
     expect(pendingRaceRegs([row({ status: "cancelled" })], df, "2099-10-18", "c1")).toEqual([]);
     expect(pendingRaceRegs([row({ session_id: "2099-10-20-sat", session_date: "2099-10-20" })], df, "2099-10-18", "c1")).toEqual([]);
   });
+  it("asks for a KAUST Triathlon place too (2026-11-22), as the booking app's _isRaceRegSess", () => {
+    const kt = new Map([["2099-12-04-kt", { kind: "ktri" as const }]]);
+    expect(pendingRaceRegs([row({ session_id: "2099-12-04-kt", session_date: "2099-12-04" })], kt, "2099-11-25", "c1")).toEqual([{ entryId: "q1", sessionId: "2099-12-04-kt", date: "2099-12-04", answer: null }]);
+  });
   it("asks nothing from a read without the column", () => {
     const old: Record<string, unknown> = row();
     delete old.race_reg;

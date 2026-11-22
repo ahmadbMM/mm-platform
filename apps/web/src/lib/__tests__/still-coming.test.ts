@@ -237,7 +237,7 @@ describe("Running late", () => {
   it("counts from the gathering of a ride that gathers or the start where everyone starts together, never the circuit or the pool", () => {
     expect(lateFrom(sat)).toBe(SGO);
     expect(lateFrom(ws)).toBe(Date.parse("2099-03-03T15:00:00Z"));
-    for (const k of ["event", "yoga", "defe5k"]) expect(lateFrom({ ...ws, kind: k as TicketSession["kind"] }), k).toBe(Date.parse("2099-03-03T15:00:00Z"));
+    for (const k of ["event", "yoga", "defe5k", "ktri"]) expect(lateFrom({ ...ws, kind: k as TicketSession["kind"] }), k).toBe(Date.parse("2099-03-03T15:00:00Z"));
     expect(lateFrom(jcc)).toBeNull();
     expect(lateFrom(swim)).toBeNull();
     expect(lateFrom({ ...sat, kind: "petromin", gathers: false })).toBeNull();

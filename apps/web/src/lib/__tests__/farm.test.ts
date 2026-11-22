@@ -181,7 +181,7 @@ describe("the Farm House Night's facts (lib/event-info.ts)", () => {
     expect(infoWho({ ...s, kind: "yoga" }, who)).toBe("Community members");
     expect(infoPrice(s, { free: "Complimentary", seat: null, from: "from SAR 57.5" })).toBe("Complimentary");
     expect(infoPlaces({ ...s, left: 3 }, { waitlist: "Waitlist", left1: "{0} spot left", leftN: "{0} spots left" })).toBeNull();
-    expect(dateText(s, { aboutJcc: "J", aboutSat: "S", aboutPetro: "P", aboutSwim: "W", aboutWs: "T", aboutRun: "R", aboutVl: "V", aboutDefe: "D", aboutAr: "A", aboutYoga: "Y", aboutFarm: "Arrive {gather}, dinner {start}.", sndAbout: "N", evAbout: "E" }, infoTimes(s, (x) => fmtClock(x, "en")))).toBe("Arrive 4:30 PM, dinner 8:30 PM.");
+    expect(dateText(s, { aboutJcc: "J", aboutSat: "S", aboutPetro: "P", aboutSwim: "W", aboutWs: "T", aboutRun: "R", aboutVl: "V", aboutDefe: "D", aboutAr: "A", aboutYoga: "Y", aboutFarm: "Arrive {gather}, dinner {start}.", aboutKtri: "K", sndAbout: "N", evAbout: "E" }, infoTimes(s, (x) => fmtClock(x, "en")))).toBe("Arrive 4:30 PM, dinner 8:30 PM.");
   });
   it("is at the place staff wrote with the farm's own map, never \"Meeting point\" nor the circuit", () => {
     const words = { meetingPoint: "Meeting point", venueCircuit: "Jeddah Corniche Circuit", venueJyc: "Jeddah Yacht Club" };
@@ -408,7 +408,7 @@ describe("the Farm House Night's look", () => {
     expect(booking).toMatch(/\.tk-card\.ev-farm \.tk-num \{ font-family: var\(--cs-font-fh\)[^}]*font-weight: 800; \}/);
     for (const sel of [".xs-feat-card.xs-feat-fh", '[dir="rtl"] .xs-feat-card.xs-feat-fh', ".xs-sum-head.xs-fh-head", ".xs .xs-go.ev-farm", ".xs-info.ev-farm .xs-info-go"]) expect(xp, sel).toContain(sel);
     // the face the names ask for is the one the layout loads: Rubik, its heaviest weight here, its Arabic letters too
-    expect(css("../../app/[locale]/layout.tsx")).toMatch(/Rubik\(\{ subsets: \["latin", "arabic"\], weight: "800",[^}]*variable: "--cs-font-fh", preload: false \}\)/);
+    expect(css("../../app/[locale]/layout.tsx")).toMatch(/Rubik\(\{ subsets: \["latin", "arabic"\], weight: \["800", "900"\],[^}]*variable: "--cs-font-fh", preload: false \}\)/);
   });
   it("gives cream its contrast on rust and peach its own at the title's size, as the booking app's block says", () => {
     const lum = (hex: string) => {

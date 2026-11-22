@@ -11,6 +11,7 @@ import { opensLine, type OpensWords } from "@/lib/opens-in";
 import { radioKey, tabStop } from "@/lib/radio-keys";
 import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
 import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
+import { KTRI_MARK, KTRI_MARK_SIZE } from "@/lib/ktri";
 import { hasKindArt, kindsInOrder, rowsOfKind } from "@/lib/kind-theme";
 import type { Held } from "@/lib/held";
 import { calDayLabel, calDayOf, calKey, calMonth, calMonths, calMove, calOffered, calPlan, calTitle, calToday, calViewRead, calViewSave, calWeekdays, type CalPlan, type CalView } from "@/lib/reserve-calendar";
@@ -49,6 +50,13 @@ import { SOCIAL_ICONS } from "@/components/site/social-icons";
 // families" along the foot with its state, never how many places are left (staff approve each one, as on the Saturday
 // ride); its summary is the booking app's rust plate, its button rust, and it hands over to the booking app, which takes
 // the member's family by name ("add the participants").
+// The KAUST Triathlon (2026-11-22; lib/ktri.ts) is a date inside the community card too, featured and shown to every
+// visitor, on its own card in the booking app's "Red Sea Dawn" look: the sky going pale to white, two sea swells along its
+// foot, the sun-over-the-water mark, KAUST in heavy blue and Triathlon in navy, SWIM · BIKE · RUN between two thin rules,
+// when to report and where, and along the foot what a tap does: "Book your place in our group" for a community member, who
+// is handed to the booking app (which asks which race), "Register on the race website" for anyone else, whose last step
+// says so and links the race's registration website (in a new tab) in place of the hand-over. Never the Members tag nor
+// the members' note; its Details are everyone's.
 // Featured (2026-11-13, as the booking app's _featLandHtml and renderRegister): a date inside MicroMobility Experiences that
 // staff feature, or a special event as it is made (lib/rides.ts featuredOf). Above the event cards, "Featured" (a star on a
 // neon disc) heads one card for each, four at most, soonest first: its day as a calendar leaf (the weekday on a band of
@@ -144,6 +152,11 @@ export type StepSession = {
    *  families"), and the words its two times are said with wherever its time shows ("Arrival", "Dinner"); absent on any
    *  other date. */
   farm?: { meta: string[]; line: string; arrive: string; dinner: string };
+  /** The KAUST Triathlon's own date card (the booking app's _ktSessCard, 2026-11-22): its name as the poster sets it ("KAUST"
+   *  heavy, the rest after it; `k` null for a title staff changed), the SWIM · BIKE · RUN line, when to report and where
+   *  ("Report 6:00 AM · KAUST Urban Beach"), its foot (what a tap does), the line under a member's hand-over, and for a
+   *  visitor who is not a community member where they register instead (`out`, null for a member); absent on any other date. */
+  ktri?: { title: { k: string | null; rest: string }; sbr: string; meta: string[]; foot: string; step: string; out: { url: string; msg: string; btn: string } | null };
   /** What the signed-in visitor already holds on the date (lib/held.ts, 2026-11-13): "ok" Booked, "wl" On the waitlist,
    *  "rsv" Reserved; absent when they hold nothing there, and for a visitor who is not signed in. */
   held?: Held;
@@ -324,6 +337,20 @@ const YogaScene = () => (
     <circle className="sc-yg-ring" cx="80" cy="80" r="76" /><circle className="sc-yg-ring" cx="80" cy="80" r="58" /><circle className="sc-yg-ring" cx="80" cy="80" r="41" /><circle className="sc-yg-sun" cx="80" cy="80" r="25" />
   </svg>
 );
+/** The sea along the KAUST Triathlon's card's foot, two swells (the booking app's _ktScene): drawn, never a picture, so it
+ *  takes the card's colours and turns with the page. */
+const KtScene = () => (
+  <svg className="sc-kt-scene" aria-hidden="true" focusable="false" viewBox="0 0 320 40" preserveAspectRatio="none">
+    <path className="sc-kt-sea1" d="M0 18c26 0 26-8 53-8s27 8 53 8 27-8 54-8 26 8 53 8 27-8 53-8 27 8 54 8V40H0z" />
+    <path className="sc-kt-sea2" d="M0 28c26 0 26-7 53-7s27 7 53 7 27-7 54-7 26 7 53 7 27-7 53-7 27 7 54 7V40H0z" />
+  </svg>
+);
+/** Its name as the poster sets it (the booking app's _ktTitleHtml): KAUST heavy and blue, the rest after it. */
+const KtTitle = ({ t, className }: { t: { k: string | null; rest: string }; className: string }) => (
+  <span className={className}>{t.k ? <><b className="sc-kt-k">{t.k}</b> <span>{t.rest}</span></> : t.rest}</span>
+);
+/** SWIM · BIKE · RUN between two thin rules (the booking app's _ktSbr). */
+const KtSbr = ({ text }: { text: string }) => <span className="sc-kt-sbr"><i aria-hidden="true" /><span>{text}</span><i aria-hidden="true" /></span>;
 /** The Farm House Night's fan of rounded feathers (its turkey's tail) rising from its card's far corner around a ring and
  *  a maroon core (the booking app's _fhScene): drawn, never a picture, so it takes the card's colours. */
 const FH_FEATHERS: [number, number, number][] = [
@@ -497,7 +524,8 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   // Petromin Days is Petromin's team's, who are not Club members (an account holds the Community tag or
   // the Petromin tag, never both): its dates carry no Members tag and no word about joining the Club.
   // Nor do Victory Lap's, which its tag holders book too (its rules say who, vlNote).
-  const clubOnly = (s: StepSession) => s.members && ev?.key !== "petromin" && s.kind !== "vlap";
+  // Nor the KAUST Triathlon's, shown to everyone: a member books, anyone else registers on the race's website (2026-11-22).
+  const clubOnly = (s: StepSession) => s.members && ev?.key !== "petromin" && s.kind !== "vlap" && s.kind !== "ktri";
   const noBike = (s: StepSession) => isNonBike(s.kind, s.id);
   // men only, women only or mixed: the booking app's .sg-chip
   const chip = (s: StepSession) => (s.sg ? <span className={`sg-chip sg-${s.sg.cls}`}>{s.sg.label}</span> : null);
@@ -693,19 +721,23 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
           <div className={`xs-feat-grid${feats.length > 1 ? " xs-feat-rail" : ""}`}>
             {feats.map(({ e, s, feat }) => {
               // who leads yoga, and who the Farm House Night is for, where any other date says its price word
-              const foot = s.yoga ? s.yoga.with : s.farm ? s.farm.line : s.info.price;
+              // (and what a tap on the KAUST Triathlon does: book for a member, register on the race's website for anyone else)
+              const foot = s.yoga ? s.yoga.with : s.farm ? s.farm.line : s.ktri ? s.ktri.foot : s.info.price;
               return (
-                <button key={s.id} type="button" className={`xs-feat-card ev-${s.kind}${s.yoga ? " xs-feat-yg" : s.farm ? " xs-feat-fh" : ""}`} onClick={() => pickFeat(e, s)}>
-                  {s.yoga && <YogaScene />}{s.farm && <FarmScene />}
+                <button key={s.id} type="button" className={`xs-feat-card ev-${s.kind}${s.yoga ? " xs-feat-yg" : s.farm ? " xs-feat-fh" : s.ktri ? " xs-feat-kt" : ""}`} onClick={() => pickFeat(e, s)}>
+                  {s.yoga && <YogaScene />}{s.farm && <FarmScene />}{s.ktri && <KtScene />}
                   <span className="xs-feat-day"><span className="xs-feat-wd">{feat.wd}</span><b>{feat.dn}</b><span>{feat.mo}</span></span>
                   <span className="xs-feat-copy">
-                    <span className={`xs-feat-name${s.yoga ? " sc-yg-title" : s.farm ? " sc-fh-title" : ""}`}>{s.name}</span>
+                    {s.ktri ? <KtTitle t={s.ktri.title} className="xs-feat-name sc-kt-title" />
+                      : <span className={`xs-feat-name${s.yoga ? " sc-yg-title" : s.farm ? " sc-fh-title" : ""}`}>{s.name}</span>}
                     {/* a rule before each part, cut where a line starts (.xs-feat-meta), so none starts or ends a line; a
                         ride that gathers says its gathering and its start as two parts */}
                     <span className="xs-feat-meta">
                       <span className="xs-feat-mi">
                         {s.near && <span><strong className="sc-dw">{s.near}</strong></span>}
-                        {s.when && (s.when.gather
+                        {/* the KAUST Triathlon says when to report, never its window (the booking app's _ktReportTxt) */}
+                        {s.ktri && <span><bdi>{s.ktri.meta[0]}</bdi></span>}
+                        {!s.ktri && s.when && (s.when.gather
                           ? <><span>{gatherWord(s)} <bdi>{s.when.a}</bdi></span><span>{startWord(s)} <bdi>{s.when.b}</bdi></span></>
                           : <span><bdi>{s.when.b ? `${s.when.a} – ${s.when.b}` : s.when.a}</bdi></span>)}
                         {feat.len && <span><bdi>{feat.len}</bdi></span>}
@@ -715,10 +747,10 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       <span className="xs-feat-meta">
                         <span className="xs-feat-mi">
                           {s.info.place && <span><bdi>{s.info.place}</bdi></span>}
-                          {foot && <span className={s.yoga || s.farm ? "xs-feat-with" : undefined}><bdi>{foot}</bdi></span>}
+                          {foot && <span className={s.yoga || s.farm || s.ktri ? "xs-feat-with" : undefined}><bdi>{foot}</bdi></span>}
                         </span>
                       </span>
-                      {stateOf(s)}
+                      {!s.ktri?.out && stateOf(s)}
                     </span>
                   </span>
                   <span className="xs-feat-go" aria-hidden="true">{arrow18}</span>
@@ -909,6 +941,24 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                     {about}{ring}
                   </div></Fragment>
                 );
+                // The KAUST Triathlon's own card (the booking app's _ktSessCard, 2026-11-22): the sky, the sea along the foot, the
+                // mark, its name as the poster sets it, SWIM · BIKE · RUN, when to report and where, and what a tap does along
+                // the foot; its state (full, few left) to a member alone, who may book it
+                if (s.ktri) return (
+                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}${ring ? " has-orm" : ""}`}>
+                    <button type="button" className={`sc-card sc-ktri ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
+                      <KtScene />
+                      <span className="sc-kt-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-kt-mark" src={KTRI_MARK} alt="" width={KTRI_MARK_SIZE.width} height={KTRI_MARK_SIZE.height} decoding="async" /></span>
+                      <KtTitle t={s.ktri.title} className="sc-kt-title" />
+                      <KtSbr text={s.ktri.sbr} />
+                      {s.sg && <span className="sc-kicker">{chip(s)}</span>}
+                      <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
+                      <span className="sc-kt-meta">{s.ktri.meta.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>
+                      <span className="sc-kt-foot"><span className="sc-kt-with">{s.ktri.out && <ArrowIcon size={14} />}{s.ktri.foot}</span>{!s.ktri.out && spots}</span>
+                    </button>
+                    {about}{ring}
+                  </div></Fragment>
+                );
                 // The Farm House Night's own card (the booking app's _fhSessCard, 2026-11-13): the venue's rust tile, the fan of
                 // feathers rising from the far corner, the mark, its name in peach, its day, its arrival and dinner and where,
                 // and who it is for along the foot with its state alone: never Available nor how many places are left, as on
@@ -993,16 +1043,27 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
             {ev.blood && <Plate b={ev.blood} />}
             {/* the Farm House Night's head is the booking app's rust plate (_fhHeadHtml): the mark, its name in peach, when, and
                 who it is for */}
+            {/* the KAUST Triathlon's head is the booking app's sky plate (_ktHeadHtml): the sea, the mark, its name as the poster
+                sets it and SWIM · BIKE · RUN */}
+            {sess.ktri && (
+              <div className="xs-kt-head">
+                <KtScene />
+                <img className="xs-kt-mark" src={KTRI_MARK} alt="" width={KTRI_MARK_SIZE.width} height={KTRI_MARK_SIZE.height} />
+                <span className="xs-kt-copy"><KtTitle t={sess.ktri.title} className="xs-kt-name" /><KtSbr text={sess.ktri.sbr} /></span>
+              </div>
+            )}
             <div className={`xs-sum-head${sess.farm ? " xs-fh-head" : ""}`}>
               {sess.defe ? <span className="xs-logo small xs-defe-logo"><img src={DEFE_LOGO} alt="" /></span>
                 : sess.yoga ? <span className="xs-logo small xs-yoga-logo"><img src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} /></span>
                 : sess.farm ? <span className="xs-logo small xs-farm-logo"><img src={FARM_MARK} alt="" width={FARM_MARK_SIZE.width} height={FARM_MARK_SIZE.height} /></span>
+                : sess.ktri ? null // its mark is on the sky plate above
                 : ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
               <div><strong className={sess.yoga ? "xs-yg-name" : sess.farm ? "xs-fh-name" : undefined}>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span>{sess.farm && <span className="xs-fh-sub">{sess.farm.line}</span>}{/* the venue's Instagram on the rust plate before the hand-over (the booking app's .fh-flow-ig; the user, 2026-11-14:
                   "add the insta of the farmhouse in the registration process so people can see before registering") */}
               {sess.farm && sess.info.ig && <a className="xs-fh-ig" href={sess.info.ig.url} target="_blank" rel="noopener noreferrer" aria-label={`${sess.info.ig.label} @${sess.info.ig.handle}`}><IgMark /><bdi dir="ltr">@{sess.info.ig.handle}</bdi></a>}</div>
             </div>
-            {tags(sess)}
+            {!sess.ktri?.out && tags(sess)}
+            {sess.ktri && <p className="xs-kt-meta">{sess.ktri.meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</p>}
             {sess.defe && <p className="xs-defe-cause"><Ribbon /><span>{sess.defe.cause}</span></p>}
             {sess.yoga && <p className="xs-yg-with">{sess.yoga.with}</p>}
             {ev.blood && <p className="xs-bld-cause">{ev.blood.cause}</p>}
@@ -1024,15 +1085,24 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
             )}
             {clubOnly(sess) && <p className="xs-note">{noBike(sess) ? t.membersNoteNb : t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
           </div>
-          {sess.refusal ? (
+          {sess.ktri?.out ? (
+            // the KAUST Triathlon to anyone but a community member: the race's own registration website, in a new tab, in
+            // place of the hand-over (the booking app's _ktOut and its pop-up's ktOutMsg, ktOutBtn)
+            <>
+              <p className="xs-kt-out">{sess.ktri.out.msg}</p>
+              <a className="xs-go ev-ktri" href={sess.ktri.out.url} target="_blank" rel="noopener">{sess.ktri.out.btn} <span aria-hidden="true">{arrow}</span></a>
+            </>
+          ) : sess.refusal ? (
             // a session for the other gender (the owner, 2026-10-27): no hand-over, as the booking app refuses it too
             <p className="xs-refuse" role="alert">{sess.refusal}</p>
           ) : (
             <>
-              <a className={`xs-go${ev.blood ? " ev-blood" : sess.yoga ? " ev-yoga" : sess.farm ? " ev-farm" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
+              <a className={`xs-go${ev.blood ? " ev-blood" : sess.yoga ? " ev-yoga" : sess.farm ? " ev-farm" : sess.ktri ? " ev-ktri" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
+              {/* a member on the KAUST Triathlon picks their race in the booking app, then enters it on its website */}
+              {sess.ktri && <p className="xs-handoff">{sess.ktri.step}</p>}
               {/* one place per account, so never "add the participants" on the Blood Donation event, nor on yoga (the booking
                   app's _noGroupAdd); the Farm House Night says it, as the member adds their family there */}
-              {!ev.blood && !sess.yoga && !sess.here && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
+              {!ev.blood && !sess.yoga && !sess.ktri && !sess.here && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
             </>
           )}
         </section>

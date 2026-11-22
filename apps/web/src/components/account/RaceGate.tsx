@@ -6,6 +6,7 @@ import "./race-gate.css";
 import { useEffect, useRef, useState } from "react";
 import { useL } from "@/i18n/TxProvider";
 import { DEFE_RACE_CODE, DEFE_RACE_URL } from "@/lib/tickets";
+import { KTRI_REG_URL } from "@/lib/ktri";
 import type { RaceRegAnswer } from "@/lib/race-reg";
 import { signOut } from "./quiet";
 
@@ -14,13 +15,16 @@ import { signOut } from "./quiet";
 // what, when and where - then Yes or No. Yes saves and lets the runner through; No saves and shows the
 // members' code and the way to Defe's registration page, then Done lets them through for this visit (the
 // next visit asks again until Yes). No close, no backdrop, no Escape; signing out is the only other way
-// off, and the rest of the page is inert while it is up. The answer goes through /api/account/race-reg.
+// off, and the rest of the page is inert while it is up. The answer goes through /api/account/race-reg. A KAUST Triathlon
+// place (2026-11-22) is asked the same in its own words: No shows the race's registration website, with no code.
 export type PendingRaceReg = {
   entryId: string;
   /** The answer so far: null before any, or "no" (asked again until Yes). */
   answer: RaceRegAnswer | null;
   name: string; when: string; time: string; venue: string;
-  /** The question's words in the page's language (tickets.text.ts). */
+  /** Where the race itself is entered (Defe's page, or the KAUST Triathlon's registration website); Defe's when absent. */
+  url?: string;
+  /** The question's words in the page's language (tickets.text.ts); `code` "" for a race without a discount code. */
   t: { q: string; sub: string; noNote: string; code: string; link: string; yes: string; no: string; failed: string };
 };
 /** yes: answered Yes · later: No, passed with Done for this visit · stale: the place no longer asks (ask again). */
@@ -83,7 +87,9 @@ export default function RaceGate({ onDone, ...w }: PendingRaceReg & { onDone: (r
   const btn = (v: RaceRegAnswer, label: string) => (
     <button type="button" aria-pressed={answer === v} disabled={busy} onClick={() => set(v)}>{label}</button>
   );
-  const code = w.t.code.split("{0}");
+  const code = w.t.code ? w.t.code.split("{0}") : null;
+  // only the two addresses the site knows are ever linked: the organiser's page the server named, else Defe's
+  const url = w.url === KTRI_REG_URL ? KTRI_REG_URL : DEFE_RACE_URL;
 
   return (
     <div className="rg-gate rr-gate">
@@ -100,9 +106,9 @@ export default function RaceGate({ onDone, ...w }: PendingRaceReg & { onDone: (r
         {answer === "no" && (
           <div className="rr-no">
             <p className="rr-note">{w.t.noNote}</p>
-            {/* the discount code, bold and left to right in every language */}
-            <p className="rr-code">{code[0]}<strong dir="ltr">{DEFE_RACE_CODE}</strong>{code[1] ?? ""}</p>
-            <a className="rr-link" href={DEFE_RACE_URL} target="_blank" rel="noopener">{w.t.link}</a>
+            {/* the discount code, bold and left to right in every language (none on the KAUST Triathlon) */}
+            {code && <p className="rr-code">{code[0]}<strong dir="ltr">{DEFE_RACE_CODE}</strong>{code[1] ?? ""}</p>}
+            <a className="rr-link" href={url} target="_blank" rel="noopener">{w.t.link}</a>
           </div>
         )}
         {fail && <p className="wg-err" role="alert">{w.t.failed}</p>}

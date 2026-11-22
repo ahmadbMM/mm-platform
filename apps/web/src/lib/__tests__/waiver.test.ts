@@ -38,7 +38,7 @@ describe("which waiver a ride is agreed under", () => {
       expect(waiverVersion(ticketSession(r)!)).toBe("2026-11-v4");
     }
     expect(waiverVersion(ticketSession({ ...satRow, ride_kind: "swim" })!)).toBe("swim-2026-11-v4");
-    for (const k of ["workshop", "event", "yoga"]) expect(waiverVersion(ticketSession({ ...satRow, ride_kind: k })!)).toBe("activity-2026-11-v4"); // yoga: the activity waiver, as the booking app's desk takes it (rentals 20261112120000)
+    for (const k of ["workshop", "event", "yoga", "ktri"]) expect(waiverVersion(ticketSession({ ...satRow, ride_kind: k })!)).toBe("activity-2026-11-v4"); // yoga: the activity waiver, as the booking app's desk takes it (rentals 20261112120000)
     // the Farm House Night has its own (the booking app's 46689058, 2026-11-13)
     expect(waiverKind(ticketSession({ ...satRow, ride_kind: "farm" })!)).toBe("farm");
     expect(waiverVersion(ticketSession({ ...satRow, ride_kind: "farm" })!)).toBe("farm-2026-11-v1");

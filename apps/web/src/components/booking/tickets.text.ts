@@ -16,7 +16,8 @@
 // vlWaitPartner, vlNoPartner, vlPairWait, vlShirtLabel, vlT5Short, vlT5_*, vlEdBtn, and the ticket question vt*
 // (the divisions are Kamin Sports' names, lib/vlap.ts vlDivName). The DEFE 5KM Run (2026-10-18): runnerNumber,
 // and defeKit*, defeRace*, defeReg*, the booking app's own keys. Yoga (2026-11-12): ygLead*, ygLevel*, ygBring*, the booking
-// app's own keys. The Farm House Night (2026-11-13): fhArrive, fhDinner, the booking app's own keys. Men only, women only
+// app's own keys. The Farm House Night (2026-11-13): fhArrive, fhDinner, the booking app's own keys. The KAUST Triathlon
+// (2026-11-22): kt*, the booking app's own keys. Men only, women only
 // or mixed (2026-10-27):
 // sgMale, sgFemale, sgMixed, the booking app's own keys. Arena Heros (2026-10-28): athleteNumber, vlRaces wd/md,
 // vlTeamCode, vlWithPartner and vlPairWait as on Victory Lap, and the site's own ahTeamCode and ahHeat.
@@ -131,6 +132,32 @@ export const T = {
     // and its countdown to them (the booking app's fhCdArrive, fhCdDinner), never "Gathering in" / "Starts in"
     fhCdArrive: "Arrival in {0}",
     fhCdDinner: "Dinner in {0}",
+    // the KAUST Triathlon (2026-11-22): its "Have you registered through the registration website?", when to report, the
+    // race (picked or changed here), the gate pass (the booking app's kt* keys)
+    ktRegQ: "Have you registered through the KAUST Triathlon registration website?",
+    ktRegSub: "Your place in the MicroMobility group is booked. The race itself is entered and paid on the KAUST Triathlon registration website.",
+    ktRegNoNote: "Register for your race on the KAUST Triathlon website before Wed 2 Dec, 11:50 PM. A race closes earlier when it is full.",
+    ktRegLink: "Register on the KAUST Triathlon website",
+    ktRegYesNote: "You told us you registered on the KAUST Triathlon website.",
+    ktReportK: "Report",
+    ktReportV: "KAUST Urban Beach",
+    ktRaceK: "Your race",
+    ktGateK: "Gate pass",
+    ktGateV: "Not living at KAUST? After you register, apply for your gate pass with the link the organisers send you. Without it you cannot enter KAUST.",
+    ktPick: "Pick your race",
+    ktRaceSaved: "Race saved",
+    ktStarts: "Starts {0}",
+    ktOly: "Olympic",
+    ktSpr: "Sprint",
+    ktOlyTeam: "Olympic relay team",
+    ktSprTeam: "Sprint relay team",
+    ktChamps: "Future Champs run",
+    ktOlyD: "1.5 km swim · 40 km bike · 10 km run",
+    ktSprD: "400 m swim · 20 km bike · 5 km run",
+    ktChampsD: "A 2.5 km run for ages 10 to 15",
+    ktFeeInd: "Race entry {0}",
+    ktFeeTeam: "Race entry {0} per team",
+    ktFeeKid: "Race entry {0} per child",
     // the venue's Instagram on the ticket (the booking app's socInstagram, 2026-11-13): the link's name for a screen reader
     instagram: "Instagram",
     yes: "Yes",
@@ -302,6 +329,30 @@ export const T = {
     fhDinner: "العشاء",
     fhCdArrive: "الوصول بعد {0}",
     fhCdDinner: "العشاء بعد {0}",
+    ktRegQ: "هل سجّلت عبر موقع التسجيل في ترايثلون كاوست؟",
+    ktRegSub: "تم حجز مكانك في مجموعة مايكروموبيليتي. أما التسجيل في السباق نفسه ودفع رسومه فيكون عبر موقع التسجيل في ترايثلون كاوست.",
+    ktRegNoNote: "سجّل في سباقك عبر موقع ترايثلون كاوست قبل الأربعاء 2 ديسمبر الساعة 11:50 م. يُغلق السباق أبكر إذا اكتمل.",
+    ktRegLink: "سجّل عبر موقع ترايثلون كاوست",
+    ktRegYesNote: "أخبرتنا أنك سجّلت عبر موقع ترايثلون كاوست.",
+    ktReportK: "الحضور",
+    ktReportV: "الشاطئ الحضري في كاوست",
+    ktRaceK: "سباقك",
+    ktGateK: "تصريح الدخول",
+    ktGateV: "لا تسكن في كاوست؟ بعد التسجيل، قدّم على تصريح الدخول عبر الرابط الذي يرسله المنظمون. بدونه لا يمكنك دخول كاوست.",
+    ktPick: "اختر سباقك",
+    ktRaceSaved: "تم حفظ السباق",
+    ktStarts: "يبدأ {0}",
+    ktOly: "الأولمبي",
+    ktSpr: "السريع",
+    ktOlyTeam: "فريق التتابع الأولمبي",
+    ktSprTeam: "فريق التتابع السريع",
+    ktChamps: "جري أبطال المستقبل",
+    ktOlyD: "سباحة 1.5 كم · دراجة 40 كم · جري 10 كم",
+    ktSprD: "سباحة 400 م · دراجة 20 كم · جري 5 كم",
+    ktChampsD: "جري 2.5 كم للأعمار من 10 إلى 15",
+    ktFeeInd: "رسوم السباق {0}",
+    ktFeeTeam: "رسوم السباق {0} للفريق",
+    ktFeeKid: "رسوم السباق {0} للطفل",
     instagram: "إنستغرام",
     yes: "نعم",
     no: "لا",

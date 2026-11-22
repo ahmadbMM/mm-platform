@@ -25,6 +25,7 @@ import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { AH_VENUE } from "@/lib/arena";
 import { yogaLength } from "@/lib/yoga";
 import { farmForMembers } from "@/lib/farm";
+import { KTRI_REG_URL, KTRI_REPORT, KTRI_VENUE, ktriOut } from "@/lib/ktri";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { ArrowIcon, CalendarIcon } from "@/components/site/Icons";
 import OpensIn from "@/components/site/OpensIn";
@@ -45,12 +46,15 @@ import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 // community member alone ("not to public": nobody else's page names it, nor its search engines' list). A session staff
 // closed as Full, no waitlist (the user, 2026-11-13; lib/rides.ts fbkOf, the booking app's _sessFb) stays listed, never
 // faded, so nobody takes it for called off: Fully booked in the full red among its tags, where to go next as a quiet line
-// under them (See you next Saturday on the Saturday ride, See you at the next session on any other), and no Book.
+// under them (See you next Saturday on the Saturday ride, See you at the next session on any other), and no Book. The KAUST
+// Triathlon (2026-11-22; lib/ktri.ts) is listed to everyone in its blue with when to report and where, never the Members
+// tag: a community member books it on the community card (ev=community), and anyone else is sent to the race's
+// registration website in place of Book (the booking app's _ktGate).
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16", yoga: "#b4532f", farm: "#8a3f27" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16", yoga: "#b4532f", farm: "#8a3f27", ktri: "#1565b4" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -71,7 +75,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community", ktri: "community" };
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
@@ -87,7 +91,8 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   // user, 2026-11-13: "not to public"), the members' check asked only while one is ahead
   const ahead = upcoming(withoutPetromin(rides?.sessions ?? []), now);
   // and while a date ahead is for members first (2026-11-18): a member reads its mark and books, anyone else waits
-  const member = ahead.some((s) => s.kind === "farm" || mfAt(s, drawn.getTime())) ? await communityMember() : false;
+  // and while a KAUST Triathlon date is (2026-11-22): a member books it, anyone else is sent to the race's registration
+  const member = ahead.some((s) => s.kind === "farm" || s.kind === "ktri" || mfAt(s, drawn.getTime())) ? await communityMember() : false;
   const sessions = farmForMembers(ahead, member).slice(0, Math.max(1, N(c.hero.count)));
   const sgWords = genderText(tx);
   // a session for the other gender says so in place of Book to a signed-in account (or one with none on file); a
@@ -105,7 +110,10 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const mfW = membersFirstWords(locale);
   const mfMs = (s: RideSession) => (s.fbk ? 0 : mfAt(s, drawn.getTime()));
   const mfLine = (s: RideSession) => fillAt(mfW.everyone, revealWhen(s.publicAt, locale, now.slice(0, 10), { today: tx("Today", "اليوم"), tomorrow: tx("Tomorrow", "غداً") }));
-  const bookLink = (s: RideSession) => <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>;
+  const bookLink = (s: RideSession) => (s.kind === "ktri" && ktriOut(member)
+    // the KAUST Triathlon to anyone but a member: the race's own registration, in a new tab (the booking app's ktCardReg)
+    ? <a href={KTRI_REG_URL} target="_blank" rel="noopener">{tx("Register on the race website", "سجّل عبر موقع السباق")}</a>
+    : <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>);
   // Full, no waitlist: the booking app's sessFbk, sessFbkSat and sessFbkNext
   const fbkWord = tx("Fully booked", "محجوز بالكامل");
   const fbkLine = (s: RideSession) => (s.kind === "saturday" ? tx("See you next Saturday", "نراك السبت القادم") : tx("See you at the next session", "نراك في الجلسة القادمة"));
@@ -145,7 +153,10 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                       <div className="pg-event-meta">
                         {/* in the rider's clock, as Experiences and the tickets say them ("6 PM", "6:00 م"), each in its own direction */}
                         {/* the Farm House Night's are its arrival and dinner (the booking app's fhArrive, fhDinner) */}
-                        {s.times && (s.gather && !oneTime(s.times)
+                        {/* the KAUST Triathlon: when to report, never its window (the booking app's _ktReportTxt), and where */}
+                        {s.kind === "ktri" && <span>{tx("Report", "الحضور")} <bdi>{clock(KTRI_REPORT)}</bdi></span>}
+                        {s.kind === "ktri" && <span><bdi>{s.location && s.location !== "JCC" ? s.location : KTRI_VENUE}</bdi></span>}
+                        {s.kind !== "ktri" && s.times && (s.gather && !oneTime(s.times)
                           ? <span>{s.kind === "farm" ? fw.arrive : S(d.gather)} <bdi>{clock(s.times[0])}</bdi> · {s.kind === "farm" ? fw.dinner : S(d.start)} <bdi>{clock(s.times[1])}</bdi></span>
                           : <span><bdi>{timesText(s.times, false, clock, { gather: "", start: "" })}</bdi></span>)}
                         {routeNameOf(routes, s.routeSlug) && <span>{tx("Route", "المسار")}: {routeNameOf(routes, s.routeSlug)}</span>}
@@ -171,7 +182,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {s.kind === "blood" && <span>{tx("Jeddah Corniche Circuit", "حلبة كورنيش جدة")}</span>}
                         {/* Run for Her is a community event (members only, free), tagged as one */}
                         <em>{s.kind === "jcc" || s.kind === "snd96" ? S(c.hero.rideTag) : s.kind === "event" || s.kind === "blood" ? S(c.hero.eventTag) : S(c.hero.communityTag)}</em>
-                        {s.members && <em>{S(d.members)}</em>}
+                        {s.members && s.kind !== "ktri" && <em>{S(d.members)}</em>}
                         {(s.kind === "event" || s.kind === "blood") && !s.members && <em>{S(d.everyone)}</em>}
                         {s.free && s.kind !== "blood" && <em>{S(d.free)}</em>}
                         {s.full && <em className="warn">{S(d.full)}</em>}

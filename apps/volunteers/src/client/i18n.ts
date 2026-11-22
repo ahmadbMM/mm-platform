@@ -147,7 +147,7 @@ export function gathers(s: { ride_kind?: string | null; event_kind?: string | nu
   const kind = s.ride_kind ?? "";
   if (kind === "snd96") return true;
   if (s.event_kind !== "community") return false; // the circuit's own nights: a window
-  return !["event", "petromin", "swim", "workshop", "arena", "defe5k", "blood", "yoga"].includes(kind);
+  return !["event", "petromin", "swim", "workshop", "arena", "defe5k", "blood", "yoga", "ktri"].includes(kind); // the KAUST Triathlon (2026-11-22): a window
 }
 
 /** A session's times as staff typed them ("17:00 - 23:00"), each in this language's clock. A session that gathers
@@ -167,7 +167,8 @@ export function timesLabel(raw: string | null | undefined, gather = false): stri
 
 const KIND_NAMES: Record<string, Key> = { saturday: "evSatName", petromin: "evPetroName", swim: "evSwimName", workshop: "evWorkshopName", snd96: "evSnd96Name",
   event: "evEventName", runher: "evRunHerName", vlap: "evVlapName", arena: "evArenaName", defe5k: "evDefeName", blood: "evBloodName", yoga: "evYogaName",
-  farm: "evFarmName" }; // the Farm House Night (2026-11-13), named as the booking app's _vol_sess_name names it
+  farm: "evFarmName", // the Farm House Night (2026-11-13), named as the booking app's _vol_sess_name names it
+  ktri: "evKtriName" }; // the KAUST Triathlon (2026-11-22), as the booking app's _vol_sess_name names it
 function nameIn(s: { title?: string | null; ride_kind?: string | null }, word: (k: Key) => string): string {
   const kind = s.ride_kind ?? "";
   if (!Object.prototype.hasOwnProperty.call(KIND_NAMES, kind)) return word("evJccName");

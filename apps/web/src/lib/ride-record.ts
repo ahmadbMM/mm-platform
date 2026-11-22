@@ -44,7 +44,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   first_lap: ["flag", "green"], regular: ["wheel", "teal"], podium: ["podium", "purple"], front_row: ["one", "gold"], carbon: ["bike", "silver"],
   streak: ["flame", "orange"], squad: ["people", "blue"], fuel: ["bottle", "red"], corniche25: ["wave", "blue"],
   marshal: ["shield", "orange"], pit_crew: ["wrench", "silver"], green_flag: ["wflag", "green"], super_licence: ["card", "purple"],
-  scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], t100: ["t100", "gold"], t50: ["t50", "silver"], t25: ["t25", "orange"], ironman_703: ["ironman_703", "silver"], ironman_1406: ["ironman_1406", "gold"], complete_profile: ["profile", "special"],
+  scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], t100: ["t100", "gold"], t50: ["t50", "silver"], t25: ["t25", "orange"], ironman_703: ["ironman_703", "silver"], ironman_1406: ["ironman_1406", "gold"], kaust_triathlon: ["kaust_triathlon", "blue"], complete_profile: ["profile", "special"],
   national_day_96: ["n96", "national"], back_on_track: ["return", "teal"], safety_car: ["beacon", "orange"], endurance: ["clock", "purple"],
   triple_crown: ["crown", "gold"], slipstream: ["wind", "green"], paceline: ["wind", "blue"], peloton: ["wind", "gold"],
   rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
@@ -91,7 +91,7 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
 /** Badges staff give that a rider sees only once they hold one (BDG_HELD_ONLY): never greyed under Badges to earn,
  *  never offered to request (the booking app, 2026-11-12: Talent Scout, for helping someone from the community get a job anywhere,
  *  "only visible for its holders"). */
-export const HELD_ONLY = new Set(["company_challenge", "talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night", "back_on_track"]);
+export const HELD_ONLY = new Set(["kaust_triathlon", "company_challenge", "talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night", "back_on_track"]);
 /** Whether only a badge's holders see it (the booking app's _bdgHeldOnly, 2026-11-12: "add a switch to all badges that has
  *  to do with the visibility of the badges to customers and members"): the catalogue's held_only, staff's switch in
  *  Community > Badges, else the start the app keeps (def): HELD_ONLY, the ride badges rideBadges marks hide. */

@@ -23,7 +23,7 @@ describe("a session that gathers (the booking app's _gathersTime)", () => {
     // the Farm House Night (2026-11-13): its arrival, then dinner, as the booking app's KIND_TRAITS farm gathers
     for (const k of ["saturday", "runher", "vlap", "farm", null]) expect(gathers({ ride_kind: k, event_kind: "community" }), String(k)).toBe(true);
     expect(gathers({ ride_kind: "snd96", event_kind: null })).toBe(true);
-    for (const k of ["petromin", "swim", "workshop", "event", "arena", "defe5k", "blood", "yoga"]) expect(gathers({ ride_kind: k, event_kind: "community" }), k).toBe(false);
+    for (const k of ["petromin", "swim", "workshop", "event", "arena", "defe5k", "blood", "yoga", "ktri"]) expect(gathers({ ride_kind: k, event_kind: "community" }), k).toBe(false);
     expect(gathers({ ride_kind: null, event_kind: null })).toBe(false); // the circuit's own nights
   });
   it("names its two times as the gathering and the start, not a range", async () => {
@@ -48,6 +48,9 @@ describe("the name a certificate is issued with", () => {
     // own title as it is
     expect(sessionNameEn({ title: null, ride_kind: "farm" })).toBe("Farm House Night");
     expect(sessionName({ title: null, ride_kind: "farm" })).toBe("ليلة المزرعة");
+    // the KAUST Triathlon (2026-11-22), named as the booking app's _vol_sess_name names it
+    expect(sessionNameEn({ title: null, ride_kind: "ktri" })).toBe("KAUST Triathlon");
+    expect(sessionName({ title: null, ride_kind: "ktri" })).toBe("ترايثلون كاوست");
     expect(sessionNameEn({ title: "Nawar Farm House Night", ride_kind: "farm" })).toBe("Nawar Farm House Night");
   });
 });
