@@ -19,6 +19,7 @@ import { maxRiders, needsBike, partyRide, regSteps } from "../booking";
 import { liveSession, payableOnline } from "../booking-server";
 import { icsPlace, placeLink, ticketCue, ticketRow, ticketSession, venueOf, venueText, type TicketRow } from "../tickets";
 import { isPaint, PAINT_MARK, PAINT_VENUE, paintKnow } from "../paint";
+import { farmForMembers, MEMBERS_EYES } from "../farm";
 import { fmtSar } from "../fill";
 import { experiencesSchema } from "@/content/pages/experiences";
 import ExperiencesPage from "../../app/[locale]/experiences/page";
@@ -154,9 +155,33 @@ describe("the Tee Painting Workshop's kind", () => {
   });
 });
 
+describe("the Tee Painting Workshop to anyone but a community member (exclusively for members, as the booking app hides it)", () => {
+  it("is in no list: farmForMembers leaves it out, as the Farm House Night", () => {
+    const rows = [{ id: "a", kind: "paint" }, { id: "b", kind: "saturday" }, { id: "c", kind: "farm" }];
+    expect(MEMBERS_EYES.has("paint")).toBe(true);
+    expect(farmForMembers(rows, false).map((x) => x.id)).toEqual(["b"]);
+    expect(farmForMembers(rows, true).map((x) => x.id)).toEqual(["a", "b", "c"]);
+  });
+  it("has no date, Featured card or Details on Experiences, for a visitor not signed in or signed in without membership", async () => {
+    for (const signedIn of [false, true]) {
+      jar.account = signedIn ? ACCOUNT : ""; jar.member = false;
+      const p = await experiences([TP, JCC]);
+      expect(p.featured).toEqual([]);
+      expect(p.events.flatMap((e) => e.sessions).some((x) => x.kind === "paint")).toBe(false);
+      expect(JSON.stringify(p)).not.toContain("Tee Painting");
+      expect(draw(p, 1)).not.toContain("Tee Painting");
+    }
+  });
+  it("is not listed on Events", async () => {
+    const html = await eventsPage([TP, JCC]);
+    expect(html).not.toContain("Tee Painting");
+    expect(html).not.toContain("2099-11-28-tp");
+  });
+});
+
 describe("the Tee Painting Workshop on Experiences", () => {
+  beforeEach(asMember);
   it("is a featured date inside MicroMobility Experiences, booked on this site, with its own card and price", async () => {
-    asMember();
     const p = await experiences([TP, JCC]);
     expect(p.featured).toEqual([{ ev: "community", id: TP.id }]);
     const s = tpOf(p);
@@ -168,11 +193,11 @@ describe("the Tee Painting Workshop on Experiences", () => {
   });
   it("gives its Details its own text, who books, its price, where with its map, and what it is", async () => {
     const i = tpOf(await experiences([TP])).info;
-    expect(i.text).toBe("Paint and colour your own MicroMobility T-shirt with the community at Red Mug Caffe, 3 PM to 6 PM.");
+    expect(i.text).toBe("An afternoon with the community drawing and colouring on MicroMobility T-shirts, 3 PM to 6 PM. One place per member; places are limited.");
     expect(i).toMatchObject({ who: "Community members", price: `${PRICE} · per person`, place: "Red Mug Caffe", map: MAP, distance: null });
     expect(i.more).toEqual([{ k: "What", v: "Paint and colour your own MicroMobility T-shirt" }]);
   });
-  it("says it in Arabic, and in a language the booking app does not speak (German)", async () => {
+  it("says it in Arabic and in the booking app's own words where it speaks the language (Spanish), and in German", async () => {
     const ar = tpOf(await experiences([TP], "ar"));
     expect(ar.name).toBe("ورشة الرسم على التيشيرت");
     expect(ar.info.more).toEqual([{ k: "ماذا", v: "ارسم ولوّن تيشيرت مايكروموبيليتي الخاص بك" }]);
@@ -180,7 +205,11 @@ describe("the Tee Painting Workshop on Experiences", () => {
     const de = tpOf(await experiences([TP], "de"));
     expect(de.name).toBe("T-Shirt-Malworkshop");
     expect(de.paint?.price).toContain("pro Person");
-    expect(de.info.text).toMatch(/^Gestalte und bemale/);
+    expect(de.info.text).toMatch(/^Ein Nachmittag mit der Community/);
+    const es = tpOf(await experiences([TP], "es"));
+    expect(es.name).toBe("Taller de pintura de camisetas");
+    expect(es.info.more).toEqual([{ k: "Qué", v: "Pinta y colorea tu propia camiseta MicroMobility" }]);
+    expect(es.info.text).toMatch(/^Una tarde con la comunidad para dibujar y colorear camisetas MicroMobility, de \S+ a \S+\. Una plaza por miembro/);
   });
   it("draws its date card in Paint Splash: the splash, the mark, its name, its time and place, its price, never how to pay", async () => {
     const p = await experiences([TP, JCC]);
@@ -194,7 +223,6 @@ describe("the Tee Painting Workshop on Experiences", () => {
     expect(html).not.toMatch(/bank transfer|receipt|Pay at/i);
   });
   it("opens its booking steps here from its last step, its price said, with no pay line and no participants to add", async () => {
-    asMember();
     const p = await experiences([TP]);
     const html = draw(p, 3, comm(p), tpOf(p));
     expect(html).toMatch(/<a class="xs-go ev-paint" href="[^"]*ev=community&amp;session=2099-11-28-tp[^"]*">/);
@@ -212,7 +240,8 @@ describe("the Tee Painting Workshop on Experiences", () => {
 });
 
 describe("the Tee Painting Workshop on Events", () => {
-  it("is listed in its indigo with its start and end and where, booked on the community card, never its price", async () => {
+  beforeEach(asMember);
+  it("is listed to a member in its indigo with its start and end and where, booked on the community card, never its price", async () => {
     const html = await eventsPage([TP, JCC]);
     expect(html).toContain("Tee Painting Workshop");
     expect(html).toContain("--kind:#3d34a5");

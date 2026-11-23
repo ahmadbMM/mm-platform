@@ -420,7 +420,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const anniv = anniversaryOf(stats?.first, today);
     const recs = myRecords(record, recSessions, (id) => bikeTypes.get(id) ?? null);
     // a Farm House Night on offer is named to a community member alone (2026-11-13: "not to public")
-    if (openKinds?.has("farm") && (await rpcServer<boolean>("community_member", a)).data !== true) openKinds.delete("farm");
+    // and so is a Tee Painting Workshop (2026-11-23)
+    if ((openKinds?.has("farm") || openKinds?.has("paint")) && (await rpcServer<boolean>("community_member", a)).data !== true) { openKinds.delete("farm"); openKinds.delete("paint"); }
     const tried = openKinds ? triedKinds(more.byKind.map(([k]) => k), openKinds) : [];
     return (
       <section className="ac-sec" aria-label={recordText.stats}>

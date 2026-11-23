@@ -32,4 +32,7 @@ export const isFarm = (s: { kind?: string | null } | null | undefined): boolean 
  *  Featured card, Details or list of what is on offer names it. A member's own booking on one is theirs, and My Account
  *  shows it whatever. */
 export const farmForMembers = <T extends { kind?: string | null }>(sessions: readonly T[], member: boolean): T[] =>
-  member ? [...sessions] : sessions.filter((s) => s.kind !== "farm");
+  member ? [...sessions] : sessions.filter((s) => !MEMBERS_EYES.has(s.kind ?? ""));
+/** The kinds a signed-in community member alone sees (farmForMembers): the Farm House Night, and the Tee Painting Workshop
+ *  since 2026-11-23 (the user: exclusively for community members; the booking app hides it from anyone else). */
+export const MEMBERS_EYES: ReadonlySet<string> = new Set(["farm", "paint"]);

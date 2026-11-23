@@ -65,15 +65,16 @@ export async function GET(req: Request) {
   // who is asking, read only where the date needs it (each a bare boolean that checks the token; a failure reads as no)
   const ask = async (fn: string) => (acct ? (await rpcServer<boolean>(fn, { p_id: acct.id, p_token: acct.token })).data === true : false);
   const mf = mfAt(s, now);
-  const member = s.members || mf > 0 || s.kind === "farm" ? await ask("community_member") : false;
+  const member = s.members || mf > 0 || s.kind === "farm" || s.kind === "paint" ? await ask("community_member") : false;
   const viewer = {
     member,
     petromin: s.kind === "petromin" && s.members && !member ? await ask("petromin_member") : false,
     vlap: s.kind === "vlap" && s.members && !member ? await ask("vlap_member") : false,
     satLink: s.kind === "saturday" ? (await rpcServer<boolean>("saturday_link_only", {})).data === true : false,
   };
-  // the Farm House Night is a member's alone (lib/farm.ts farmForMembers): nobody else is told it exists
-  if ((s.kind === "farm" && !member) || !remindable(s, viewer)) return back(req);
+  // the Farm House Night and the Tee Painting Workshop are a member's alone (lib/farm.ts farmForMembers): nobody else is told
+  // they exist
+  if (((s.kind === "farm" || s.kind === "paint") && !member) || !remindable(s, viewer)) return back(req);
   const w = siteBookingWindow(content);
   const win = w && notOpenYet(s.date, w, riyadhClock(new Date(now)), s.kind) ? opensAt(s.date, w) : null;
   const at = remindAt({ opensAt: win, mf: { at: mf, held: !member } }, now);

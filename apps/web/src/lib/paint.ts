@@ -1,7 +1,8 @@
 // The Tee Painting Workshop (the booking app, 2026-11-23): ride_kind 'paint', event_kind 'community', session id
 // '<date>-tp'. The first is on Saturday 28 November 2026 from 3 to 6 PM at Red Mug Caffe: drawing and colouring on
 // MicroMobility T-shirts. A date inside MicroMobility Experiences (the community card), never a card of its own, featured
-// as made; members only, one place per account, first come first served to its 20 places and then the waitlist, nobody
+// as made; for community members alone, and shown to them alone (lib/farm.ts farmForMembers, as the Farm House Night: no
+// date, Featured card, Details or Events entry for anyone else, as the booking app hides it), one place per account, first come first served to its 20 places and then the waitlist, nobody
 // approves it. No bike anywhere, so session and participant words; a start and an end, like yoga; the activity waiver.
 // Paid: 130 SAR per person (sessions.price, paid_ride), said as the price alone. How to pay is announced later, so no
 // page says how (no bank transfer, no receipt, no online payment), and nothing asks a T-shirt size.

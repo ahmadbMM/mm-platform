@@ -51,7 +51,8 @@ import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 // Triathlon (2026-11-22; lib/ktri.ts) is listed to everyone in its blue with when to report and where, never the Members
 // tag: a community member books it on the community card (ev=community), and anyone else is sent to the race's
 // registration website in place of Book (the booking app's _ktGate). The Tee Painting Workshop (2026-11-23; lib/paint.ts) is
-// listed in its indigo with its start and end and where (Red Mug Caffe), booked on the community card (ev=community).
+// listed in its indigo with its start and end and where (Red Mug Caffe), booked on the community card (ev=community), to a
+// signed-in community member alone, as the Farm House Night (lib/farm.ts farmForMembers).
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -94,7 +95,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const ahead = upcoming(withoutPetromin(rides?.sessions ?? []), now);
   // and while a date ahead is for members first (2026-11-18): a member reads its mark and books, anyone else waits
   // and while a KAUST Triathlon date is (2026-11-22): a member books it, anyone else is sent to the race's registration
-  const member = ahead.some((s) => s.kind === "farm" || s.kind === "ktri" || mfAt(s, drawn.getTime())) ? await communityMember() : false;
+  const member = ahead.some((s) => s.kind === "farm" || s.kind === "paint" || s.kind === "ktri" || mfAt(s, drawn.getTime())) ? await communityMember() : false;
   const sessions = farmForMembers(ahead, member).slice(0, Math.max(1, N(c.hero.count)));
   const sgWords = genderText(tx);
   // a session for the other gender says so in place of Book to a signed-in account (or one with none on file); a
