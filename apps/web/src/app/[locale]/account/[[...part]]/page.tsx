@@ -30,6 +30,7 @@ import "../handoff.css";
 import { accountSchema } from "@/content/pages/account";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
 import { FARM_NAME, farmBadge, farmName } from "@/content/farm-words";
+import { paintBadge } from "@/content/paint-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { readAccount, readBookings, rpcServer } from "@/lib/account";
@@ -404,7 +405,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     // content/farm-words.ts), handed on only to one who holds them
     const recordText = { ...recordBase, names: { ...recordBase.names,
       ...(allBadges.some((x) => x.slug === "blood_visitor") ? { blood_visitor: bloodWords(tx).visitorBadge } : {}),
-      ...(allBadges.some((x) => x.slug === "farmhouse_night" && x.on) ? { farmhouse_night: farmBadge(tx) } : {}) } };
+      ...(allBadges.some((x) => x.slug === "farmhouse_night" && x.on) ? { farmhouse_night: farmBadge(tx) } : {}),
+      // the Tee Painting Workshop's too (content/paint-words.ts, 2026-11-24): for community members' eyes alone
+      ...(allBadges.some((x) => x.slug === "tee_painting" && x.on) ? { tee_painting: paintBadge(tx) } : {}) } };
     const dur = { h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM };
     if (p === "badges") return (allBadges.length > 0 || helper) && (
       <section className="ac-sec" aria-label={recordText.badges}>

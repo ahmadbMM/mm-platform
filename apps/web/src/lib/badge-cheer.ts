@@ -24,14 +24,15 @@ export const fresh = (at: string | null | undefined, now: number = Date.now()): 
 
 /** The badges the app works out itself that pop up, in the app's order (its BDG_CHEER). */
 export const CHEER_ORDER = ["recruiter", "recruiter_3", "recruiter_5", "recruiter_10", "complete_profile", "national_day_96", "run_for_her", "defe_5k",
-  "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night"] as const;
+  "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night", "tee_painting"] as const;
 export const RECRUITER_N: Record<string, number> = { recruiter: 1, recruiter_3: 3, recruiter_5: 5, recruiter_10: 10 };
-const EVENT = new Set(["national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night"]);
+const EVENT = new Set(["national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night", "tee_painting"]);
 /** A Community badge (a month's challenge, the club's goal): the pulse's, while it answers (the app's _hubBdg). */
 export const isCommunityBadge = (slug: string): boolean => /^(challenge|club_goal)_\d+$/.test(slug);
 
 type Row = TicketRow & { donated?: boolean };
 const FARM_ID = /^\d{4}-\d\d-\d\d-fh(-|$)/;
+const PAINT_ID = /^\d{4}-\d\d-\d\d-tp(-|$)/;
 const ymd = (s: string) => (/^\d{4}-\d\d-\d\d/.test(s) ? s.slice(0, 10) : "");
 
 /** The day each event badge was first earned (the app's day1: the earliest session it was earned on; Blood Donor the
@@ -53,6 +54,7 @@ export function eventDays(rows: Row[], sessions: Map<string, RecordSession>, don
     blood_donor: bld,
     blood_visitor: [bld, day1((r) => done(r) && kind(r) === "blood")].filter(Boolean).sort()[0] ?? "",
     farmhouse_night: day1((r) => onIt(r) && (sessions.has(r.sessionId) ? kind(r) === "farm" : FARM_ID.test(r.sessionId))),
+    tee_painting: day1((r) => onIt(r) && (sessions.has(r.sessionId) ? kind(r) === "paint" : PAINT_ID.test(r.sessionId))),
   };
   return Object.fromEntries(Object.entries(out).filter(([, v]) => v));
 }

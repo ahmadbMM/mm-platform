@@ -24,6 +24,12 @@ import { fmtSar } from "../fill";
 import { experiencesSchema } from "@/content/pages/experiences";
 import ExperiencesPage from "../../app/[locale]/experiences/page";
 import EventsPage from "../../app/[locale]/events/page";
+import AccountPage from "../../app/[locale]/account/[[...part]]/page";
+import RideRecord from "@/components/account/RideRecord";
+import { paintBadge } from "@/content/paint-words";
+import { clientDict } from "@/i18n/dicts";
+import { TRANSLATED } from "@/i18n/locales";
+import { makeL } from "@/i18n/tx";
 
 // cookies() is a request's; here it holds the account's cookie a test sets, or none, and whether the booking app's members'
 // check (community_member) says that account is a community member.
@@ -281,5 +287,59 @@ describe("a Tee Painting Workshop ticket (My Account)", () => {
   it("says it in Arabic", () => {
     const html = card([ticketRow(base)!], true);
     expect(html).toContain('<span class="tk-tp-k">ماذا</span><span class="tk-tp-v">ارسم ولوّن تيشيرت مايكروموبيليتي الخاص بك</span>');
+  });
+});
+
+// The Tee Painting Workshop badge (tee_painting, 2026-11-24): earned by a booking on a workshop that staff checked in or out
+// (lib/ride-record.ts), and worded by the server's own words (content/paint-words.ts paintBadge), which My Account hands on
+// only to one who holds it.
+describe("the Tee Painting Workshop badge on My Account", () => {
+  const booking = (o: Record<string, unknown> = {}) => ({ id: "q1abcdef", session_id: TP.id, session_date: TP.session_date, session_day: "Saturday", status: "done", queue_num: 4, price: 130, paid: true, name: "Sara Haddad", type_preference: "None", ...o });
+  const badges = async (rows: unknown[], locale = "en", catalog: unknown[] = []) => {
+    jar.account = ACCOUNT; jar.member = true;
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.includes("/rpc/customer_profile")) return json([{ name: "Sara Haddad", email: "sara@example.test", phone: "+966500000000" }]);
+      if (url.includes("/rpc/my_bookings")) return json(rows);
+      if (url.includes("/rpc/list_sessions")) return json([TP, JCC]);
+      if (url.includes("/rpc/community_member")) return json(true);
+      if (url.includes("/rpc/badge_catalog")) return json(catalog);
+      if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/0" } });
+      return json([]);
+    }));
+    const page = await AccountPage({ params: Promise.resolve({ locale, part: ["badges"] }), searchParams: Promise.resolve({}) });
+    const rec = findAll(page, RideRecord)[0];
+    return rec ? (rec.props as { t: { names: Record<string, [string, string, string]> }; badges: { slug: string; on: boolean }[] }) : null;
+  };
+
+  it("names it, with how it is earned and what it means, to one checked in or out at a workshop", async () => {
+    for (const status of ["done", "active"]) {
+      const r = await badges([booking({ status })]);
+      expect(r?.badges.find((x) => x.slug === "tee_painting"), status).toMatchObject({ on: true });
+      expect(r?.t.names.tee_painting, status).toEqual(paintBadge(makeL("en", null)));
+    }
+    expect((await badges([booking()], "ar"))?.t.names.tee_painting?.[0]).toBe("ورشة الرسم على التيشيرت");
+    expect((await badges([booking()], "es"))?.t.names.tee_painting?.[0]).toBe("Taller de pintura de camisetas");
+  });
+
+  it("hands its words to nobody else: still waiting, cancelled, no bookings, or shown to everyone by staff but not held", async () => {
+    for (const [why, rows, catalog] of [
+      ["waiting", [booking({ status: "waiting" })], []],
+      ["cancelled", [booking({ status: "cancelled" })], []],
+      ["no bookings", [], []],
+      ["shown to everyone, not held", [booking({ status: "waiting" })], [{ slug: "tee_painting", icon: "tee", color: "red", system: true, auto: true, held_only: false, name: "Badge", name_ar: "Badge" }]],
+    ] as const) {
+      const r = await badges([...rows], "en", [...catalog]);
+      expect(r, why).not.toBeNull();
+      expect(r?.badges.find((x) => x.slug === "tee_painting"), why).toEqual(catalog.length ? expect.objectContaining({ on: false }) : undefined);
+      expect(r?.t.names.tee_painting, why).toBeUndefined();
+    }
+  });
+
+  it("keeps its how and what out of every browser dictionary", () => {
+    for (const l of TRANSLATED) {
+      const d = JSON.stringify(clientDict(l));
+      expect(d, l).not.toContain("Come to one of our tee painting workshops.");
+      expect(d, l).not.toContain("drawing and colouring on MicroMobility T-shirts with the community");
+    }
   });
 });

@@ -39,6 +39,8 @@ export type BadgeData = { catalog: BadgeRow[]; weeks: { w: string; ids: string[]
 export const DEFE_RIDE_IDS = ["2026-10-24"];
 /** A Farm House Night's session id ('<date>-fh', lib/farm.ts): the Farmhouse Night badge reads it when the session itself did not load. */
 const FARM_ID = /^\d{4}-\d\d-\d\d-fh(-|$)/;
+/** A Tee Painting Workshop's session id ('<date>-tp', lib/paint.ts): its badge reads it when the session itself did not load. */
+const PAINT_ID = /^\d{4}-\d\d-\d\d-tp(-|$)/;
 
 export const BADGE_SYS: Record<string, [string, string]> = {
   first_lap: ["flag", "green"], regular: ["wheel", "teal"], podium: ["podium", "purple"], front_row: ["one", "gold"], carbon: ["bike", "silver"],
@@ -59,6 +61,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   defe_5k: ["defe", "defe"], // the DEFE 5KM Run: Defe's ribbon inside the finisher's ring, rose into berry (2026-10-18)
   blood_donor: ["drop", "red"], // Blood Donor: a drop with a heart, on the ordinary red medal (2026-11-05)
   blood_visitor: ["dropo", "teal"], // Blood Donation Visitor: the drop's outline with a heart inside, on the teal medal (2026-11-06)
+  tee_painting: ["tee", "paint"], // Tee Painting Workshop: a T-shirt with brush strokes and paint drops, on its own Paint Splash medal (2026-11-24)
   farmhouse_night: ["barn", "farm"], // Farmhouse Night: a barn under a crescent moon, on its own special medal, peach into rust and wine (2026-11-14)
   volunteer: ["hand", "volunteer"], // Volunteer: a raised hand on its own blue special medal, given by staff (2026-11-05)
   // the hours ladder's levels: the database gives each with the volunteer's hours (the booking app, 2026-11-06 review, VL14)
@@ -91,7 +94,7 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
 /** Badges staff give that a rider sees only once they hold one (BDG_HELD_ONLY): never greyed under Badges to earn,
  *  never offered to request (the booking app, 2026-11-12: Talent Scout, for helping someone from the community get a job anywhere,
  *  "only visible for its holders"). */
-export const HELD_ONLY = new Set(["kaust_triathlon", "company_challenge", "talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night", "back_on_track"]);
+export const HELD_ONLY = new Set(["kaust_triathlon", "company_challenge", "talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night", "tee_painting", "back_on_track"]);
 /** Whether only a badge's holders see it (the booking app's _bdgHeldOnly, 2026-11-12: "add a switch to all badges that has
  *  to do with the visibility of the badges to customers and members"): the catalogue's held_only, staff's switch in
  *  Community > Badges, else the start the app keeps (def): HELD_ONLY, the ride badges rideBadges marks hide. */
@@ -395,6 +398,10 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
   // row, as the night has no bike; a session that did not load counts by its id's -fh
   const farmNight = (id: string) => { const x = ses(id); return x ? x.kind === "farm" : FARM_ID.test(id); };
   const fhn = all.some((r) => (r.status === "done" || r.status === "active") && farmNight(r.sessionId));
+  // Tee Painting Workshop (2026-11-24): checked in or checked out on a Tee Painting Workshop, read from every row (no bike); a
+  // session that did not load counts by its id's -tp
+  const paintDay = (id: string) => { const x = ses(id); return x ? x.kind === "paint" : PAINT_ID.test(id); };
+  const tpw = all.some((r) => (r.status === "done" || r.status === "active") && paintDay(r.sessionId));
   // the Marshal ladder is earned by leading rides too (the booking app, 2026-11-06); staff still give it by hand
   const led = ledRides(all, sessions);
   const P = (n: number, of: number) => `${Math.min(n, of)}/${of}`, pct = profile ? profilePct(profile) : 0;
@@ -409,6 +416,7 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
     { s: "blood_donor", on: bld, hide: true }, // the drop: shown to those who gave blood
     { s: "blood_visitor", on: bvs, hide: true }, // the drop's outline: shown to everyone who came, donors and visitors
     { s: "farmhouse_night", on: fhn, hide: true }, // the barn under the moon: shown to those who came to a farm night
+    { s: "tee_painting", on: tpw, hide: true }, // the painted T-shirt: shown to those who came to a Tee Painting Workshop
     { s: "first_lap", on: rides >= 1, p: `${rides}/1` }, { s: "regular", on: rides >= 5, p: P(rides, 5) }, { s: "podium", on: rides >= 10, p: P(rides, 10) },
     { s: "front_row", on: p1 >= 1, p: P(p1, 1) }, { s: "pole_position", on: p1 >= 5, p: P(p1, 5) }, { s: "pole_master", on: p1 >= 10, p: P(p1, 10) },
     { s: "grid_leader", on: p1 >= 25, p: P(p1, 25) }, { s: "pole_legend", on: p1 >= 50, p: P(p1, 50) },

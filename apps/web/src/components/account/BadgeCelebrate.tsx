@@ -78,7 +78,7 @@ export default function BadgeCelebrate({ locale, short }: { locale: string; shor
   useEffect(() => { if (show && dlg.current && !dlg.current.open) dlg.current.showModal(); }, [show]);
   if (!show) return null;
   const { c } = show;
-  const sp = ["special", "national", "pink", "vlap", "defe", "volunteer", "farm"].includes(c.color);
+  const sp = ["special", "national", "pink", "vlap", "defe", "volunteer", "farm", "paint"].includes(c.color);
   const done = () => dlg.current?.close();
   return (
     <dialog ref={dlg} className={`badge-pop-box bdg-new${sp ? ` special sp-${c.color}` : ""}`} aria-labelledby="bdg-new-nm"

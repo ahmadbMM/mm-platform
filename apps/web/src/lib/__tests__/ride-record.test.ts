@@ -9,6 +9,7 @@ import { T as RECORD } from "@/components/account/RideRecord.text";
 import { GLYPH } from "@/components/account/badge-glyphs";
 import { bloodWords } from "@/content/blood-words";
 import { farmBadge } from "@/content/farm-words";
+import { paintBadge } from "@/content/paint-words";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { createElement, type ReactElement } from "react";
 // The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
@@ -745,5 +746,59 @@ describe("the account page's three parts (2026-11-09)", () => {
     expect(stats).not.toContain("mr-badge");
     expect(badges).not.toContain("Rides led");
     expect(badges).toContain("First Lap");
+  });
+});
+
+describe("the Tee Painting Workshop badge (tee_painting, 2026-11-24)", () => {
+  // Coming to a Tee Painting Workshop (ride_kind 'paint', session id '<date>-tp'): a booking staff checked in (active) or
+  // checked out (done), read from every row (no bike); shown only to those who came, as the workshop itself is community
+  // members' alone.
+  const TP = "2026-11-28-tp";
+  const tpRows = (o: Record<string, unknown>) => recordRows([row({ id: "q1", session_id: TP, session_date: "2026-11-28", status: "done", paid: false, type_preference: "None", ...o })]);
+  const tpSes = new Map<string, RecordSession>([[TP, { kind: "paint", freeRide: false }]]);
+  const slugs = (rows: ReturnType<typeof tpRows>, s: Map<string, RecordSession> = tpSes) => badgeList(rows, s, empty, today, null).map((x) => x.slug);
+
+  it("is earned by a booking on a workshop that staff checked in or checked out, on its own medal: the painted T-shirt", () => {
+    for (const status of ["active", "done"]) {
+      expect(badgeList(tpRows({ status }), tpSes, empty, today, null).find((x) => x.slug === "tee_painting"), status).toMatchObject({ on: true, icon: "tee", color: "paint" });
+    }
+    expect(BADGE_SYS.tee_painting).toEqual(["tee", "paint"]);
+    expect(GLYPH.tee).toContain("M6.4 3.6");
+    const catalog = [{ slug: "tee_painting", icon: "tee", color: "red", system: true, auto: true }];
+    expect(badgeList(tpRows({}), tpSes, { ...empty, catalog }, today, null).find((x) => x.slug === "tee_painting")).toMatchObject({ on: true, icon: "tee", color: "paint" });
+  });
+
+  it("stays out of sight until then: waiting, cancelled, a no-show, or a session of another kind", () => {
+    for (const status of ["waiting", "cancelled", "noshow"]) expect(slugs(tpRows({ status })), status).not.toContain("tee_painting");
+    expect(slugs(tpRows({}), new Map([[TP, { kind: "farm" as const, freeRide: true }]]))).not.toContain("tee_painting");
+    expect(HELD_ONLY.has("tee_painting")).toBe(true);
+    expect(badgeList(tpRows({ status: "waiting" }), tpSes, { ...empty, catalog: [{ slug: "tee_painting", icon: "tee", color: "red", system: true, auto: true }] }, today, null).map((x) => x.slug)).not.toContain("tee_painting");
+  });
+
+  it("counts a workshop whose session did not load by its id's -tp, and no other id", () => {
+    expect(slugs(tpRows({}), new Map())).toContain("tee_painting");
+    expect(slugs(tpRows({ session_id: "2026-11-28-tp-2", id: "q4" }), new Map())).toContain("tee_painting");
+    expect(slugs(tpRows({ status: "waiting" }), new Map())).not.toContain("tee_painting");
+    for (const id of ["2026-11-28-fh", "2026-11-28", "2026-11-28-tpx"]) expect(slugs(tpRows({ session_id: id, id: "q5" }), new Map()), id).not.toContain("tee_painting");
+  });
+
+  it("is not a ride", () => {
+    const L = badgeList(tpRows({}), tpSes, empty, today, null);
+    expect(L.find((x) => x.slug === "first_lap")?.on).toBe(false);
+  });
+
+  it("is worded on the server, the Arabic by the session's own title, never in the browser's dictionary", () => {
+    expect(paintBadge(serverL("en"))).toEqual(["Tee Painting Workshop", "Come to one of our tee painting workshops.",
+      "For joining a MicroMobility Tee Painting Workshop, drawing and colouring on MicroMobility T-shirts with the community. Given once our team checks you in."]);
+    expect(paintBadge(serverL("ar"))[0]).toBe("ورشة الرسم على التيشيرت");
+    expect(paintBadge(serverL("es"))[0]).toBe("Taller de pintura de camisetas");
+    expect(paintBadge(serverL("de"))[0]).toBe("T-Shirt-Malworkshop");
+    expect(RECORD.en.names.tee_painting).toBeUndefined();
+    expect(RECORD.ar.names.tee_painting).toBeUndefined();
+  });
+
+  it("is drawn on its own special medal in the Paint Splash palette, the T-shirt in white", () => {
+    const html = renderToStaticMarkup(createElement(Medal, { icon: "tee", color: "paint" }));
+    for (const c of ["bdg-sp", "#f5b700", "#c7362b", "#1f2a44", "#a12a21", "M6.4 3.6"]) expect(html, c).toContain(c);
   });
 });

@@ -1,6 +1,7 @@
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { bloodWords } from "@/content/blood-words";
 import { farmBadge } from "@/content/farm-words";
+import { paintBadge } from "@/content/paint-words";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { intlOf } from "@/i18n/locales";
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
@@ -56,7 +57,9 @@ export async function GET(req: Request) {
   const base = serverLocalize(RECORD, locale);
   const names: Record<string, readonly string[]> = { ...base.names,
     ...(items.some((x) => x.slug === "blood_visitor") ? { blood_visitor: bloodWords(tx).visitorBadge } : {}),
-    ...(items.some((x) => x.slug === "farmhouse_night" && x.on) ? { farmhouse_night: farmBadge(tx) } : {}) };
+    ...(items.some((x) => x.slug === "farmhouse_night" && x.on) ? { farmhouse_night: farmBadge(tx) } : {}),
+      // the Tee Painting Workshop's too (content/paint-words.ts, 2026-11-24): for community members' eyes alone
+      ...(items.some((x) => x.slug === "tee_painting" && x.on) ? { tee_painting: paintBadge(tx) } : {}) };
   const words = (x: BadgeItem): [string, string, string] => {
     const own = names[x.slug];
     if (own && (!x.row || x.row.system !== false)) return [String(own[0] ?? ""), String(own[1] ?? ""), String(own[2] ?? "")];

@@ -15,6 +15,7 @@ const SPECIAL: Record<string, [[string, string, string], string]> = {
   defe: [["#f6c3d6", "#d782a0", "#a22b63"], "#7a1d4a"], // Rode with Defe (2026-10-18)
   volunteer: [["#8fd0ff", "#1f7ae0", "#0b3b82"], "#0a3270"], // the Volunteer badge (2026-11-05)
   farm: [["#f3c7a9", "#c9502a", "#7e2034"], "#6e2c1c"], // Farmhouse Night, peach into the venue's rust and wine (2026-11-14)
+  paint: [["#f5b700", "#c7362b", "#1f2a44"], "#a12a21"], // Tee Painting Workshop, the booking app's Paint Splash: sun into red and ink, a deep red rim (2026-11-24)
 }; // BadgeGrid's special() lists the same colours, to frame their tiles and pop-ups to match
 // The T100 races in Jeddah (redrawn 2026-10-09 as the booking app's _bdgRace): a finisher's medal on a ribbon,
 // the race's name struck on it, gold / silver / bronze whatever the badge's colour. [text, [gradient], rim, ink]

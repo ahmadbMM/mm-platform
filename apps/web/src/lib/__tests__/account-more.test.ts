@@ -277,9 +277,9 @@ describe("the new-badge pop-up", () => {
   it("dates an event's badge by its first session (Blood Donor by the donation) and lists only earned ones that may pop", () => {
     const row = (id: string, sessionId: string, date: string, status: string): TicketRow & { donated?: boolean } => ({ id, sessionId, date, status } as unknown as TicketRow);
     const sessions = new Map<string, RecordSession>([["r1", { kind: "runher", freeRide: true }], ["r2", { kind: "runher", freeRide: true }], ["b1", { kind: "blood", freeRide: true }], ["s1", { kind: "snd96", freeRide: true }]]);
-    const days = eventDays([row("e1", "r2", "2026-11-18", "done"), row("e2", "r1", "2026-11-11", "done"), row("e3", "b1", "2026-11-17", "done"), row("e4", "s1", "2026-09-23", "active"), row("e5", "2026-11-14-fh", "2026-11-14", "done")],
+    const days = eventDays([row("e1", "r2", "2026-11-18", "done"), row("e2", "r1", "2026-11-11", "done"), row("e3", "b1", "2026-11-17", "done"), row("e4", "s1", "2026-09-23", "active"), row("e5", "2026-11-14-fh", "2026-11-14", "done"), row("e6", "2026-11-28-tp", "2026-11-28", "active")],
       sessions, new Map([["e3", "2026-11-17T15:00:00Z"]]));
-    expect(days).toEqual({ national_day_96: "2026-09-23", run_for_her: "2026-11-11", blood_donor: "2026-11-17T15:00:00Z", blood_visitor: "2026-11-17", farmhouse_night: "2026-11-14" });
+    expect(days).toEqual({ national_day_96: "2026-09-23", run_for_her: "2026-11-11", blood_donor: "2026-11-17T15:00:00Z", blood_visitor: "2026-11-17", farmhouse_night: "2026-11-14", tee_painting: "2026-11-28" });
     const it = (slug: string, on: boolean, o: Partial<BadgeItem> = {}): BadgeItem => ({ slug, icon: "m", color: "green", on, p: null, given: null, season: null, manual: false, row: null, lv: null, lvN: 0, nx: null, ...o });
     const list = cheersOf([
       it("run_for_her", true), it("first_lap", true), it("spirit", true, { given: { at: "2026-11-18T09:00:00Z", note: "Thanks" } }), it("victory_lap", false),
