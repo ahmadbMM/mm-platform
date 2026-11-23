@@ -33,6 +33,7 @@ import { vlConfig, vlDivNames, vlPayLine } from "@/lib/vlap";
 import { AH_INFO_URL, ahConfig, ahPayLine } from "@/lib/arena";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { yogaKnow, yogaLength } from "@/lib/yoga";
+import { paintKnow } from "@/lib/paint";
 import { farmForMembers } from "@/lib/farm";
 import { KTRI_REG_URL, KTRI_REPORT, KTRI_RACES, ktriOut, ktriTitle } from "@/lib/ktri";
 import { igUrl } from "@/lib/instagram";
@@ -165,7 +166,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 // other kind keeps its hand-over to the booking app, which has its own steps: a run's runner details, a race's athlete
 // step (Victory Lap, Arena Heros), the Blood Donation event's donor step, and the Petromin nights (micromobility.sa/petromin
 // and the booking app's Petromin Days).
-const HERE = new Set<RideKind>(["jcc", "saturday", "swim", "workshop", "snd96", "event", "yoga", "farm"]);
+const HERE = new Set<RideKind>(["jcc", "saturday", "swim", "workshop", "snd96", "event", "yoga", "farm", "paint"]);
 const ID = (v: string | string[] | undefined) => (typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : null);
 
 export default async function ExperiencesPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
@@ -247,7 +248,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
-    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga), aboutFarm: fw.about, aboutKtri: S(d.aboutKtri),
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga), aboutFarm: fw.about, aboutKtri: S(d.aboutKtri), aboutPaint: S(d.aboutPaint),
     sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
   };
   const whoWords = {
@@ -268,7 +269,9 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // Victory Lap's price per athlete, to those who may book it alone (vlBook; the owner, 2026-10-17); Arena Heros', to
   // a community member alone, who may book it (2026-10-28)
   const athletePrice = (s: RideSession) => (s.kind === "vlap" && vlBook && s.price != null ? `${sar(s.price)} · ${tx("per athlete, VAT included", "لكل رياضي، شاملًا ضريبة القيمة المضافة")}`
-    : s.kind === "arena" && (member || !s.members) && s.price != null ? `${sar(s.price)} · ${tx("per athlete, medals included", "لكل رياضي، شاملًا الميدالية")}` : null);
+    : s.kind === "arena" && (member || !s.members) && s.price != null ? `${sar(s.price)} · ${tx("per athlete, medals included", "لكل رياضي، شاملًا الميدالية")}`
+    // the Tee Painting Workshop's per person (2026-11-23): the price alone, never how to pay (announced later)
+    : s.kind === "paint" && s.price != null ? `${sar(s.price)} · ${tx("per person", "للشخص")}` : null);
   // Arena Heros' facts (lib/arena.ts), in the booking app's words (arFormatTxt, arLvl_*, arGuide_*, arRulesLink): its
   // two races in Victory Lap's words, the organisers' two divisions (their names kept as the booking app keeps
   // Victory Lap's), each with its level and what it asks, the race's format, the prayer break under its window,
@@ -320,6 +323,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     bikeK: tx("Bike collection", "استلام الدراجة"), bikeV: tx("Sharafeyah branch · Thursday 3 Dec, during working hours", "فرع الشرفية · الخميس 3 ديسمبر، خلال ساعات العمل"),
   };
   const ktReport = `${ktWords.report} ${clock(KTRI_REPORT)}`;
+  // The Tee Painting Workshop (2026-11-23; lib/paint.ts): what it is, a row of its Details
+  const tpWords = { whatK: tx("What", "ماذا"), whatV: tx("Paint and colour your own MicroMobility T-shirt", "ارسم ولوّن تيشيرت مايكروموبيليتي الخاص بك") };
   // The Saturday ride's sunrise over the Corniche that day, in the page's clock (lib/kind-theme.ts), and its two routes'
   // words; null on any other kind.
   const sunrise = (s: RideSession) => (s.kind === "saturday" ? ((v) => (v ? clock(v) : null))(sunriseHhmm(s.date)) : null);
@@ -379,6 +384,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
       // registration website on the last step, in place of the hand-over (the booking app's _ktGate)
       ...(s.kind === "ktri" ? { ktri: { title: ktriTitle(sessionName(s, kindName, enName, L !== "en", L === "ar")), sbr: ktWords.sbr, meta: [ktReport, place.name].filter(Boolean), bike: { k: ktWords.bikeK, v: ktWords.bikeV }, foot: ktriOut(s, member) ? ktWords.cardReg : ktWords.cardMem, step: ktWords.step,
         out: ktriOut(s, member) ? { url: KTRI_REG_URL, msg: ktWords.outMsg, btn: ktWords.outBtn } : null } } : {}),
+      // the Tee Painting Workshop's own card (2026-11-23): its start and end and where, and its price along the foot
+      ...(s.kind === "paint" ? { paint: { meta: [s.times ? (oneTime(s.times) ? clock(s.times[0]) : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "", place.name].filter(Boolean), price: athletePrice(s) } } : {}),
       // a featured date (the booking app's _featCardHtml, 2026-11-13): its day as its Featured card's tile, and how long
       // yoga runs, which that card says after its time
       ...(s.featured ? { feat: { ...fmtDayTile(s.date, locale), len: s.kind === "yoga" ? yogaLength(s.times, ygWords.min) || null : null } } : {}),
@@ -395,7 +402,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
       // Victory Lap's payment, as the booking app's review step says it under the price (2026-10-23); Arena Heros':
       // announced later (the owner, 2026-10-28), unless staff wrote how (sessions.vl.pay)
-      ...(athletePrice(s) ? { payNote: s.kind === "arena"
+      // (none on the Tee Painting Workshop, whose payment is announced later: its price alone, 2026-11-23)
+      ...(athletePrice(s) && s.kind !== "paint" ? { payNote: s.kind === "arena"
         ? ahPayLine(ahConfig(s.vl), locale, tx("Pay by bank transfer after booking and upload the receipt. Your QR code and number appear once your payment is confirmed.", "ادفع بتحويل بنكي بعد الحجز وارفع الإيصال. يظهر رمز QR ورقمك بعد تأكيد الدفع."))
         : vlPayLine(vlConfig(s.vl), locale, tx("Once booked, tell us whether you already have a ticket or buy one by bank transfer.", "بعد الحجز، أخبرنا إن كانت لديك تذكرة بالفعل أو اشترِ واحدة بتحويل بنكي.")) } : {}),
       route: routeNameOf(routes, s.routeSlug),
@@ -432,6 +440,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
         ...(s.kind === "defe5k" ? { kit: { label: defeWords.kitLabel, text: defeWords.kit }, race: { label: defeWords.regLabel, link: defeWords.regLink, url: DEFE_RACE_URL } } : {}),
         // yoga: who leads it, how long, the level and what to bring, after where (the booking app's _infoFacts)
         ...(s.kind === "yoga" ? { more: yogaKnow(ygWords, yogaLength(s.times, ygWords.min)).map(([k, v]) => ({ k, v })) } : {}),
+        // the Tee Painting Workshop: what it is, after where (2026-11-23)
+        ...(s.kind === "paint" ? { more: paintKnow(tpWords).map(([k, v]) => ({ k, v })) } : {}),
         // the KAUST Triathlon: when to report, the races and their starts, the entry fees, when entries close, the race's
         // registration website and the gate pass (the booking app's _infoFacts, 2026-11-22)
         ...(s.kind === "ktri" ? {
@@ -551,7 +561,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     const mfMs = s.fbk ? 0 : mfAt(s, drawn.getTime());
     return {
       id: s.id, date: s.date, kind: s.kind, name: s.kind === "jcc" ? "" : step.name, full: s.full, community, members: s.members, free: s.free, approval: !!s.approval,
-      seat: s.kind === "event" ? s.price ?? 0 : null, capacity: places, left: s.left ?? null, wlCap: s.wlCap ?? null,
+      // the Tee Painting Workshop's place is priced as a seat (2026-11-23): its own price, one per account
+      seat: s.kind === "event" || s.kind === "paint" ? s.price ?? 0 : null, capacity: places, left: s.left ?? null, wlCap: s.wlCap ?? null,
       km: s.groupKm ?? { beg: 20, int: 40 }, addons: s.addons ?? [], meetUrl: s.meetUrl ?? null, location: s.location ?? null, routeSlug: s.routeSlug,
       day: fmtDayDate(s.date, locale), near: step.near,
       time: s.times ? timesText(s.times, s.gather, clock, s.kind === "farm" ? { gather: fw.arrive, start: fw.dinner } : { gather: S(d.gather), start: S(d.start) }) : "",

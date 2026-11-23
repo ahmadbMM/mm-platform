@@ -3,7 +3,8 @@
 // a character: the marks take the colour they sit in (the kind's ink on its tint), and the route turns round for Arabic.
 
 /** The booking app's glyph for each kind (KIND_IC): people for the Saturday ride, the water for the pool, three speed
- *  stripes for a Petromin night, a lotus for yoga, a barn for the Farm House Night (2026-11-13), a runner for the runs,
+ *  stripes for a Petromin night, a lotus for yoga, a barn for the Farm House Night (2026-11-13), a T-shirt for the Tee
+ *  Painting Workshop (2026-11-23), a runner for the runs,
  *  and so on; a bike for anything else. */
 const GLYPH: Record<string, string> = {
   people: "M3.4 19.4c.6-3.2 2.8-5 5.6-5s5 1.8 5.6 5M15.2 5.9a3 3 0 0 1 0 5.6M17.6 14.6c1.7.6 2.8 2.2 3.1 4.8",
@@ -17,6 +18,8 @@ const GLYPH: Record<string, string> = {
   bike: "M5.9 15.6L9.4 8.7l2.3 6.9zM9.4 8.7h6.4l-4.1 6.9M15.8 8.7l2.3 6.9M9.4 8.7L8.9 6.6M7.5 6.6h3M15.8 8.7l-.7-2.5h2.7",
   // the booking app's _CU.barn: a gabled barn on the ground, its door crossed
   barn: "M3.5 20.5V10L12 4l8.5 6v10.5M2.5 20.5h19M9 20.5v-6h6v6M9 14.5l6 6M15 14.5l-6 6",
+  // the Tee Painting Workshop's (2026-11-23): a T-shirt with a brush stroke across it
+  shirt: "M8.6 3.8L3.6 6.6l1.9 3.9 2.1-1V20.2h8.8V9.5l2.1 1 1.9-3.9-5-2.8c-.5 1.5-1.8 2.4-3.4 2.4s-2.9-.9-3.4-2.4z M9.6 13.4c1.6-1 3.2.9 4.8-.2",
 };
 /** The circles some glyphs have, beside their paths. */
 const DOTS: Record<string, [number, number, number][]> = {
@@ -25,6 +28,7 @@ const DOTS: Record<string, [number, number, number][]> = {
 const KIND_GLYPH: Record<string, string> = {
   saturday: "people", petromin: "stripes", event: "ticket", workshop: "clock", swim: "wave", snd96: "flag", jcc: "bike",
   runher: "run", vlap: "flag", arena: "flag", defe5k: "run", blood: "ticket", yoga: "lotus", farm: "barn", ktri: "wave", // the KAUST Triathlon: the water (2026-11-22)
+  paint: "shirt", // the Tee Painting Workshop: a T-shirt with a brush stroke (2026-11-23)
 };
 
 export function KindIcon({ kind, size = 16 }: { kind: string; size?: number }) {

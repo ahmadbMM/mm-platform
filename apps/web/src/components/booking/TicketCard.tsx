@@ -20,6 +20,7 @@ import { AH_BANK, vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-tic
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { YOGA_MARK, YOGA_MARK_SIZE, yogaKnow } from "@/lib/yoga";
+import { PAINT_MARK, PAINT_MARK_SIZE, paintKnow } from "@/lib/paint";
 import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
 import { KTRI_MARK, KTRI_MARK_SIZE, KTRI_REG_URL, KTRI_REPORT, ktriBike, ktriBikeText, ktriRaceOpts } from "@/lib/ktri";
 import { igUrl } from "@/lib/instagram";
@@ -96,6 +97,12 @@ import { gpxFileName, type RoutePage } from "@/lib/route-track";
 // anyone not living at KAUST, then "Have you registered through the KAUST Triathlon registration website?" as the DEFE
 // run's ticket keeps it (No shows the race's registration website, no code). Free, no price of 0 for the participant;
 // cancel only, as one place per account with no bike; its wallet pass is offered as yoga's is.
+// A Tee Painting Workshop ticket (2026-11-23; lib/paint.ts) wears its "Paint Splash" look: a white canvas in every state with
+// drops of the palette along its foot, the mark as its logo, the palette's indigo where the night ticket is neon; it says
+// what it is while it is ahead, Red Mug Caffe with its own map for Directions and in its calendar entry, and its price for
+// the participant and the total (130 SAR), never where or how it is paid (announced later): no "Pay at the booth", no
+// Wallet switch, no add-ons; cancel only, as one place per account with no bike, and no wallet pass, which the passes do
+// not know yet.
 // "Need help?" (2026-11-16; lib/ride-help.ts, TicketHelp) stands above "Report a bike problem" on a booking that holds a
 // place, from an hour before the session until 3 hours after it, never on the Blood Donation event: WhatsApp us with what
 // is wrong, the rider, the session and their location; Call us; the ambulance.
@@ -254,6 +261,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const ktri = s?.kind === "ktri"; // the KAUST Triathlon: its mark, when to report, the race, the gate pass (2026-11-22)
   // a free yoga place says Free, never a price of 0 (the booking app's _ygFree); so does a KAUST Triathlon place
   const ygFree = (yoga || ktri) && !!s?.free;
+  const paint = s?.kind === "paint"; // the Tee Painting Workshop: its mark, what it is, its price alone (2026-11-23)
   const farm = s?.kind === "farm"; // the Farm House Night: its mark, Arrival and Dinner, Edit for the family (2026-11-13)
   // The Blood Donation event, by its id on a session that did not load: a donor's number, no price anywhere (2026-11-03)
   const donor = s ? s.kind === "blood" : isBloodId(primary.sessionId);
@@ -274,7 +282,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   // the Wallet switch (the booking app's _cwPaySlot, 2026-11-03): only with a balance read; each row's own add-ons, so a
   // row that costs nothing is left out of what it pays
   const extrasBy = extrasCost === null ? null : extras.reduce((m, x) => m.set(x.rowId, (m.get(x.rowId) ?? 0) + (x.amount ?? 0)), new Map<string, number>());
-  const due = !past && !allWl && balance !== null ? walletDue(rows, s?.kind, !!s?.approval, extrasBy) : null;
+  const due = !past && !allWl && !paint && balance !== null ? walletDue(rows, s?.kind, !!s?.approval, extrasBy) : null;
   const wWords = walletWords(locale);
   const cw = codeWords(locale); // the kinds of code a row used
   const canEdit = !past && rows.some((r) => r.status === "waiting" || r.status === "waitlist");
@@ -365,6 +373,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             : yoga ? <span className="tk-logo tk-logo-yoga" aria-hidden="true"><img src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} decoding="async" /></span>
             : farm ? <span className="tk-logo tk-logo-farm" aria-hidden="true"><img src={FARM_MARK} alt="" width={FARM_MARK_SIZE.width} height={FARM_MARK_SIZE.height} decoding="async" /></span>
             : ktri ? <span className="tk-logo tk-logo-ktri" aria-hidden="true"><img src={KTRI_MARK} alt="" width={KTRI_MARK_SIZE.width} height={KTRI_MARK_SIZE.height} decoding="async" /></span>
+            : paint ? <span className="tk-logo tk-logo-paint" aria-hidden="true"><img src={PAINT_MARK} alt="" width={PAINT_MARK_SIZE.width} height={PAINT_MARK_SIZE.height} decoding="async" /></span>
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {ahHeld && !allWl && <p className="tk-label">{t.ahHoldTitle}</p>}
           {!hideNum && (allWl
@@ -495,7 +504,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
                 {/* Unpaid says where it is paid; a waitlisted rider owes nothing until they have a place. */}
                 {r.paid
                   ? <span className="tk-pay paid"><span className="dot" aria-hidden="true" />{r.price === 0 ? t.onTheHouse : t.paid}</span>
-                  : r.status !== "waitlist" && r.price > 0 && !vlap && !arena && <span className="tk-pay due"><span className="dot" aria-hidden="true" />{t.payDue}</span>}
+                  : r.status !== "waitlist" && r.price > 0 && !vlap && !arena && !paint && <span className="tk-pay due"><span className="dot" aria-hidden="true" />{t.payDue}</span>}
               </div>
             )}
           </div>
@@ -649,6 +658,14 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             ))}
           </div>
         )}
+        {paint && !past && (
+          // what it is (2026-11-23)
+          <div className="tk-tp-know">
+            {paintKnow({ whatK: t.tpWhatK, whatV: t.tpWhatV }).map(([k, v]) => (
+              <p key={k}><span className="tk-tp-k">{k}</span><span className="tk-tp-v">{v}</span></p>
+            ))}
+          </div>
+        )}
         {bw && (
           // the short rules, what confirmed donors get, and the free ride once staff confirmed the donation (the booking
           // app's _bldTkHtml, _bldRwHtml); a code that has been used says so, as there
@@ -692,8 +709,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
       {links.safety && <div className="tk-actions tk-sfy"><a className="tk-btn" href={links.safety}><Shield />{safetyWords(locale).btn}</a></div>}
       {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out, and
           none on the DEFE 5KM Run or Arena Heros, which the passes do not know (the booking app's _walletOk); yoga's
-          is offered, as the pool's (its passes know yoga since 2026-11-12). */}
-      {wallet && !past && !allWl && ready && !defe && !arena && !donor && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
+          is offered, as the pool's (its passes know yoga since 2026-11-12); none on the Tee Painting Workshop (2026-11-23). */}
+      {wallet && !past && !allWl && ready && !defe && !arena && !paint && !donor && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
       {canEdit && (
         // a run booking is never changed, only cancelled, as in the booking app; a ride staff approve neither, but for the Farm
         // House Night, whose Edit takes family members off by name (2026-11-13, _fhDropOpen); Victory Lap's and Arena Heros'
@@ -707,7 +724,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             // National Day ride: a session without a bike or one staff approve would be offered nothing (the database refuses
             // a move off a ride staff approve)
             move: !noNum && !run && !vlap && !arena && !donor && bikes && s?.kind !== "snd96",
-            extras: !noNum && !run && !vlap && !arena && !donor && !s?.free,
+            extras: !noNum && !run && !vlap && !arena && !paint && !donor && !s?.free,
           }}
           vlEdit={(vlap && rows.length === 1 && primary.vl) || (arena && rows.length === 1 && primary.ah) ? links.manage : null}
           t={{ edit: t.edit, reschedule: t.reschedule, cancel: t.cancel, leaveWl: t.leaveWl, vlEdit: t.vlEdit, cancelled: t.cancelled, sarWord: t.sarWord }}

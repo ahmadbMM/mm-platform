@@ -24,6 +24,7 @@ import { communityMember, genderViewer } from "@/lib/account";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { AH_VENUE } from "@/lib/arena";
 import { yogaLength } from "@/lib/yoga";
+import { PAINT_VENUE } from "@/lib/paint";
 import { farmForMembers } from "@/lib/farm";
 import { KTRI_REG_URL, KTRI_REPORT, KTRI_VENUE, ktriOut } from "@/lib/ktri";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
@@ -49,12 +50,13 @@ import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 // under them (See you next Saturday on the Saturday ride, See you at the next session on any other), and no Book. The KAUST
 // Triathlon (2026-11-22; lib/ktri.ts) is listed to everyone in its blue with when to report and where, never the Members
 // tag: a community member books it on the community card (ev=community), and anyone else is sent to the race's
-// registration website in place of Book (the booking app's _ktGate).
+// registration website in place of Book (the booking app's _ktGate). The Tee Painting Workshop (2026-11-23; lib/paint.ts) is
+// listed in its indigo with its start and end and where (Red Mug Caffe), booked on the community card (ev=community).
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16", yoga: "#b4532f", farm: "#8a3f27", ktri: "#1565b4" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16", yoga: "#b4532f", farm: "#8a3f27", ktri: "#1565b4", paint: "#3d34a5" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -75,7 +77,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community", ktri: "community" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community", ktri: "community", paint: "community" };
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
@@ -172,6 +174,9 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {/* yoga: how long and where, as its date card on Experiences says them (2026-11-12) */}
                         {s.kind === "yoga" && yogaLength(s.times, tx("{0} min", "{0} دقيقة")) && <span>{yogaLength(s.times, tx("{0} min", "{0} دقيقة"))}</span>}
                         {s.kind === "yoga" && s.location && s.location !== "JCC" && <span><bdi>{s.location}</bdi></span>}
+                        {/* the Tee Painting Workshop: where, as its date card on Experiences says it (2026-11-23; never its price,
+                            as Arena Heros', said on Experiences) */}
+                        {s.kind === "paint" && <span><bdi>{s.location && s.location !== "JCC" ? s.location : PAINT_VENUE}</bdi></span>}
                         {/* the Farm House Night: where, as its date card on Experiences says it (2026-11-13) */}
                         {s.kind === "farm" && s.location && s.location !== "JCC" && <span><bdi>{s.location}</bdi></span>}
                         {/* Victory Lap: what it is, as its card on Experiences says it (never its price) */}

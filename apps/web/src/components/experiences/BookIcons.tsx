@@ -15,6 +15,8 @@ const CU = {
   clock: <><circle cx="12" cy="12" r="8.6" /><path d="M12 7.4V12l3.2 2" /></>,
   lock: <><rect x="4.4" y="10.6" width="15.2" height="10" rx="2.2" /><path d="M8 10.6V7.6a4 4 0 0 1 8 0v3" /></>,
   close: <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />,
+  // a T-shirt with a brush stroke across it: the Tee Painting Workshop (2026-11-23)
+  shirt: <path d="M8.6 3.8L3.6 6.6l1.9 3.9 2.1-1V20.2h8.8V9.5l2.1 1 1.9-3.9-5-2.8c-.5 1.5-1.8 2.4-3.4 2.4s-2.9-.9-3.4-2.4z M9.6 13.4c1.6-1 3.2.9 4.8-.2" />,
 };
 export type IconName = keyof typeof CU;
 
@@ -26,9 +28,9 @@ export function Ic({ name, size = 16, flip = false, className = "" }: { name: Ic
 }
 
 /** Each ride kind wears a drawn glyph beside its name (KIND_IC). A kind without a bike never wears the bike: the dates
- *  handed to the booking app (a run, a race, the donor, yoga, the farm, the KAUST Triathlon) have theirs too (bug hunt 2026-11-18). */
+ *  handed to the booking app (a run, a race, the donor, yoga, the farm, the KAUST Triathlon, the Tee Painting Workshop) have theirs too (bug hunt 2026-11-18). */
 const KIND_IC: Record<string, IconName> = {
   saturday: "people", petromin: "people", event: "ticket", workshop: "clock", swim: "wave", snd96: "flag", jcc: "bike",
-  runher: "people", defe5k: "people", vlap: "flag", arena: "flag", blood: "ticket", yoga: "people", farm: "people", ktri: "wave",
+  runher: "people", defe5k: "people", vlap: "flag", arena: "flag", blood: "ticket", yoga: "people", farm: "people", ktri: "wave", paint: "shirt",
 };
 export const KindIc = ({ kind }: { kind: string }) => <Ic name={KIND_IC[kind] ?? "bike"} size={14} />;

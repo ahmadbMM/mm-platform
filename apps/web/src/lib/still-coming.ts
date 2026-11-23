@@ -48,7 +48,7 @@ export function comingCounts(at: string | null | undefined, m: { go: number }): 
 /** The minutes a rider may say they will be late (the booking app's RL_MINS, the database's check). */
 export const RL_MINS: readonly number[] = [10, 20, 30];
 /** The kinds where everyone starts together, besides the rides that gather (the booking app's LTR_KINDS). */
-const LTR_KINDS = new Set(["workshop", "event", "yoga", "defe5k", "ktri"]);
+const LTR_KINDS = new Set(["workshop", "event", "yoga", "defe5k", "ktri", "paint"]);
 
 /** The moment to turn up that being late is counted from (epoch ms; the booking app's _ltrAt): a gathering ride's
  *  gathering, the start of a session where everyone starts together; null anywhere riders come any time. */

@@ -113,7 +113,7 @@ export type BookAccount = {
 // ── What a session involves (KIND_TRAITS) ────────────────────────────────────────────────────
 /** The kinds with no bike to ride (the booking app's KIND_TRAITS bike:false): the pool, the workshop, an event, the runs,
  *  the races, the Blood Donation event, yoga and the Farm House Night. */
-const NO_BIKE: RideKind[] = ["swim", "workshop", "event", "runher", "vlap", "arena", "defe5k", "blood", "yoga", "farm"];
+const NO_BIKE: RideKind[] = ["swim", "workshop", "event", "runher", "vlap", "arena", "defe5k", "blood", "yoga", "farm", "paint"];
 export const needsBike = (s: Pick<BookSession, "kind">) => !NO_BIKE.includes(s.kind);
 /** A run (Run for Her, the DEFE 5KM Run: _isRun) and a race (Victory Lap, Arena Heros: _isRace). */
 export const isRun = (s: Pick<BookSession, "kind">) => s.kind === "runher" || s.kind === "defe5k";

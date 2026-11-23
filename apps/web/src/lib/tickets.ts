@@ -12,6 +12,7 @@ import { AH_VENUE, ahConfig, ahEntry, ahHold, isArenaId, type AhConfig, type AhE
 import { isBloodId } from "./blood";
 import { igOf } from "./instagram";
 import { KTRI_VENUE, triRaceOf, type TriRace } from "./ktri";
+import { PAINT_VENUE } from "./paint";
 import { sessionGender, type SessionGender } from "./session-gender";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
@@ -399,7 +400,7 @@ export function ticketSession(r: Row): TicketSession | null {
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga" && kind !== "farm" && kind !== "ktri",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga" && kind !== "farm" && kind !== "ktri" && kind !== "paint",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -576,7 +577,7 @@ export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | {
 export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
   if (s?.approval && s.meetUrl && !(s.kind === "farm" && s.location)) return { kind: "meet" };
   if (s?.kind === "yoga" && !s.location && s.meetUrl) return { kind: "meet" };
-  const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : s?.kind === "blood" ? "JCC" : s?.kind === "ktri" ? KTRI_VENUE : "");
+  const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : s?.kind === "blood" ? "JCC" : s?.kind === "ktri" ? KTRI_VENUE : s?.kind === "paint" ? PAINT_VENUE : "");
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : loc === AH_VENUE ? { kind: "gym" } : { kind: "text", text: loc };
 }
 
@@ -604,11 +605,11 @@ export function placeLink(s: (Pick<TicketSession, "approval" | "kind" | "meetUrl
   // Club, a ride with a place to that place, the DEFE 5K and a ride with none to the booth (bug hunt 2026-11-11: no button)
   if (s && meetsAt(s) && s.meetUrl) return s.meetUrl;
   if (s?.kind === "arena") return s.meetUrl;
-  if ((s?.kind === "yoga" || s?.kind === "ktri") && s.meetUrl) return s.meetUrl; // the KAUST Triathlon's beach pin too (2026-11-22)
+  if ((s?.kind === "yoga" || s?.kind === "ktri" || s?.kind === "paint") && s.meetUrl) return s.meetUrl; // the KAUST Triathlon's beach pin too (2026-11-22), Red Mug Caffe's (2026-11-23)
   if (s?.kind === "blood") return s.meetUrl ?? circuit;
   // Any other named place is searched by its name (the booking app's _dirBtnHtml, 2026-11-10): every booking away from
   // the circuit used to open the circuit's directions.
-  const loc = s?.location?.trim() || (s?.kind === "runher" ? "JYC" : s?.kind === "ktri" ? KTRI_VENUE : "");
+  const loc = s?.location?.trim() || (s?.kind === "runher" ? "JYC" : s?.kind === "ktri" ? KTRI_VENUE : s?.kind === "paint" ? PAINT_VENUE : "");
   if (loc && loc !== "JCC") return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ICS_PLACES.get(loc) ?? loc)}`;
   return circuit;
 }
@@ -807,7 +808,7 @@ const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Bra
 export function icsPlace(s: TicketSession): string {
   if (meetsAt(s) && s.meetUrl) return s.meetUrl;
   if (s.kind === "yoga" && !s.location && s.meetUrl) return s.meetUrl; // a yoga date at its map, without a place's name: never the circuit
-  const loc = s.location || (s.kind === "runher" ? "JYC" : s.kind === "arena" ? AH_VENUE : s.kind === "blood" ? "JCC" : s.kind === "ktri" ? KTRI_VENUE : "");
+  const loc = s.location || (s.kind === "runher" ? "JYC" : s.kind === "arena" ? AH_VENUE : s.kind === "blood" ? "JCC" : s.kind === "ktri" ? KTRI_VENUE : s.kind === "paint" ? PAINT_VENUE : "");
   return loc ? ICS_PLACES.get(loc) ?? loc : "";
 }
 

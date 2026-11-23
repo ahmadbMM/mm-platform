@@ -113,7 +113,7 @@ describe("the KAUST Triathlon's kind", () => {
     expect(rentsBikes("ktri")).toBe(false);
     expect(waiverKind(ticketSession(KT)!)).toBe("activity");
     expect(EVENT_OF.ktri).toBe("community");
-    expect(KIND_ORDER.at(-1)).toBe("ktri");
+    expect(KIND_ORDER).toContain("ktri"); // the Tee Painting Workshop after it since 2026-11-23
     expect(LM_KINDS).toContain("ktri");
     expect(isKtri(s)).toBe(true);
   });

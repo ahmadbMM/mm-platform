@@ -159,7 +159,8 @@ export function liveSession(r: Row, today: string): LiveSession | null {
   const price = Number(r.price);
   return {
     id: S(r.id), date: S(r.session_date), kind, community, members: community && r.open_to_all !== true, free, approval,
-    seat: kind === "event" ? (free ? 0 : Number.isFinite(price) && price > 0 ? price : 0) : null,
+    // an event's seat, and the Tee Painting Workshop's place (2026-11-23), at the session's own price
+    seat: kind === "event" || kind === "paint" ? (free ? 0 : Number.isFinite(price) && price > 0 ? price : 0) : null,
     capacity: places, wlCap: waitlistCap(r.bike_slots, places), addons: addonIds(r.addons),
     full: r.status === "full", open: (r.status === "open" || r.status === "full") && S(r.session_date) >= today && kind !== "petromin", day: S(r.day),
     gender: sessionGender(r.gender_only), // men only, women only or mixed (null; the owner, 2026-10-27)
@@ -368,8 +369,9 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
 }
 
 /** Whether a booking on this ride is paid online (rentals 20261110150000 pay_booking_start): a paid ride that is
- *  not a race (the organiser's money, by transfer) nor a Petromin night (the company's bill or the desk). */
-export const payableOnline = (s: Pick<LiveSession, "free" | "kind">) => !s.free && !["vlap", "arena", "petromin"].includes(s.kind);
+ *  not a race (the organiser's money, by transfer) nor a Petromin night (the company's bill or the desk), nor the Tee
+ *  Painting Workshop, whose payment is announced later (2026-11-23). */
+export const payableOnline = (s: Pick<LiveSession, "free" | "kind">) => !s.free && !["vlap", "arena", "petromin", "paint"].includes(s.kind);
 
 /** The add-on items the listed sessions sell, read with the public key (the columns the booking app's customers read:
  *  never what the shop pays). Staging's page reads them the same way. */

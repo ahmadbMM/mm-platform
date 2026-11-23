@@ -327,6 +327,21 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-feat-kt .xs-feat-mi > span::before { background: rgba(21, 101, 180, .35); }
 .xs-feat-kt .xs-feat-with { font-weight: 700; color: var(--kt-blue-dk); }
 .xs-feat-kt .xs-feat-go { color: var(--kt-blue); }
+/* the Tee Painting Workshop's card (2026-11-23, "Paint Splash"): the white canvas, the palette splashed from the far corner,
+   the day on the wash under an indigo band, the name in indigo ink, its price in deep indigo */
+.xs-feat-card.xs-feat-tp { position: relative; overflow: hidden; isolation: isolate; color: var(--tp-ink); background: var(--tp-canvas); border-color: rgba(61, 52, 165, .28); }
+.xs-feat-card.xs-feat-tp:hover { background: #fff; border-color: rgba(61, 52, 165, .6); box-shadow: 0 0 14px rgba(61, 52, 165, .12); }
+.xs-feat-card.xs-feat-tp:focus-visible { outline: 2px solid var(--tp-indigo); }
+.xs-feat-tp .xs-feat-day { background: var(--tp-wash); box-shadow: inset 0 0 0 1px rgba(61, 52, 165, .18); }
+.xs-feat-tp .xs-feat-day b { color: var(--tp-ink); }
+.xs-feat-tp .xs-feat-day span { color: var(--tp-ink-2); }
+.xs-feat-tp .xs-feat-day .xs-feat-wd { color: var(--mm-white); background: var(--tp-indigo); }
+.xs-feat-tp .sc-dw { color: var(--tp-indigo-dk); }
+.xs-feat-tp .xs-feat-name.sc-tp-title { font-size: 20px; }
+.xs-feat-tp .xs-feat-meta { font-weight: 600; color: var(--tp-ink-2); }
+.xs-feat-tp .xs-feat-mi > span::before { background: rgba(61, 52, 165, .35); }
+.xs-feat-tp .xs-feat-with { font-family: "MM Riyal", var(--cs-font-en), var(--cs-font-ar), sans-serif; font-weight: 800; color: var(--tp-indigo-dk); }
+.xs-feat-tp .xs-feat-go { color: var(--tp-indigo); }
 @media (max-width: 767px) {
   .xs-feat { margin-bottom: 28px; }
   /* a phone with two or more: one row that scrolls sideways out to the screen's edges (.xp-wrap's 20px), the next card
@@ -342,6 +357,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
   .xs-feat-yg .xs-feat-name.sc-yg-title { font-size: 18px; }
   .xs-feat-fh .xs-feat-name.sc-fh-title { font-size: 17px; }
   .xs-feat-kt .xs-feat-name.sc-kt-title { font-size: 18px; }
+  .xs-feat-tp .xs-feat-name.sc-tp-title { font-size: 18px; }
 }
 
 /* A phone names only the step it is on; the others keep their names for screen readers. */
@@ -408,6 +424,16 @@ html:is([lang="ar"], [lang="ur"]) .xs-summary .xs-yg-name { font-family: var(--c
 .xs-info.ev-ktri .xs-info-go:hover { background: var(--kt-blue-dk); border-color: var(--kt-blue-dk); }
 .xs-info.ev-ktri .xs-info-btns button:focus-visible { outline-color: rgba(21, 101, 180, .45); }
 @media (max-width: 400px) { .xs-kt-mark { height: 34px; } }
+/* The Tee Painting Workshop (2026-11-23): its summary wears the mark and the name in indigo ink; its button and its Details'
+   link and button indigo */
+.xs-logo.xs-paint-logo img { height: 36px; width: auto; }
+.xs-summary .xs-tp-name { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-weight: 800; color: var(--tp-indigo); }
+.xs .xs-go.ev-paint { background: var(--tp-indigo); color: #fff; }
+.xs .xs-go.ev-paint:hover { background: var(--tp-indigo-dk); }
+.xs .xs-info.ev-paint .xs-info-facts a { color: var(--tp-indigo-dk); }
+.xs-info.ev-paint .xs-info-go { background: var(--tp-indigo); border-color: var(--tp-indigo); color: #fff; }
+.xs-info.ev-paint .xs-info-go:hover { background: var(--tp-indigo-dk); border-color: var(--tp-indigo-dk); }
+.xs-info.ev-paint .xs-info-btns button:focus-visible { outline-color: rgba(61, 52, 165, .45); }
 /* The Farm House Night (2026-11-13, the booking app's flow head .fh-flow-*): its summary's head is the venue's rust plate,
    the mark, its name in Rubik 800 peach, when in cream and who it is for under it; its button and its Details' link and
    button in rust */
@@ -497,6 +523,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
 .sc-wrap:has(> .sc-farm) > .orm-btn:hover { background: rgba(255, 255, 255, .1); }
 .sc-wrap:has(> .sc-yoga) > .orm-btn { color: var(--yg-clay-dk); }
 .sc-wrap:has(> .sc-ktri) > .orm-btn { color: var(--kt-blue-dk); }
+.sc-wrap:has(> .sc-paint) > .orm-btn { color: var(--tp-indigo-dk); }
 .sc-wrap:has(> .sc-defe) > .orm-btn { color: #a22b63; }
 @media (max-width: 560px) {
   .sc-wrap > .orm-btn { inset-inline-start: 19px; }

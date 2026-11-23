@@ -26,6 +26,7 @@ const KIND: Record<string, { en: string; ar: string }> = {
   arena: phrase("Arena Heros Hybrid Race", "سباق أرينا هيروز الهجين"), // Arena Heros (2026-10-28): a race in teams of 2, its window as it is
   yoga: phrase("Hatha Yoga for Cyclists", "هاثا يوغا لراكبي الدراجات"), // yoga (2026-11-12): a start and an end, as the pool
   ktri: phrase("KAUST Triathlon", "ترايثلون كاوست"), // the KAUST Triathlon (2026-11-22): its window as it is, booked by members
+  paint: phrase("Tee Painting Workshop", "ورشة الرسم على التيشيرت"), // the Tee Painting Workshop (2026-11-23): a start and an end, as yoga
 };
 
 export default function ClubRides(p: Props) {

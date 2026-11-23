@@ -188,7 +188,7 @@ export default async function BookingsPage({ params, searchParams }: { params: P
   const bikeNames = new Map(await Promise.all(brpBikes.map(async (id) => [id, await bikeName(id)] as const)));
   // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own Edit does; Reschedule and
   // Cancel open its My Bookings. (Victory Lap's and Arena Heros' details change in My Bookings there.)
-  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community", ktri: "community" };
+  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community", ktri: "community", paint: "community" };
   const appLink = (params: Record<string, string>) => {
     try { const u = new URL(app); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
     catch { return book; }

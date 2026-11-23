@@ -12,6 +12,7 @@ import { radioKey, tabStop } from "@/lib/radio-keys";
 import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
 import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
 import { KTRI_MARK, KTRI_MARK_SIZE } from "@/lib/ktri";
+import { PAINT_MARK, PAINT_MARK_SIZE } from "@/lib/paint";
 import { hasKindArt, kindsInOrder, rowsOfKind } from "@/lib/kind-theme";
 import type { Held } from "@/lib/held";
 import { calDayLabel, calDayOf, calKey, calMonth, calMonths, calMove, calOffered, calPlan, calTitle, calToday, calViewRead, calViewSave, calWeekdays, type CalPlan, type CalView } from "@/lib/reserve-calendar";
@@ -157,6 +158,10 @@ export type StepSession = {
    *  ("Report 6:00 AM · KAUST Urban Beach"), where and when the bikes are collected (its summary says it), its foot (what a tap does), the line under a member's hand-over, and for a
    *  visitor who is not a community member where they register instead (`out`, null for a member); absent on any other date. */
   ktri?: { title: { k: string | null; rest: string }; sbr: string; meta: string[]; bike: { k: string; v: string }; foot: string; step: string; out: { url: string; msg: string; btn: string } | null };
+  /** The Tee Painting Workshop's own date card (2026-11-23, "Paint Splash"): its start and end and where ("3:00 PM – 6:00 PM ·
+   *  Red Mug Caffe"), and its price along its foot ("SAR 130 · per person"; null when the session has none); absent on any
+   *  other date. */
+  paint?: { meta: string[]; price: string | null };
   /** What the signed-in visitor already holds on the date (lib/held.ts, 2026-11-13): "ok" Booked, "wl" On the waitlist,
    *  "rsv" Reserved; absent when they hold nothing there, and for a visitor who is not signed in. */
   held?: Held;
@@ -351,6 +356,16 @@ const KtTitle = ({ t, className }: { t: { k: string | null; rest: string }; clas
 );
 /** SWIM · BIKE · RUN between two thin rules (the booking app's _ktSbr). */
 const KtSbr = ({ text }: { text: string }) => <span className="sc-kt-sbr"><i aria-hidden="true" /><span>{text}</span><i aria-hidden="true" /></span>;
+/** Paint splashed from the Tee Painting Workshop's card's far corner (2026-11-23, "Paint Splash"): a broad brush stroke and
+ *  drops in the palette's colours, drawn, never a picture, so it turns with the page. */
+const PaintScene = () => (
+  <svg className="sc-tp-scene" aria-hidden="true" focusable="false" viewBox="0 0 160 80">
+    <path className="sc-tp-s1" d="M58 80c4-14 18-22 34-24 14-2 22-12 36-14 12-2 24 4 32 14V80z" />
+    <path className="sc-tp-s2" d="M96 80c6-10 16-14 28-14 10 0 18-6 26-14 4-4 8-4 10-2V80z" />
+    <circle className="sc-tp-d1" cx="70" cy="44" r="7" /><circle className="sc-tp-d2" cx="104" cy="30" r="5" />
+    <circle className="sc-tp-d3" cx="134" cy="20" r="8" /><circle className="sc-tp-d4" cx="86" cy="20" r="3.5" /><circle className="sc-tp-d1" cx="150" cy="38" r="3" />
+  </svg>
+);
 /** The Farm House Night's fan of rounded feathers (its turkey's tail) rising from its card's far corner around a ring and
  *  a maroon core (the booking app's _fhScene): drawn, never a picture, so it takes the card's colours. */
 const FH_FEATHERS: [number, number, number][] = [
@@ -722,14 +737,14 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
             {feats.map(({ e, s, feat }) => {
               // who leads yoga, and who the Farm House Night is for, where any other date says its price word
               // (and what a tap on the KAUST Triathlon does: book for a member, register on the race's website for anyone else)
-              const foot = s.yoga ? s.yoga.with : s.farm ? s.farm.line : s.ktri ? s.ktri.foot : s.info.price;
+              const foot = s.yoga ? s.yoga.with : s.farm ? s.farm.line : s.ktri ? s.ktri.foot : s.paint ? s.paint.price : s.info.price;
               return (
-                <button key={s.id} type="button" className={`xs-feat-card ev-${s.kind}${s.yoga ? " xs-feat-yg" : s.farm ? " xs-feat-fh" : s.ktri ? " xs-feat-kt" : ""}`} onClick={() => pickFeat(e, s)}>
-                  {s.yoga && <YogaScene />}{s.farm && <FarmScene />}{s.ktri && <KtScene />}
+                <button key={s.id} type="button" className={`xs-feat-card ev-${s.kind}${s.yoga ? " xs-feat-yg" : s.farm ? " xs-feat-fh" : s.ktri ? " xs-feat-kt" : s.paint ? " xs-feat-tp" : ""}`} onClick={() => pickFeat(e, s)}>
+                  {s.yoga && <YogaScene />}{s.farm && <FarmScene />}{s.ktri && <KtScene />}{s.paint && <PaintScene />}
                   <span className="xs-feat-day"><span className="xs-feat-wd">{feat.wd}</span><b>{feat.dn}</b><span>{feat.mo}</span></span>
                   <span className="xs-feat-copy">
                     {s.ktri ? <KtTitle t={s.ktri.title} className="xs-feat-name sc-kt-title" />
-                      : <span className={`xs-feat-name${s.yoga ? " sc-yg-title" : s.farm ? " sc-fh-title" : ""}`}>{s.name}</span>}
+                      : <span className={`xs-feat-name${s.yoga ? " sc-yg-title" : s.farm ? " sc-fh-title" : s.paint ? " sc-tp-title" : ""}`}>{s.name}</span>}
                     {/* a rule before each part, cut where a line starts (.xs-feat-meta), so none starts or ends a line; a
                         ride that gathers says its gathering and its start as two parts */}
                     <span className="xs-feat-meta">
@@ -747,7 +762,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       <span className="xs-feat-meta">
                         <span className="xs-feat-mi">
                           {s.info.place && <span><bdi>{s.info.place}</bdi></span>}
-                          {foot && <span className={s.yoga || s.farm || s.ktri ? "xs-feat-with" : undefined}><bdi>{foot}</bdi></span>}
+                          {foot && <span className={s.yoga || s.farm || s.ktri || s.paint ? "xs-feat-with" : undefined}><bdi>{foot}</bdi></span>}
                         </span>
                       </span>
                       {!s.ktri?.out && stateOf(s)}
@@ -941,6 +956,23 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                     {about}{ring}
                   </div></Fragment>
                 );
+                // The Tee Painting Workshop's own card (2026-11-23, "Paint Splash"): a white canvas with paint splashed from the
+                // far corner, the mark, its name in the palette's ink, its day, its start and end and where, and its price along
+                // the foot with its state
+                if (s.paint) return (
+                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}${ring ? " has-orm" : ""}`}>
+                    <button type="button" className={`sc-card sc-paint ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
+                      <PaintScene />
+                      <span className="sc-tp-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-tp-mark" src={PAINT_MARK} alt="" width={PAINT_MARK_SIZE.width} height={PAINT_MARK_SIZE.height} decoding="async" /></span>
+                      <span className="sc-tp-title">{s.name}</span>
+                      {s.sg && <span className="sc-kicker">{chip(s)}</span>}
+                      <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
+                      <span className="sc-tp-meta">{s.paint.meta.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>
+                      <span className="sc-tp-foot"><span className="sc-tp-price">{s.paint.price && <bdi>{s.paint.price}</bdi>}</span>{spots}</span>
+                    </button>
+                    {about}{ring}
+                  </div></Fragment>
+                );
                 // The KAUST Triathlon's own card (the booking app's _ktSessCard, 2026-11-22): the sky, the sea along the foot, the
                 // mark, its name as the poster sets it, SWIM · BIKE · RUN, when to report and where, and what a tap does along
                 // the foot; its state (full, few left) to a member alone, who may book it
@@ -1056,9 +1088,10 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
               {sess.defe ? <span className="xs-logo small xs-defe-logo"><img src={DEFE_LOGO} alt="" /></span>
                 : sess.yoga ? <span className="xs-logo small xs-yoga-logo"><img src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} /></span>
                 : sess.farm ? <span className="xs-logo small xs-farm-logo"><img src={FARM_MARK} alt="" width={FARM_MARK_SIZE.width} height={FARM_MARK_SIZE.height} /></span>
+                : sess.paint ? <span className="xs-logo small xs-paint-logo"><img src={PAINT_MARK} alt="" width={PAINT_MARK_SIZE.width} height={PAINT_MARK_SIZE.height} /></span>
                 : sess.ktri ? null // its mark is on the sky plate above
                 : ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
-              <div><strong className={sess.yoga ? "xs-yg-name" : sess.farm ? "xs-fh-name" : undefined}>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span>{sess.farm && <span className="xs-fh-sub">{sess.farm.line}</span>}{/* the venue's Instagram on the rust plate before the hand-over (the booking app's .fh-flow-ig; the user, 2026-11-14:
+              <div><strong className={sess.yoga ? "xs-yg-name" : sess.farm ? "xs-fh-name" : sess.paint ? "xs-tp-name" : undefined}>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span>{sess.farm && <span className="xs-fh-sub">{sess.farm.line}</span>}{/* the venue's Instagram on the rust plate before the hand-over (the booking app's .fh-flow-ig; the user, 2026-11-14:
                   "add the insta of the farmhouse in the registration process so people can see before registering") */}
               {sess.farm && sess.info.ig && <a className="xs-fh-ig" href={sess.info.ig.url} target="_blank" rel="noopener noreferrer" aria-label={`${sess.info.ig.label} @${sess.info.ig.handle}`}><IgMark /><bdi dir="ltr">@{sess.info.ig.handle}</bdi></a>}</div>
             </div>
@@ -1071,8 +1104,9 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
             {ev.blood && <ul className="bld-sum">{ev.blood.rules.map((x, i) => <li key={i}><Tick /><span>{x}</span></li>)}</ul>}
             {sess.event && sess.description && <p className="xs-rules">{sess.description}</p>}
             {facts(sess)}
-            {/* Victory Lap's and Arena Heros' price per athlete, to a visitor who may book it alone (its Details' price) */}
-            {(sess.kind === "vlap" || sess.kind === "arena") && sess.info.price && <p className="xs-rules xs-vl-price"><bdi>{sess.info.price}</bdi></p>}
+            {/* Victory Lap's and Arena Heros' price per athlete, to a visitor who may book it alone (its Details' price); the Tee
+                Painting Workshop's per person, the price alone (2026-11-23) */}
+            {(sess.kind === "vlap" || sess.kind === "arena" || sess.kind === "paint") && sess.info.price && <p className="xs-rules xs-vl-price"><bdi>{sess.info.price}</bdi></p>}
             {sess.payNote && <p className="xs-rules">{sess.payNote}</p>}
             {/* the community card's rules speak of riders and the ride: not on its pool session or the DEFE run */}
             {ev.note && !(ev.key === "community" && noBike(sess)) && <p className="xs-rules">{ev.note}</p>}
@@ -1098,12 +1132,12 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
             <p className="xs-refuse" role="alert">{sess.refusal}</p>
           ) : (
             <>
-              <a className={`xs-go${ev.blood ? " ev-blood" : sess.yoga ? " ev-yoga" : sess.farm ? " ev-farm" : sess.ktri ? " ev-ktri" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
+              <a className={`xs-go${ev.blood ? " ev-blood" : sess.yoga ? " ev-yoga" : sess.farm ? " ev-farm" : sess.ktri ? " ev-ktri" : sess.paint ? " ev-paint" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
               {/* a member on the KAUST Triathlon picks their race in the booking app, then enters it on its website */}
               {sess.ktri && <p className="xs-handoff">{sess.ktri.step}</p>}
               {/* one place per account, so never "add the participants" on the Blood Donation event, nor on yoga (the booking
                   app's _noGroupAdd); the Farm House Night says it, as the member adds their family there */}
-              {!ev.blood && !sess.yoga && !sess.ktri && !sess.here && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
+              {!ev.blood && !sess.yoga && !sess.ktri && !sess.paint && !sess.here && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
             </>
           )}
         </section>

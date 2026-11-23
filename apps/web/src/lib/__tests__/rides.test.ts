@@ -655,9 +655,9 @@ describe("yoga (ride_kind 'yoga', 2026-11-12)", () => {
 // put featured sessions and special events such as hatha yoga class"): the booking app's _featured, read from the same
 // settings blob as the session's times. No column and no migration.
 describe("featured (bike_slots._feat, 2026-11-13)", () => {
-  const ALL = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena", "blood", "yoga", "farm", "ktri"] as const;
-  it("can be said of a date inside MicroMobility Experiences only: the Saturday ride, a Petromin night, the pool, the DEFE 5KM Run, yoga, the Farm House Night and the KAUST Triathlon", () => {
-    expect([...FEATURE_OK].sort()).toEqual(["defe5k", "farm", "ktri", "petromin", "saturday", "swim", "yoga"]);
+  const ALL = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena", "blood", "yoga", "farm", "ktri", "paint"] as const;
+  it("can be said of a date inside MicroMobility Experiences only: the Saturday ride, a Petromin night, the pool, the DEFE 5KM Run, yoga, the Farm House Night, the KAUST Triathlon and the Tee Painting Workshop", () => {
+    expect([...FEATURE_OK].sort()).toEqual(["defe5k", "farm", "ktri", "paint", "petromin", "saturday", "swim", "yoga"]);
     for (const k of ALL) expect(featuredOf(k, '{"_feat":1}'), k).toBe(FEATURE_OK.includes(k));
     // a kind with a card of its own, and a circuit night, never: whatever its settings say
     for (const k of ["jcc", "workshop", "event", "runher", "vlap", "arena", "blood", "snd96"] as const) {
@@ -678,10 +678,10 @@ describe("featured (bike_slots._feat, 2026-11-13)", () => {
       expect(featuredOf(k, '{"_feat":false}'), k).toBe(false);
     }
   });
-  it("is the kind's own answer with no _feat at all: yoga, the DEFE 5KM Run, the Farm House Night and the KAUST Triathlon are featured as made, the others not", () => {
-    expect([...FEATURED_KINDS].sort()).toEqual(["defe5k", "farm", "ktri", "yoga"]);
+  it("is the kind's own answer with no _feat at all: yoga, the DEFE 5KM Run, the Farm House Night, the KAUST Triathlon and the Tee Painting Workshop are featured as made, the others not", () => {
+    expect([...FEATURED_KINDS].sort()).toEqual(["defe5k", "farm", "ktri", "paint", "yoga"]);
     for (const v of ['{"_time":"16:00 - 17:30"}', "{}", { _time: "19:00" }, '{"_feat":null}', null, undefined, "", "not json", 42, "[]"]) {
-      for (const k of FEATURE_OK) expect(featuredOf(k, v), `${k} ${String(v)}`).toBe(k === "yoga" || k === "defe5k" || k === "farm" || k === "ktri");
+      for (const k of FEATURE_OK) expect(featuredOf(k, v), `${k} ${String(v)}`).toBe(k === "yoga" || k === "defe5k" || k === "farm" || k === "ktri" || k === "paint");
     }
   });
   it("is on every session the site reads, from its row", () => {

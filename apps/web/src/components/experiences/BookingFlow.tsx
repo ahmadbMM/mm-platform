@@ -270,6 +270,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     return () => { document.title = base; };
   }, [stepName]);
   const free = !!sel?.free;
+  // the Tee Painting Workshop (2026-11-23): its price alone, how to pay announced later, so no code and no locker
+  const priceOnly = sel?.kind === "paint";
   const booked = sel && acctNow ? acctNow.live[sel.id] ?? 0 : 0;
   const cap = sel ? maxRiders(sel, booked, jccCap, seatMax) : jccCap;
   const qty = riders.length;
@@ -515,7 +517,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   );
   const fromLine = (s: BookSession): React.ReactNode => {
     const p = fromPrice(s, prices);
-    return !p ? null : p.kind === "free" ? t.free : fillNode(p.kind === "seat" ? t.perSeat : t.from, <Money n={p.n} word={word} />);
+    // the Tee Painting Workshop's place: its price alone, never "per seat" (2026-11-23)
+    return !p ? null : p.kind === "free" ? t.free : p.kind === "seat" && s.kind === "paint" ? <Money n={p.n} word={word} /> : fillNode(p.kind === "seat" ? t.perSeat : t.from, <Money n={p.n} word={word} />);
   };
   const cardStop = (list: BookSession[]) => tabStop(list, (x) => x.id === selId, (x) => !x.opens && !x.satLink && !x.handoff && !x.fbk);
   const cardKeys = (e: React.KeyboardEvent<HTMLElement>, list: BookSession[]) => {
@@ -589,7 +592,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   // The promo code behind a link that opens it in place, open while a code is applied, typed or answered. None on a free
   // ride (no pay controls on a free ride, the owner, 2026-10-06).
   const promoShown = promoOpen || !!promo || !!promoIn || !!promoMsg;
-  const promoBox = (slot: string) => (free ? null : !promoShown ? (
+  const promoBox = (slot: string) => (free || priceOnly ? null : !promoShown ? (
     <div className="bk-promo">
       <button type="button" className="bk-link" aria-expanded={false}
         onClick={() => { setPromoOpen(true); requestAnimationFrame(() => document.getElementById(`bk-promo-${slot}`)?.focus()); }}>{t.promo}</button>
@@ -899,7 +902,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           </div>
         )}
         {/* a locker for the evening, where the session offers lockers (none on a free ride): it draws nothing otherwise */}
-        {!free && !isAlready && (
+        {!free && !priceOnly && !isAlready && (
           <div className={`bk-card bk-lk${lk.offered ? "" : " bk-lk-none"}`}>
             <LockerPick sessionId={sel.id} day={sel.date} locale={locale} max={riders.length} value={lk} onChange={setLk} words={mw} sarWord={word} />
           </div>

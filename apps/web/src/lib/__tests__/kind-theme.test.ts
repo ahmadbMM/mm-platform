@@ -41,8 +41,8 @@ describe("sunrise on the Corniche (the booking app's _sunriseMin)", () => {
 
 describe("the kinds' order (the booking app's COMM_MARKS)", () => {
   const s = (kind: string) => ({ kind });
-  it("is the Saturday ride, the pool, Petromin, yoga, the Farm House Night, the DEFE run and the KAUST Triathlon", () => {
-    expect([...KIND_ORDER]).toEqual(["saturday", "swim", "petromin", "yoga", "farm", "defe5k", "ktri"]);
+  it("is the Saturday ride, the pool, Petromin, yoga, the Farm House Night, the DEFE run, the KAUST Triathlon and the Tee Painting Workshop", () => {
+    expect([...KIND_ORDER]).toEqual(["saturday", "swim", "petromin", "yoga", "farm", "defe5k", "ktri", "paint"]);
     // the KAUST Triathlon (2026-11-22) last, as the booking app's COMM_MARKS has it
     expect(kindsInOrder([s("ktri"), s("defe5k"), s("saturday")])).toEqual(["saturday", "defe5k", "ktri"]);
     // the Farm House Night (2026-11-13) between yoga and the DEFE run, as the booking app's COMM_MARKS has it
