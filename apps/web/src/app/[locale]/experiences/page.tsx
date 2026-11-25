@@ -165,8 +165,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 // app to do it on the main website"): their last step opens the booking steps here (?ev=&session=, BookingFlow). Every
 // other kind keeps its hand-over to the booking app, which has its own steps: a run's runner details, a race's athlete
 // step (Victory Lap, Arena Heros), the Blood Donation event's donor step, and the Petromin nights (micromobility.sa/petromin
-// and the booking app's Petromin Days).
-const HERE = new Set<RideKind>(["jcc", "saturday", "swim", "workshop", "snd96", "event", "yoga", "farm", "paint"]);
+// and the booking app's Petromin Days). The Wednesday Community Ride (2026-11-25; lib/wed.ts) is booked here as a Saturday ride
+// is, with no ride groups: each member picks a bike type at its standard fare, paid at the desk, or their own bike, free.
+const HERE = new Set<RideKind>(["jcc", "saturday", "swim", "workshop", "snd96", "event", "yoga", "farm", "paint", "wed"]);
 const ID = (v: string | string[] | undefined) => (typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : null);
 
 export default async function ExperiencesPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
@@ -248,7 +249,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
-    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga), aboutFarm: fw.about, aboutKtri: S(d.aboutKtri), aboutPaint: S(d.aboutPaint),
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga), aboutFarm: fw.about, aboutKtri: S(d.aboutKtri), aboutPaint: S(d.aboutPaint), aboutWed: S(d.aboutWed),
     sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
   };
   const whoWords = {

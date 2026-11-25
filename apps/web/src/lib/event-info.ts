@@ -55,7 +55,7 @@ export const fillTimes = (text: string, t: InfoTimes): string => fill(text, t);
 
 /** The Experiences texts a date's Details start with: the dates section's about* fields, and the
  *  events section's own for the National Day ride and the ticketed events. */
-export type DateTexts = { aboutJcc: string; aboutSat: string; aboutPetro: string; aboutSwim: string; aboutWs: string; aboutRun: string; aboutVl: string; aboutDefe: string; aboutAr: string; aboutYoga: string; aboutFarm: string; aboutKtri: string; aboutPaint: string; sndAbout: string; evAbout: string };
+export type DateTexts = { aboutJcc: string; aboutSat: string; aboutPetro: string; aboutSwim: string; aboutWs: string; aboutRun: string; aboutVl: string; aboutDefe: string; aboutAr: string; aboutYoga: string; aboutFarm: string; aboutKtri: string; aboutPaint: string; aboutWed: string; sndAbout: string; evAbout: string };
 
 /** Which text a date's Details say (the booking app's INFO_DT): its kind's own, filled with its
  *  times, and the circuit's for any kind without one; a ticketed event says its own description
@@ -64,7 +64,7 @@ export function dateText(s: Pick<RideSession, "kind" | "description">, texts: Da
   if (s.kind === "event" && s.description) return s.description;
   const of: Partial<Record<RideKind, string>> = {
     jcc: texts.aboutJcc, saturday: texts.aboutSat, petromin: texts.aboutPetro, swim: texts.aboutSwim, workshop: texts.aboutWs,
-    runher: texts.aboutRun, vlap: texts.aboutVl, defe5k: texts.aboutDefe, arena: texts.aboutAr, yoga: texts.aboutYoga, farm: texts.aboutFarm, ktri: texts.aboutKtri, paint: texts.aboutPaint, snd96: texts.sndAbout, event: texts.evAbout, blood: "",
+    runher: texts.aboutRun, vlap: texts.aboutVl, defe5k: texts.aboutDefe, arena: texts.aboutAr, yoga: texts.aboutYoga, farm: texts.aboutFarm, ktri: texts.aboutKtri, paint: texts.aboutPaint, wed: texts.aboutWed, snd96: texts.sndAbout, event: texts.evAbout, blood: "",
   };
   return fillTimes(of[s.kind] ?? texts.aboutJcc, times);
 }
@@ -162,7 +162,8 @@ export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval" | "
   // Victory Lap never says how many places are left, only the waitlist once it is full (the owner, 2026-10-17);
   // nor Arena Heros, whose places are an athlete's each while a team books two, nor the Blood Donation event, which
   // has no real cap (the owner, 2026-11-03)
-  if (s.kind === "vlap" || s.kind === "arena" || s.kind === "blood") return s.left <= 0 ? t.waitlist : few;
+  // nor the Wednesday Community Ride, which has no place limit to say (2026-11-25)
+  if (s.kind === "vlap" || s.kind === "arena" || s.kind === "blood" || s.kind === "wed") return s.left <= 0 ? t.waitlist : few;
   if (s.left <= 0) return t.waitlist;
   if (s.left > 3 && few) return few;
   return fillAt(s.left === 1 ? t.left1 : t.leftN, s.left);
@@ -183,8 +184,8 @@ export function infoBreakfast(s: Pick<RideSession, "kind" | "breakfast" | "break
  *  community rides, and the National Day ride, the T100 workshop, the ticketed events, Run for Her,
  *  Victory Lap, Arena Heros (ev=arena) and the Blood Donation event (ev=blood), which have cards of their own while they have dates. A Petromin night counts as a community ride
  *  here; Petromin Days takes its own (eventCards). The DEFE 5KM Run (2026-10-18), yoga (2026-11-12) and the Farm House
- *  Night (2026-11-13) and the KAUST Triathlon (2026-11-22) and the Tee Painting Workshop (2026-11-23) are dates inside MicroMobility Experiences, the community card, never cards of their own. */
-export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community", ktri: "community", paint: "community" };
+ *  Night (2026-11-13) and the KAUST Triathlon (2026-11-22) and the Tee Painting Workshop (2026-11-23) and the Wednesday Community Ride (2026-11-25) are dates inside MicroMobility Experiences, the community card, never cards of their own. */
+export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community", ktri: "community", paint: "community", wed: "community" };
 
 /** The event cards in the order the page shows them, each with its texts' prefix in Experiences'
  *  events section and whether it shows with no date. MicroMobility Experiences, the community card, leads (the owner's

@@ -370,8 +370,9 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
 
 /** Whether a booking on this ride is paid online (rentals 20261110150000 pay_booking_start): a paid ride that is
  *  not a race (the organiser's money, by transfer) nor a Petromin night (the company's bill or the desk), nor the Tee
- *  Painting Workshop, whose payment is announced later (2026-11-23). */
-export const payableOnline = (s: Pick<LiveSession, "free" | "kind">) => !s.free && !["vlap", "arena", "petromin", "paint"].includes(s.kind);
+ *  Painting Workshop, whose payment is announced later (2026-11-23), nor the Wednesday Community Ride, paid at the desk as a
+ *  Petromin night is (2026-11-25). */
+export const payableOnline = (s: Pick<LiveSession, "free" | "kind">) => !s.free && !["vlap", "arena", "petromin", "paint", "wed"].includes(s.kind);
 
 /** The add-on items the listed sessions sell, read with the public key (the columns the booking app's customers read:
  *  never what the shop pays). Staging's page reads them the same way. */

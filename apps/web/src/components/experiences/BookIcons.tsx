@@ -32,5 +32,6 @@ export function Ic({ name, size = 16, flip = false, className = "" }: { name: Ic
 const KIND_IC: Record<string, IconName> = {
   saturday: "people", petromin: "people", event: "ticket", workshop: "clock", swim: "wave", snd96: "flag", jcc: "bike",
   runher: "people", defe5k: "people", vlap: "flag", arena: "flag", blood: "ticket", yoga: "people", farm: "people", ktri: "wave", paint: "shirt",
+  wed: "people", // the Wednesday Community Ride (2026-11-25): the Saturday ride's
 };
 export const KindIc = ({ kind }: { kind: string }) => <Ic name={KIND_IC[kind] ?? "bike"} size={14} />;

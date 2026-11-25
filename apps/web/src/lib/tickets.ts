@@ -13,6 +13,7 @@ import { isBloodId } from "./blood";
 import { igOf } from "./instagram";
 import { KTRI_VENUE, triRaceOf, type TriRace } from "./ktri";
 import { PAINT_VENUE } from "./paint";
+import { wedMeetUrl } from "./wed";
 import { sessionGender, type SessionGender } from "./session-gender";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
@@ -393,11 +394,12 @@ export function ticketSession(r: Row): TicketSession | null {
     approval: community && r.needs_approval !== false,
     published: community && r.hide_queue === false,
     times: slotTimes(r.bike_slots),
-    // the Farm House Night gathers too (2026-11-13): its arrival, then dinner
-    gathers: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "farm",
+    // the Farm House Night gathers too (2026-11-13): its arrival, then dinner; and the Wednesday Community Ride (2026-11-25)
+    gathers: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "farm" || kind === "wed",
     collect,
     ...(wlCollect !== undefined ? { wlCollect } : {}),
-    meetUrl: /^https:\/\//i.test(meet) ? meet : null,
+    // the Wednesday Community Ride meets at the Saturday ride's start point when its row names no map (lib/wed.ts)
+    meetUrl: wedMeetUrl(kind, /^https:\/\//i.test(meet) ? meet : null),
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
     bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga" && kind !== "farm" && kind !== "ktri" && kind !== "paint",
@@ -572,10 +574,12 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
  *  named (SILKDEER); one with a map link and no place's name is at its meeting point, never the circuit (the booking
  *  app's _venueName). The Farm House Night (2026-11-13), a ride staff approve with its map link, is named by the place
  *  staff wrote (Little Farmhouse, Dhahban, which the booking app names by sessions.meet_name), never "Meeting point";
- *  one with no place written is at its meeting point. */
+ *  one with no place written is at its meeting point. The Wednesday Community Ride (2026-11-25), which nobody approves, meets
+ *  at the Saturday ride's start point as that ride does: its meeting point, unless staff named a place. */
 export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "gym" } | { kind: "text"; text: string };
 export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
   if (s?.approval && s.meetUrl && !(s.kind === "farm" && s.location)) return { kind: "meet" };
+  if (s?.kind === "wed" && !s.location && s.meetUrl) return { kind: "meet" };
   if (s?.kind === "yoga" && !s.location && s.meetUrl) return { kind: "meet" };
   const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : s?.kind === "blood" ? "JCC" : s?.kind === "ktri" ? KTRI_VENUE : s?.kind === "paint" ? PAINT_VENUE : "");
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : loc === AH_VENUE ? { kind: "gym" } : { kind: "text", text: loc };
@@ -588,10 +592,11 @@ export function venueText(v: Venue, t: { meetingPoint: string; venueCircuit: str
 }
 
 /** A ride that meets at a point staff set (sessions.meet_url) rather than at the circuit (_meetsAt):
- *  the rides staff approve, and the runs (Run for Her, the DEFE 5KM Run: the booking app's _isRun). The
+ *  the rides staff approve, the runs (Run for Her, the DEFE 5KM Run: the booking app's _isRun) and the Wednesday Community
+ *  Ride, at the Saturday ride's start point (2026-11-25). The
  *  ticket's place button opens that point and says so ("Meeting point"), and the calendar file puts it
  *  as the place. */
-export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined): boolean => !!s && (s.approval || s.kind === "runher" || s.kind === "defe5k");
+export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined): boolean => !!s && (s.approval || s.kind === "runher" || s.kind === "defe5k" || s.kind === "wed");
 
 /** The map a ticket's place button opens (My Account): a ride that meets at a point (meetsAt) opens that point;
  *  Arena Heros (2026-10-28), at a venue of its own, opens the venue's map staff set (sessions.meet_url), or none

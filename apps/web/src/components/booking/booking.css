@@ -811,6 +811,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
    the Details dialog, on a featured date's card above the event cards and on its dot in the date step's calendar
    (experiences.css). */
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-saturday { --ev: var(--k-sat); }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-wed { --ev: var(--k-sat); } /* the Wednesday Community Ride: the Saturday ride's green (2026-11-25) */
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-jcc { --ev: #2f63ad; }
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-swim { --ev: var(--k-pool); }
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-workshop { --ev: #c2410c; }

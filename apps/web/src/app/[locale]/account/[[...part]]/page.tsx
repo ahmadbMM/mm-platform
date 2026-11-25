@@ -41,6 +41,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, type RideKind } from "@/lib/rides";
+import { MEMBERS_EYES } from "@/lib/farm";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
 import { loadBadgeData, loadBikeTypes, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
 import { myRecords } from "@/lib/my-records";
@@ -423,8 +424,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const anniv = anniversaryOf(stats?.first, today);
     const recs = myRecords(record, recSessions, (id) => bikeTypes.get(id) ?? null);
     // a Farm House Night on offer is named to a community member alone (2026-11-13: "not to public")
-    // and so is a Tee Painting Workshop (2026-11-23)
-    if ((openKinds?.has("farm") || openKinds?.has("paint")) && (await rpcServer<boolean>("community_member", a)).data !== true) { openKinds.delete("farm"); openKinds.delete("paint"); }
+    // and so is a Tee Painting Workshop (2026-11-23) and a Wednesday Community Ride (2026-11-25): lib/farm.ts MEMBERS_EYES
+    if (openKinds && [...MEMBERS_EYES].some((k) => openKinds.has(k as RideKind)) && (await rpcServer<boolean>("community_member", a)).data !== true) for (const k of MEMBERS_EYES) openKinds.delete(k as RideKind);
     const tried = openKinds ? triedKinds(more.byKind.map(([k]) => k), openKinds) : [];
     return (
       <section className="ac-sec" aria-label={recordText.stats}>

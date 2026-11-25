@@ -9,7 +9,7 @@ import type { RideKind } from "./rides";
 // Plain logic, so it can be tested.
 
 /** The kinds ridden on a bike (the booking app's KIND_TRAITS). */
-export const BIKE_KINDS: ReadonlySet<RideKind> = new Set<RideKind>(["jcc", "saturday", "petromin", "snd96"]);
+export const BIKE_KINDS: ReadonlySet<RideKind> = new Set<RideKind>(["jcc", "saturday", "petromin", "snd96", "wed"]); // the Wednesday Community Ride (2026-11-25)
 /** The kinds without a bike (the same list as lib/rides.ts rideKind's, lib/event-info.ts rentsBikes). */
 export const NON_BIKE_KINDS: ReadonlySet<string> = new Set<RideKind>(["swim", "workshop", "event", "runher", "vlap", "defe5k", "arena", "blood", "yoga", "farm", "ktri", "paint"]);
 /** A session id the booking app gives a kind without a bike (its _sessIdSuffix: '-tw' the workshop, '-ev' an

@@ -181,7 +181,7 @@ describe("the Farm House Night's facts (lib/event-info.ts)", () => {
     expect(infoWho({ ...s, kind: "yoga" }, who)).toBe("Community members");
     expect(infoPrice(s, { free: "Complimentary", seat: null, from: "from SAR 57.5" })).toBe("Complimentary");
     expect(infoPlaces({ ...s, left: 3 }, { waitlist: "Waitlist", left1: "{0} spot left", leftN: "{0} spots left" })).toBeNull();
-    expect(dateText(s, { aboutJcc: "J", aboutSat: "S", aboutPetro: "P", aboutSwim: "W", aboutWs: "T", aboutRun: "R", aboutVl: "V", aboutDefe: "D", aboutAr: "A", aboutYoga: "Y", aboutFarm: "Arrive {gather}, dinner {start}.", aboutKtri: "K", aboutPaint: "TP", sndAbout: "N", evAbout: "E" }, infoTimes(s, (x) => fmtClock(x, "en")))).toBe("Arrive 4:30 PM, dinner 8:30 PM.");
+    expect(dateText(s, { aboutJcc: "J", aboutSat: "S", aboutPetro: "P", aboutSwim: "W", aboutWs: "T", aboutRun: "R", aboutVl: "V", aboutDefe: "D", aboutAr: "A", aboutYoga: "Y", aboutFarm: "Arrive {gather}, dinner {start}.", aboutKtri: "K", aboutPaint: "TP", aboutWed: "WC", sndAbout: "N", evAbout: "E" }, infoTimes(s, (x) => fmtClock(x, "en")))).toBe("Arrive 4:30 PM, dinner 8:30 PM.");
   });
   it("is at the place staff wrote with the farm's own map, never \"Meeting point\" nor the circuit", () => {
     const words = { meetingPoint: "Meeting point", venueCircuit: "Jeddah Corniche Circuit", venueJyc: "Jeddah Yacht Club" };

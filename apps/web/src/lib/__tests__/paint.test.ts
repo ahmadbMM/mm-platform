@@ -117,7 +117,7 @@ describe("the Tee Painting Workshop's kind", () => {
     expect(rentsBikes("paint")).toBe(false);
     expect(waiverKind(ticketSession(TP)!)).toBe("activity");
     expect(EVENT_OF.paint).toBe("community");
-    expect(KIND_ORDER.at(-1)).toBe("paint");
+    expect(KIND_ORDER).toContain("paint"); // the Wednesday Community Ride after it since 2026-11-25
     expect(LM_KINDS).toContain("paint");
     expect(isPaint(s)).toBe(true);
     expect(membersOnlyDate(s)).toBe(true);

@@ -105,7 +105,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   // The members' rides are named as Experiences names them, and booked in the booking app on that ride
   // (the kind is the session's ride_kind: Run for Her, 'runher', opens on its own event, ev=runher, and
   // Victory Lap, 'vlap', on its own, ev=vlap, and Arena Heros, 'arena', on its own, ev=arena; the DEFE 5KM Run,
-  // 'defe5k', yoga, 'yoga', the Farm House Night, 'farm', the KAUST Triathlon, 'ktri', and the Tee Painting Workshop, 'paint', are community dates, ev=community). The Farm House Night's name
+  // 'defe5k', yoga, 'yoga', the Farm House Night, 'farm', the KAUST Triathlon, 'ktri', the Tee Painting Workshop, 'paint', and the Wednesday Community Ride, 'wed', are community dates, ev=community). The Farm House Night's name
   // is the server's (content/farm-words.ts): the members' area names it to a member alone; the rides listed to every
   // visitor (ClubRides) never do.
   const d = resolvePage(experiencesSchema, content, L).dates;

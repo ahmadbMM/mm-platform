@@ -142,7 +142,7 @@ export function whenLabel(at: string | null | undefined): string {
 /** Does a session keep its times as "gather - start" rather than "start - end"? The booking app's _gathersTime: the
  *  Saturday ride (and any community kind it does not name), the National Day ride, Run for Her, Victory Lap and the Farm
  *  House Night (its arrival, then dinner; 2026-11-13) gather, and their second time is when they set off, not when they
- *  end. */
+ *  end. The Wednesday Community Ride (2026-11-25) gathers too: its meeting, then its start. */
 export function gathers(s: { ride_kind?: string | null; event_kind?: string | null }): boolean {
   const kind = s.ride_kind ?? "";
   if (kind === "snd96") return true;
@@ -169,7 +169,8 @@ const KIND_NAMES: Record<string, Key> = { saturday: "evSatName", petromin: "evPe
   event: "evEventName", runher: "evRunHerName", vlap: "evVlapName", arena: "evArenaName", defe5k: "evDefeName", blood: "evBloodName", yoga: "evYogaName",
   farm: "evFarmName", // the Farm House Night (2026-11-13), named as the booking app's _vol_sess_name names it
   ktri: "evKtriName", // the KAUST Triathlon (2026-11-22), as the booking app's _vol_sess_name names it
-  paint: "evPaintName" }; // the Tee Painting Workshop (2026-11-23)
+  paint: "evPaintName", // the Tee Painting Workshop (2026-11-23)
+  wed: "evWedName" }; // the Wednesday Community Ride (2026-11-25): it gathers, as the Saturday ride does
 function nameIn(s: { title?: string | null; ride_kind?: string | null }, word: (k: Key) => string): string {
   const kind = s.ride_kind ?? "";
   if (!Object.prototype.hasOwnProperty.call(KIND_NAMES, kind)) return word("evJccName");

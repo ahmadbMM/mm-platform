@@ -33,6 +33,7 @@ export const isFarm = (s: { kind?: string | null } | null | undefined): boolean 
  *  shows it whatever. */
 export const farmForMembers = <T extends { kind?: string | null }>(sessions: readonly T[], member: boolean): T[] =>
   member ? [...sessions] : sessions.filter((s) => !MEMBERS_EYES.has(s.kind ?? ""));
-/** The kinds a signed-in community member alone sees (farmForMembers): the Farm House Night, and the Tee Painting Workshop
- *  since 2026-11-23 (the user: exclusively for community members; the booking app hides it from anyone else). */
-export const MEMBERS_EYES: ReadonlySet<string> = new Set(["farm", "paint"]);
+/** The kinds a signed-in community member alone sees (farmForMembers): the Farm House Night, the Tee Painting Workshop
+ *  since 2026-11-23 (the user: exclusively for community members; the booking app hides it from anyone else), and the
+ *  Wednesday Community Ride since 2026-11-25 (the user: "community exclusive event"; lib/wed.ts). */
+export const MEMBERS_EYES: ReadonlySet<string> = new Set(["farm", "paint", "wed"]);

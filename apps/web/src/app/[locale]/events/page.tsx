@@ -25,7 +25,7 @@ import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { AH_VENUE } from "@/lib/arena";
 import { yogaLength } from "@/lib/yoga";
 import { PAINT_VENUE } from "@/lib/paint";
-import { farmForMembers } from "@/lib/farm";
+import { farmForMembers, MEMBERS_EYES } from "@/lib/farm";
 import { KTRI_REG_URL, KTRI_REPORT, KTRI_VENUE, ktriOut } from "@/lib/ktri";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { ArrowIcon, CalendarIcon } from "@/components/site/Icons";
@@ -52,12 +52,14 @@ import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 // tag: a community member books it on the community card (ev=community), and anyone else is sent to the race's
 // registration website in place of Book (the booking app's _ktGate). The Tee Painting Workshop (2026-11-23; lib/paint.ts) is
 // listed in its indigo with its start and end and where (Red Mug Caffe), booked on the community card (ev=community), to a
-// signed-in community member alone, as the Farm House Night (lib/farm.ts farmForMembers).
+// signed-in community member alone, as the Farm House Night (lib/farm.ts farmForMembers). The Wednesday Community Ride
+// (2026-11-25; lib/wed.ts) is listed in the Saturday ride's green with its gathering and start, booked on the community card
+// (ev=community), to a signed-in community member alone too; never a places-left count.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16", yoga: "#b4532f", farm: "#8a3f27", ktri: "#1565b4", paint: "#3d34a5" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16", yoga: "#b4532f", farm: "#8a3f27", ktri: "#1565b4", paint: "#3d34a5", wed: "#077a4b" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -78,7 +80,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community", ktri: "community", paint: "community" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community", ktri: "community", paint: "community", wed: "community" };
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
@@ -95,7 +97,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const ahead = upcoming(withoutPetromin(rides?.sessions ?? []), now);
   // and while a date ahead is for members first (2026-11-18): a member reads its mark and books, anyone else waits
   // and while a KAUST Triathlon date is (2026-11-22): a member books it, anyone else is sent to the race's registration
-  const member = ahead.some((s) => s.kind === "farm" || s.kind === "paint" || s.kind === "ktri" || mfAt(s, drawn.getTime())) ? await communityMember() : false;
+  const member = ahead.some((s) => MEMBERS_EYES.has(s.kind) || s.kind === "ktri" || mfAt(s, drawn.getTime())) ? await communityMember() : false;
   const sessions = farmForMembers(ahead, member).slice(0, Math.max(1, N(c.hero.count)));
   const sgWords = genderText(tx);
   // a session for the other gender says so in place of Book to a signed-in account (or one with none on file); a

@@ -12,7 +12,8 @@ import { farmForMembers } from "@/lib/farm";
 // (lib/date-pattern), since a browser may not know the language. The Blood Donation event is no ride: club_rides gives
 // it as it gives any open community session, and this list leaves it out. It leaves out a farm night too (ride_kind
 // 'farm', 2026-11-13), which is for community members' eyes alone: this list is every visitor's (lib/farm.ts
-// farmForMembers), and the members' area names it to a member.
+// farmForMembers), and the members' area names it to a member; so are the Tee Painting Workshop and the Wednesday
+// Community Ride (2026-11-25).
 type Ride = { title: string; date: string; time: string | null; kind: string | null };
 type Props = { locale: string; href: string; empty: string; dayFmt: DatePattern };
 const KIND: Record<string, { en: string; ar: string }> = {
@@ -27,6 +28,7 @@ const KIND: Record<string, { en: string; ar: string }> = {
   yoga: phrase("Hatha Yoga for Cyclists", "هاثا يوغا لراكبي الدراجات"), // yoga (2026-11-12): a start and an end, as the pool
   ktri: phrase("KAUST Triathlon", "ترايثلون كاوست"), // the KAUST Triathlon (2026-11-22): its window as it is, booked by members
   paint: phrase("Tee Painting Workshop", "ورشة الرسم على التيشيرت"), // the Tee Painting Workshop (2026-11-23): a start and an end, as yoga
+  wed: phrase("Wednesday Community Ride", "جولة الأربعاء المجتمعية"), // the Wednesday Community Ride (2026-11-25): it gathers, as the Saturday ride
 };
 
 export default function ClubRides(p: Props) {

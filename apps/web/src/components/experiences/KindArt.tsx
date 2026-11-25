@@ -29,6 +29,7 @@ const KIND_GLYPH: Record<string, string> = {
   saturday: "people", petromin: "stripes", event: "ticket", workshop: "clock", swim: "wave", snd96: "flag", jcc: "bike",
   runher: "run", vlap: "flag", arena: "flag", defe5k: "run", blood: "ticket", yoga: "lotus", farm: "barn", ktri: "wave", // the KAUST Triathlon: the water (2026-11-22)
   paint: "shirt", // the Tee Painting Workshop: a T-shirt with a brush stroke (2026-11-23)
+  wed: "people", // the Wednesday Community Ride: the Saturday ride's people (2026-11-25)
 };
 
 export function KindIcon({ kind, size = 16 }: { kind: string; size?: number }) {

@@ -196,7 +196,7 @@ html:is([lang="ar"], [lang="ur"]) .bk-title { letter-spacing: 0; line-height: 1.
 .bk-pop-head > div { min-width: 0; }
 .bk-pop-title { font-size: 20px; font-weight: 700; line-height: 1.25; margin: 0; flex: 1; }
 .bk-pop-kind { margin: 2px 0 0; font-size: 13px; font-weight: 700; color: var(--ev, #077a4b); }
-.bk-pop-kind.ev-saturday { --ev: #077a4b; }
+.bk-pop-kind:is(.ev-saturday, .ev-wed) { --ev: #077a4b; }
 .bk-pop-msg { font-size: 14.5px; line-height: 1.6; color: #2e352f; margin: 0 0 12px; }
 .bk-pop-for { font-size: 13.5px; line-height: 1.55; color: #4a4843; margin: 0 0 16px; }
 .bk-pop-for b { color: #1a1919; }

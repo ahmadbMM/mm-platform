@@ -21,7 +21,8 @@ describe("the Riyadh day of a moment the database wrote", () => {
 describe("a session that gathers (the booking app's _gathersTime)", () => {
   it("is the Saturday ride, the National Day ride, Run for Her, Victory Lap and the Farm House Night", () => {
     // the Farm House Night (2026-11-13): its arrival, then dinner, as the booking app's KIND_TRAITS farm gathers
-    for (const k of ["saturday", "runher", "vlap", "farm", null]) expect(gathers({ ride_kind: k, event_kind: "community" }), String(k)).toBe(true);
+    // the Wednesday Community Ride (2026-11-25): its meeting, then its start, as the Saturday ride
+    for (const k of ["saturday", "runher", "vlap", "farm", "wed", null]) expect(gathers({ ride_kind: k, event_kind: "community" }), String(k)).toBe(true);
     expect(gathers({ ride_kind: "snd96", event_kind: null })).toBe(true);
     for (const k of ["petromin", "swim", "workshop", "event", "arena", "defe5k", "blood", "yoga", "ktri", "paint"]) expect(gathers({ ride_kind: k, event_kind: "community" }), k).toBe(false);
     expect(gathers({ ride_kind: null, event_kind: null })).toBe(false); // the circuit's own nights
@@ -54,6 +55,9 @@ describe("the name a certificate is issued with", () => {
     // the Tee Painting Workshop (2026-11-23)
     expect(sessionNameEn({ title: null, ride_kind: "paint" })).toBe("Tee Painting Workshop");
     expect(sessionName({ title: null, ride_kind: "paint" })).toBe("ورشة الرسم على التيشيرت");
+    // the Wednesday Community Ride (2026-11-25)
+    expect(sessionNameEn({ title: null, ride_kind: "wed" })).toBe("Wednesday Community Ride");
+    expect(sessionName({ title: null, ride_kind: "wed" })).toBe("جولة الأربعاء المجتمعية");
     expect(sessionNameEn({ title: "Nawar Farm House Night", ride_kind: "farm" })).toBe("Nawar Farm House Night");
   });
 });

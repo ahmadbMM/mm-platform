@@ -153,8 +153,8 @@ export const prevStep = (s: Pick<BookSession, "kind">, cur: Step): Step => {
   const st = regSteps(s), i = st.indexOf(cur);
   return i > 0 ? st[i - 1] : 1;
 };
-/** A ride that gathers then sets off (the Saturday and National Day rides). */
-export const gathers = (s: Pick<BookSession, "kind">) => s.kind === "saturday" || s.kind === "snd96";
+/** A ride that gathers then sets off (the Saturday and National Day rides, and the Wednesday Community Ride, 2026-11-25). */
+export const gathers = (s: Pick<BookSession, "kind">) => s.kind === "saturday" || s.kind === "snd96" || s.kind === "wed";
 /** "I have my own bike" is offered on every community ride and the National Day ride (_ownOffered). */
 export const ownOffered = (s: Pick<BookSession, "community" | "kind">) => s.community || s.kind === "snd96";
 /** No Road Carbon on a community ride but Petromin (_noCarbon). */

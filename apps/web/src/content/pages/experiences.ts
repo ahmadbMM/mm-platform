@@ -143,6 +143,9 @@ export const experiencesSchema = {
         // the Tee Painting Workshop (ride_kind 'paint', 2026-11-23): a date among the community rides in its own "Paint Splash"
         // look (the booking app's evPaintName)
         txt("paintName", 50, "Name: Tee Painting Workshop", "الاسم: ورشة الرسم على التيشيرت", "Tee Painting Workshop", "ورشة الرسم على التيشيرت"),
+        // the Wednesday Community Ride (ride_kind 'wed', 2026-11-25): an evening ride among the community rides, in the
+        // Saturday ride's green (lib/wed.ts)
+        txt("wedName", 50, "Name: Wednesday Community Ride", "الاسم: جولة الأربعاء المجتمعية", "Wednesday Community Ride", "جولة الأربعاء المجتمعية"),
         // (The Farm House Night, ride_kind 'farm', 2026-11-13, has no fields here: it is for community members' eyes
         // alone and this schema is public, so its name and Details are the server's, content/farm-words.ts, as the Blood
         // Donation event's are; the booking app says its own infoDtFarm.)
@@ -165,6 +168,10 @@ export const experiencesSchema = {
         // the Tee Painting Workshop's (the booking app's infoDtPaint, word for word): what it is, its start and end, one place
         // per member
         { ...long("aboutPaint", 420, "Details: Tee Painting Workshop", "التفاصيل: ورشة الرسم على التيشيرت", "An afternoon with the community drawing and colouring on MicroMobility T-shirts, {start} to {end}. One place per member; places are limited.", "عصرية مع المجتمع للرسم والتلوين على تيشيرتات مايكروموبيليتي، من {start} إلى {end}. مكان واحد لكل عضو، والأماكن محدودة."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
+        // the Wednesday Community Ride's (2026-11-25): when it meets and rides, from the Saturday ride's start point, the
+        // standard fare of the bike picked paid at the desk, the rider's own bike free and a helmet with every bike; no
+        // distance or route
+        { ...long("aboutWed", 420, "Details: Wednesday Community Ride", "التفاصيل: جولة الأربعاء المجتمعية", "A Wednesday evening ride with the community from the Saturday Social Ride’s start point. We meet at {gather} and ride at {start}. Pick your bike when you book and pay its standard ride fare at the desk; your own bike rides free, and a helmet comes with every bike. For community members.", "جولة مسائية يوم الأربعاء مع المجتمع من نقطة انطلاق جولة السبت الاجتماعية. نلتقي في {gather} وننطلق في {start}. اختر دراجتك عند الحجز وادفع أجرة الجولة المعتادة لها عند المكتب؛ دراجتك الخاصة مجانًا، والخوذة مع كل دراجة. لأعضاء المجتمع."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         // yoga's (the booking app's infoDtYoga, which it reads from here as experiences.dates.aboutYoga): who leads it, what
         // it is, its start and end, the level and what to bring
         { ...long("aboutYoga", 600, "Details: yoga", "التفاصيل: اليوغا", "Ninety minutes of Hatha Yoga made for cyclists, with Jassim Alsaady: mindful movement, deep stretching, gentle strengthening and breathwork for the hips, lower back and legs that riding leaves tight. A time to slow down, feel grounded and recover with the community. {start} to {end}. All levels welcome, no experience needed. Bring your yoga mat and wear comfortable clothing. Free for community members; places are limited.", "تسعون دقيقة من هاثا يوغا مصممة لراكبي الدراجات مع جاسم الساعدي: حركة واعية وإطالة عميقة وتقوية لطيفة وتمارين تنفّس للوركين وأسفل الظهر والساقين التي يشدّها ركوب الدراجة. وقت لتهدأ وتستعيد توازنك وتتعافى مع المجتمع. من {start} إلى {end}. لجميع المستويات، ولا تلزم خبرة سابقة. أحضر سجادة اليوغا وارتدِ ملابس مريحة. مجانية لأعضاء المجتمع، والأماكن محدودة."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },

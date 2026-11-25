@@ -546,6 +546,8 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
   --motif-pm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='8' viewBox='0 0 48 8'%3E%3Cpath d='M0 8l6-8h8l-6 8zM16 8l6-8h8l-6 8zM32 8l6-8h8l-6 8z' fill='%23A33B2E'/%3E%3C/svg%3E") right 14px bottom 0 / 48px 8px no-repeat;
 }
 :is(.sc-card, .xs-info, .xs-mk, .xs-kind).ev-saturday { --k-tint: var(--k-sat-tint); --k-ink: var(--k-sat-ink); --k-art: var(--art-dawn); --k-motif: var(--motif-sat); }
+/* the Wednesday Community Ride (2026-11-25): the Saturday ride's colours, no drawing of its own (an evening ride, never the dawn) */
+:is(.sc-card, .xs-info, .xs-mk, .xs-kind).ev-wed { --k-tint: var(--k-sat-tint); --k-ink: var(--k-sat-ink); }
 :is(.sc-card, .xs-info, .xs-mk, .xs-kind).ev-swim { --k-tint: var(--k-pool-tint); --k-ink: var(--k-pool-ink); --k-art: var(--art-pool); --k-motif: var(--motif-pool); }
 :is(.sc-card, .xs-info, .xs-mk, .xs-kind).ev-petromin { --k-tint: var(--k-pm-tint); --k-ink: var(--k-pm-ink); --k-art: var(--art-pm); --k-motif: var(--motif-pm); }
 [dir="rtl"] .k-art { transform: scaleX(-1); }

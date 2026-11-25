@@ -30,7 +30,7 @@ describe("which sessions have no bike", () => {
     for (const s of [TICKET.en.underReview, CLAIM_WORDS.id.lateSub, CLAIM_WORDS.ms.doneSub, CLAIM_WORDS.zh.noSub, TICKET.ar.cueDone("1"), RATING_WORDS.ja.kicker, "Wie war die Fahrt?"]) expect(s).toMatch(CYCLING);
   });
   it("knows them by kind, the same list as rentsBikes, and every other kind is a bike kind", () => {
-    const all: RideKind[] = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena", "blood", "yoga", "farm", "ktri", "paint"];
+    const all: RideKind[] = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena", "blood", "yoga", "farm", "ktri", "paint", "wed"];
     for (const k of all) {
       expect(isNonBike(k), k).toBe(!rentsBikes(k));
       expect(BIKE_KINDS.has(k) !== NON_BIKE_KINDS.has(k), k).toBe(true);
@@ -38,7 +38,7 @@ describe("which sessions have no bike", () => {
   });
   it("knows them by the booking app's session id when the session did not load", () => {
     for (const id of ["2026-10-20-tw", "2026-10-05-ev", "2026-10-17-rh", "2026-10-26-vl", "2026-10-22-df", "2026-10-22-df-2", "2026-11-06-ah", "2026-11-05-bd", "2026-11-21-yg", "2026-11-21-yg-2", "2026-11-19-fh", "2026-11-19-fh-2", "2026-12-04-kt", "2026-12-04-kt-2", "2026-11-28-tp", "2026-11-28-tp-2"]) expect(isNonBike(null, id), id).toBe(true);
-    for (const id of ["2026-10-20", "2026-09-30-pw", "2026-09-23-nd", "2026-10-22-dfx", "2026-11-21-ygx", "2026-11-19-fhx", "2026-12-04-ktx", "j1", ""]) expect(isNonBike(undefined, id), id).toBe(false);
+    for (const id of ["2026-10-20", "2026-11-25-wc", "2026-09-30-pw", "2026-09-23-nd", "2026-10-22-dfx", "2026-11-21-ygx", "2026-11-19-fhx", "2026-12-04-ktx", "j1", ""]) expect(isNonBike(undefined, id), id).toBe(false);
     expect(isNonBike("saturday", "2026-10-24")).toBe(false);
   });
 });

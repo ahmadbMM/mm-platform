@@ -4,6 +4,7 @@ import { priceRows, type PriceRow } from "./biz";
 import { sessionGender, type SessionGender } from "./session-gender";
 import { rideGroupKm } from "./kind-theme";
 import { igOf } from "./instagram";
+import { wedMeetUrl } from "./wed";
 
 // The rides a visitor can book, read from the booking system itself: the bike prices
 // (ride_prices) and the sessions still ahead (sessions). Both are tables the booking app reads
@@ -14,13 +15,14 @@ import { igOf } from "./instagram";
 //
 // The rules below mirror the booking app (app.src.html) and the database, never guess:
 //   kind     _rideKind: snd96 first, anything not 'community' is a circuit night (jcc), then
-//            petromin / swim / workshop / event / runher / vlap / defe5k / arena / blood / yoga / farm / ktri / paint, and
+//            petromin / swim / workshop / event / runher / vlap / defe5k / arena / blood / yoga / farm / ktri / paint / wed, and
 //            every other community row is the Saturday ride.
 //   members  _community_booking_gate: event_kind 'community' without open_to_all is booked only
 //            by members (the Saturday tag, the Club).
 //   free     _isFreeRide: a community ride (not snd96) that is not a paid ride.
-//   gather   _gathersTime: the Saturday ride, the National Day ride, Run for Her, Victory Lap and the Farm House
-//            Night store "gather - start" (the farm night's arrival, then dinner), the others "start - end".
+//   gather   _gathersTime: the Saturday ride, the National Day ride, Run for Her, Victory Lap, the Farm House Night and
+//            the Wednesday Community Ride store "gather - start" (the farm night's arrival, then dinner), the others
+//            "start - end".
 //   event    a ticketed event (ride_kind 'event', 2026-09-28): seats instead of bikes, its own
 //            price per seat (sessions.price; _fare_now charges it instead of a bike fare), open to
 //            everyone or to members (open_to_all), a description, no approval, no queue numbers.
@@ -67,6 +69,12 @@ import { igOf } from "./instagram";
 //            own - featured as made, members only, one place per account, first come first served to its places and then
 //            the waitlist, no approval; no bike, no breakfast, no gathering: a start and an end ("15:00 - 18:00"), like
 //            yoga; a paid ride at the session's own price per person (sessions.price, 130 SAR), said with no way to pay.
+//   wed      The Wednesday Community Ride (ride_kind 'wed', 2026-11-25; lib/wed.ts): an evening bike ride from the Saturday
+//            ride's start point, a date inside MicroMobility Experiences (the community card), never a card of its own and
+//            not featured as made; members only and shown to them alone (farmForMembers), first come first served with no
+//            approval, one place per member; a paid ride at the standard fare of the bike type picked, paid at the desk,
+//            the rider's own bike free; it gathers ("18:30 - 19:00": the meeting, then the start); no ride groups,
+//            distance or route, and no places-left count.
 //   featured _featured (2026-11-13): a date inside MicroMobility Experiences (the Saturday ride, a Petromin night, the
 //            pool, the DEFE 5KM Run, yoga, the Farm House Night) that staff switched on (bike_slots._feat, beside _time:
 //            no column); with no _feat the kind answers (yoga, the DEFE 5KM Run and the Farm House Night are featured as
@@ -76,7 +84,7 @@ import { igOf } from "./instagram";
 //            takes it for called off; never a night called off (cancelled_at), a draft, or one waiting on its timer
 //            (opens_at). A closed session without the mark stays out of every list, as before.
 
-export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena" | "blood" | "yoga" | "farm" | "ktri" | "paint";
+export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena" | "blood" | "yoga" | "farm" | "ktri" | "paint" | "wed";
 /** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
 export type RidePrice = PriceRow;
 export type RideSession = {
@@ -217,8 +225,9 @@ export function rideKind(r: Row): RideKind {
   if (r.event_kind !== "community") return "jcc";
   // a kind this list does not know reads as the Saturday ride, as the booking app's _rideKind does: every kind
   // the booking app makes is named here (Arena Heros since 2026-10-28, which read as a Saturday ride before; yoga since
-  // 2026-11-12; the Farm House Night since 2026-11-13; the KAUST Triathlon since 2026-11-22; the Tee Painting Workshop since 2026-11-23)
-  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" || k === "arena" || k === "blood" || k === "yoga" || k === "farm" || k === "ktri" || k === "paint" ? k : "saturday";
+  // 2026-11-12; the Farm House Night since 2026-11-13; the KAUST Triathlon since 2026-11-22; the Tee Painting Workshop since 2026-11-23;
+  // the Wednesday Community Ride since 2026-11-25)
+  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" || k === "arena" || k === "blood" || k === "yoga" || k === "farm" || k === "ktri" || k === "paint" || k === "wed" ? k : "saturday";
 }
 
 /** A route's slug as the Routes page writes one (content/pages/routes.ts): lower-case letters,
@@ -246,10 +255,12 @@ export function slotTimes(slots: unknown): [string, string] | null {
 
 /** The kinds of date inside MicroMobility Experiences, the only ones that can be featured (the booking app's _featOk,
  *  its _evMatch(s, 'community')): never a circuit night, nor a kind with a card of its own (the T100 day, a ticketed
- *  event, Run for Her, Victory Lap, Arena Heros, the Blood Donation event, the National Day ride). */
-export const FEATURE_OK: readonly RideKind[] = ["saturday", "petromin", "swim", "defe5k", "yoga", "farm", "ktri", "paint"];
+ *  event, Run for Her, Victory Lap, Arena Heros, the Blood Donation event, the National Day ride). The Wednesday Community Ride
+ *  (2026-11-25) is one, on staff's switch alone. */
+export const FEATURE_OK: readonly RideKind[] = ["saturday", "petromin", "swim", "defe5k", "yoga", "farm", "ktri", "paint", "wed"];
 /** The special events, featured as they are made (the booking app's FEAT_KINDS; the Farm House Night since 2026-11-13, the
- *  KAUST Triathlon since 2026-11-22, the Tee Painting Workshop since 2026-11-23). */
+ *  KAUST Triathlon since 2026-11-22, the Tee Painting Workshop since 2026-11-23). Never the Wednesday Community Ride (the user,
+ *  2026-11-25: "don't feature it"). */
 export const FEATURED_KINDS: readonly RideKind[] = ["yoga", "defe5k", "farm", "ktri", "paint"];
 
 /** Whether a date is featured (the booking app's _featured, 2026-11-13): one inside MicroMobility Experiences whose
@@ -359,7 +370,8 @@ export function wlCollectSlot(slots: unknown): string | undefined {
 function placeOf(r: Row): Pick<RideSession, "location" | "meetUrl"> {
   if (!("location" in r) && !("meet_url" in r)) return {};
   const meet = typeof r.meet_url === "string" ? r.meet_url.trim() : "";
-  return { location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null, meetUrl: /^https:\/\//i.test(meet) ? meet : null };
+  // the Wednesday Community Ride meets at the Saturday ride's start point when its row names no map (lib/wed.ts)
+  return { location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null, meetUrl: wedMeetUrl(rideKind(r), /^https:\/\//i.test(meet) ? meet : null) };
 }
 
 const slotsOf = (slots: unknown): Record<string, unknown> => {
@@ -471,8 +483,8 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     members: community && r.open_to_all !== true,
     free,
     times: slotTimes(r.bike_slots),
-    // the Farm House Night gathers too (2026-11-13): its arrival, then dinner
-    gather: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "farm",
+    // the Farm House Night gathers too (2026-11-13): its arrival, then dinner; and the Wednesday Community Ride (2026-11-25)
+    gather: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "farm" || kind === "wed",
     noCarbon: community && kind !== "petromin" && kind !== "ktri", // Road Carbon goes out on a Petromin night, and is rented for the KAUST Triathlon (2026-11-25)
     description: typeof r.description === "string" && r.description.trim() ? r.description.trim().slice(0, 2000) : null,
     // the database charges an event's seat only when the event is a paid ride (_fare_now); Victory Lap's and
@@ -483,7 +495,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     approval: community && kind !== "snd96" && r.needs_approval !== false, // _isApprovalRide: not the National Day ride
     capacity: seats,
     left: null,
-    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" || kind === "yoga" || kind === "farm" || kind === "ktri" || kind === "paint" ? null : collectTime(r.bike_slots),
+    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" || kind === "yoga" || kind === "farm" || kind === "ktri" || kind === "paint" || kind === "wed" ? null : collectTime(r.bike_slots),
     ...titleArOf(r),
     ...(kind === "saturday" ? { groupKm: rideGroupKm(r.bike_slots) } : {}),
     ...placeOf(r),
@@ -528,7 +540,7 @@ export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessi
  *  eyes alone (content/farm-words.ts farmName, 2026-11-13). */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), yoga: S(d.yogaName), ktri: S(d.ktriName), paint: S(d.paintName), petromin: "", blood: "", farm: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), yoga: S(d.yogaName), ktri: S(d.ktriName), paint: S(d.paintName), wed: S(d.wedName), petromin: "", blood: "", farm: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other
@@ -745,7 +757,8 @@ export async function placesTaken(fetchImpl: typeof fetch, url: string, key: str
  *  the number and places of its own (spots, else capacity) is counted for it alone (at most 6 a read): those places less
  *  the requests holding one, a waitlisted request not. */
 async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, url: string, key: string): Promise<RideSession[]> {
-  const ask = sessions.filter((s) => !s.full && !s.fbk && !s.approval).slice(0, 12);
+  // never the Wednesday Community Ride, which has no place limit to say (the user, 2026-11-25)
+  const ask = sessions.filter((s) => !s.full && !s.fbk && !s.approval && s.kind !== "wed").slice(0, 12);
   const auto = sessions.filter((s) => s.approval && !s.full && !s.fbk && s.fewAt && (s.spots || s.capacity)).slice(0, 6);
   const [counts, autoCounts] = await Promise.all([
     Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id, s.kind === "petromin"))),
