@@ -127,6 +127,8 @@ describe("toSession", () => {
     // unless asked for (Experiences' Petromin Days, 2026-10-12): members-only, with Road Carbon
     expect(toSession(row({ event_kind: "community", ride_kind: "petromin", paid_ride: true }), false, true)).toMatchObject({ kind: "petromin", members: true, free: false, noCarbon: false });
     expect(toSession(row({ event_kind: "community", ride_kind: "petromin", status: "closed" }), false, true)).toBeNull();
+    // the KAUST Triathlon rents Road Carbon too (the user, 2026-11-25)
+    expect(toSession(row({ event_kind: "community", ride_kind: "ktri" }))?.noCarbon).toBe(false);
     expect(toSession(row({ session_date: "27/09/2026" }))).toBeNull();
   });
 });

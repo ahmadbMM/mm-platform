@@ -125,7 +125,7 @@ export type RideSession = {
   times: [string, string] | null;
   gather: boolean;
   /** No Road Carbon bike on this ride: the booking app's _noCarbon, community rides except
-   *  Petromin. */
+   *  Petromin and the KAUST Triathlon (2026-11-25). */
   noCarbon: boolean;
   /** What the session is, as staff described it (an event's blurb); null when none. */
   description: string | null;
@@ -473,7 +473,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     times: slotTimes(r.bike_slots),
     // the Farm House Night gathers too (2026-11-13): its arrival, then dinner
     gather: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "farm",
-    noCarbon: community && kind !== "petromin", // Road Carbon goes out on a Petromin night
+    noCarbon: community && kind !== "petromin" && kind !== "ktri", // Road Carbon goes out on a Petromin night, and is rented for the KAUST Triathlon (2026-11-25)
     description: typeof r.description === "string" && r.description.trim() ? r.description.trim().slice(0, 2000) : null,
     // the database charges an event's seat only when the event is a paid ride (_fare_now); Victory Lap's and
     // Arena Heros' price is per athlete; the Tee Painting Workshop's per person (2026-11-23)
