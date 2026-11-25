@@ -310,6 +310,32 @@ test('an account that already holds four places: nothing more to add, and its bo
   await page.waitForURL(BOOKING + '?signin=' + HANDOFF + '&tab=bookings&lang=en');
 });
 
+test('a night for one place per account (max 1): the holder alone, no family step, and one place held says so', async ({ page }) => {
+  const { of } = await open(page, '', { farm_night: nightFor({ max: 1 }) });
+  await code(page);
+  await signIn(page);
+  await expect(page.locator('#s-book')).toBeVisible();
+  await expect(page.locator('#f-people')).toBeHidden();
+  await expect(page.locator('#pn-you')).toBeVisible();
+  await expect(page.locator('#people input[data-k]')).toHaveCount(0);
+  await send(page);
+  await expect(page.locator('#done-title')).toHaveText('Your request is in');
+  expect(of('farm_book').map((b) => b.p_family)).toEqual([[]]);
+});
+
+test('a night for one place per account says Just you, and an account already on it is told it has its place', async ({ page }) => {
+  await open(page, '', { farm_night: nightFor({ max: 1 }, ['Sara Alharbi']) });
+  await code(page);
+  await page.click('#back-land');
+  await expect(page.locator('#facts')).toContainText('Just you, one place per account');
+  await expect(page.locator('#facts')).not.toContainText('family');
+  await page.click('#go');
+  await signIn(page);
+  await expect(page.locator('#b-notice .notice-h')).toHaveText('You already have your place on this night.');
+  await expect(page.locator('#book')).toBeDisabled();
+  await expect(page.locator('#b-open')).toBeVisible();
+});
+
 for (const [error, check] of [
   ['room', async (page: Page) => expect(page.locator('#f-people .err')).toHaveText('There are not enough places left for everyone. Try with fewer people.')],
   ['full', async (page: Page) => expect(page.locator('#b-notice .notice-h')).toHaveText('The Farmhouse Night is fully booked.')],

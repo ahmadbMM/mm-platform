@@ -17,7 +17,7 @@ its own pages (`apps/web/src/app/[locale]/farmhouse`); `?classic=1` answers with
 
 1. **The code** (`farm_night(p_code, p_id, p_token)`): the page names the night and nothing more until the code is
    good. A good code shows the night it opens: its date, arrival and dinner, the venue and its map, the venue's
-   Instagram, who comes (you and up to three family members) and its state: open, fully booked or bookings closed. Never
+   Instagram, who comes (you and up to three family members, or you alone on a night made for one place per account: farm_night max 1, bike_slots._solo) and its state: open, fully booked or bookings closed. Never
    a count of places or people. A wrong code is metered by address (`throttled` after 30 in ten minutes).
 2. **The account**: "Do you have a MicroMobility account?" Yes: the booking site's own sign-in; no: its sign-up
    (no height: the night has no bike). A forgotten password goes through the booking app (`?handoff=farmhouse&lang=`),

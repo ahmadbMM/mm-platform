@@ -34,8 +34,11 @@
   // (rentals STAGING.md, section 2); everywhere else, the live app.
   var BOOKING_URL = location.hostname === "staging.micromobility.sa" ? "https://micromobility-staff-staging.pages.dev/" : "https://experiences.micromobility.sa/";
   // The most people one account brings to the night: the account holder and three with them (the database's
-  // _group_ride_cap and farm_book hold it at four; farm_night says so as max).
+  // _group_ride_cap and farm_book hold it at four; farm_night says so as max). A night made for one place per account
+  // (bike_slots._solo, the user 2026-11-25: "only can book for themselves with no extra booking") says max 1: just the
+  // account holder, no family step.
   var SEAT_MAX = 4;
+  function seatMaxOf(n) { return n && +n.max === 1 ? 1 : 4; }
   // On the website the form can be drawn again without a reload (the rider goes to another page of the site and comes
   // back, and SiteForm.tsx runs this script again): the run before this one stops listening to the document and its
   // timers stop, or both runs would answer every click and key.
@@ -181,7 +184,7 @@
       if (t[1]) f += fact(tr("Dinner"), "<bdi>" + esc(t[1]) + "</bdi>");
       var pl = placeOf(n), m = mapOf(n);
       if (pl || m) f += fact(tr("Venue"), (pl ? "<bdi>" + esc(pl) + "</bdi>" : "") + (m ? (pl ? "<br>" : "") + '<a class="d-link" href="' + esc(m) + '" target="_blank" rel="noopener">' + esc(tr("Open in Maps")) + "</a>" : ""));
-      f += fact(tr("Who"), esc(tr("You and up to three family members")));
+      f += fact(tr("Who"), esc(seatMaxOf(n) === 1 ? tr("Just you, one place per account") : tr("You and up to three family members")));
       f += fact(tr("Cost"), esc(tr("Free")));
     }
     $("#facts").innerHTML = f; $("#facts").hidden = !n;
@@ -1172,6 +1175,7 @@
     if (r.err === "throttled") { showBanner("Too many wrong codes. Wait a few minutes, then try again."); return; }
     if (r.err) { codeRefused(r.err); return; }
     heldNames = Array.isArray(night.held) ? night.held.map(String) : [];
+    SEAT_MAX = seatMaxOf(night);
     if (night.state !== "open") bookState = night.state === "full" ? "full" : "closed";
     else if (!room()) bookState = "cap";
     ppl = Math.min(Math.max(ppl, pplMin()), Math.max(pplMin(), pplMax()));
@@ -1189,7 +1193,7 @@
     $("#ppl-dec").disabled = ppl <= pplMin() || !!bookState; $("#ppl-inc").disabled = ppl >= pplMax() || !!bookState;
     $("#f-held").hidden = hi;
     $("#held").innerHTML = heldNames.map(function (n) { return "<li><bdi>" + esc(n) + "</bdi></li>"; }).join("");
-    $("#f-people").hidden = !!bookState;
+    $("#f-people").hidden = !!bookState || SEAT_MAX === 1; // one place per account: no stepper, the holder alone
     var rows = "", fi = 0;
     for (var i = 0; i < ppl && !bookState; i++) {
       if (hi && i === 0) {
@@ -1225,10 +1229,12 @@
     var st = bookState, n = $("#b-notice"), map = {
       closed: ["Bookings for the Farmhouse Night are closed.", ""],
       full: ["The Farmhouse Night is fully booked.", ""],
-      cap: ["Your booking already has four people, the most one account can bring.", "It is in My Bookings in the MicroMobility app."]
+      cap: ["Your booking already has four people, the most one account can bring.", "It is in My Bookings in the MicroMobility app."],
+      cap1: ["You already have your place on this night.", "It is in My Bookings in the MicroMobility app."]
     };
     n.hidden = !st;
-    if (st) { $(".notice-h", n).textContent = tr(map[st][0]); $(".notice-p", n).textContent = map[st][1] ? tr(map[st][1]) : ""; }
+    var mk = st === "cap" && SEAT_MAX === 1 ? "cap1" : st; // one place per account: its own words
+    if (st) { $(".notice-h", n).textContent = tr(map[mk][0]); $(".notice-p", n).textContent = map[mk][1] ? tr(map[mk][1]) : ""; }
     $("#b-open").hidden = st !== "cap";
     $("#book").disabled = !!st;
     $("#review").hidden = !!st; $("#f-waiver").hidden = !!st;
