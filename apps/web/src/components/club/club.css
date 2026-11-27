@@ -72,6 +72,7 @@ html:is([lang="ar"], [lang="ur"]) .club-eyebrow { letter-spacing: 0; font-size: 
   .club-parts { width: 100%; }
   .club-part { flex: 1 1 0; min-width: 0; padding: 0 8px; }
 }
+@media (max-width: 420px) { .club-part { padding: 0 4px; font-size: 13px; } } /* four parts since the Leaderboard (2026-11-27) */
 .club-earn { display: flex; flex-direction: column; gap: 14px; }
 .club-earn h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 1.5px; color: #4a534c; margin: 0; }
 html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
@@ -141,6 +142,11 @@ html:is([lang="ar"], [lang="ur"]) .club-members h3 { letter-spacing: 0; }
 .club-ask ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .club-ask li { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-bottom: 1px dashed rgba(0, 0, 0, .08); }
 .club-mine .club-ask a { display: inline-flex; align-items: center; gap: 6px; color: #077a4b; font-weight: 800; font-size: 14.5px; text-decoration: none; overflow-wrap: anywhere; }
+/* The Leaderboard part (2026-11-27): the three ways into the distance leaderboards, as the Ask links */
+.club-lb h3 { margin: 0 0 10px; }
+.club-lb-go { display: flex; flex-direction: column; gap: 8px; }
+.club-mine .club-lb-go a { display: inline-flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 48px; padding: 0 16px; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 14px; color: #077a4b; font-weight: 800; font-size: 14.5px; text-decoration: none; }
+.club-mine .club-lb-go a:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .club-att-nums { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-bottom: 12px; font-size: 15px; font-weight: 700; color: #1a1919; }
 .club-att-sub { margin: 0 0 6px; font-size: 12.5px; color: #57605a; font-weight: 700; }
 .club-att-empty { margin: 0; color: #57605a; font-size: 14px; }

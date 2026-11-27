@@ -7,8 +7,9 @@
 // pop-up and the rating's last screen link there, as the app's ways in from them open its Challenges).
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 
-export type ClubPart = "sess" | "goals" | "club";
-const KEYS: ClubPart[] = ["sess", "goals", "club"];
+export type ClubPart = "sess" | "goals" | "board" | "club";
+// Leaderboard (2026-11-27, the booking app's 4th part): the distance leaderboards' ways in, between Challenges and Club.
+const KEYS: ClubPart[] = ["sess", "goals", "board", "club"];
 
 // The address's #hash, read in the browser only (the server draws the first part).
 const onHash = (cb: () => void) => { window.addEventListener("hashchange", cb); return () => window.removeEventListener("hashchange", cb); };

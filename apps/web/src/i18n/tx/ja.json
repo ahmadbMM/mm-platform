@@ -1982,5 +1982,14 @@
   "Come to one of our tee painting workshops.": "Tシャツペインティング・ワークショップに参加しよう。",
   "For joining a MicroMobility Tee Painting Workshop, drawing and colouring on MicroMobility T-shirts with the community. Given once our team checks you in.": "MicroMobilityのTシャツペインティング・ワークショップに参加し、コミュニティの仲間とMicroMobilityのTシャツに絵を描いて色を塗ったあなたに。スタッフがチェックインすると授与されます。",
   "Wednesday Community Ride": "水曜コミュニティライド",
-  "A Wednesday evening ride with the community from the Saturday Social Ride’s start point. We meet at {gather} and ride at {start}. Pick your bike when you book and pay its standard ride fare at the desk; your own bike rides free, and a helmet comes with every bike. For community members.": "土曜ソーシャルライドと同じスタート地点から、コミュニティと走る水曜の夜のライドです。{gather}に集合し、{start}に出発します。予約時に自転車を選び、通常のライド料金を受付でお支払いください。自分の自転車なら無料で、どの自転車にもヘルメットが付きます。コミュニティメンバー限定です。"
+  "A Wednesday evening ride with the community from the Saturday Social Ride’s start point. We meet at {gather} and ride at {start}. Pick your bike when you book and pay its standard ride fare at the desk; your own bike rides free, and a helmet comes with every bike. For community members.": "土曜ソーシャルライドと同じスタート地点から、コミュニティと走る水曜の夜のライドです。{gather}に集合し、{start}に出発します。予約時に自転車を選び、通常のライド料金を受付でお支払いください。自分の自転車なら無料で、どの自転車にもヘルメットが付きます。コミュニティメンバー限定です。",
+  "Longest Ride Gold": "最長ライド：ゴールド",
+  "Hold the longest measured single ride among members": "メンバーの中で計測された最長の1回のライドを持つ",
+  "The first place on the Longest ride leaderboard, men and women apart. It moves to whoever rides further: a ride counts once our team enters or approves its distance.": "最長ライドランキングの1位。男性と女性は別々です。もっと遠くまで走った人に移ります：チームが距離を記録または承認した時点でライドが数えられます。",
+  "Longest Ride Silver": "最長ライド：シルバー",
+  "Hold the second longest measured single ride among members": "メンバーの中で計測された2番目に長い1回のライドを持つ",
+  "The second place on the Longest ride leaderboard, men and women apart. It moves to whoever rides further: a ride counts once our team enters or approves its distance.": "最長ライドランキングの2位。男性と女性は別々です。もっと遠くまで走った人に移ります：チームが距離を記録または承認した時点でライドが数えられます。",
+  "Longest Ride Bronze": "最長ライド：ブロンズ",
+  "Hold the third longest measured single ride among members": "メンバーの中で計測された3番目に長い1回のライドを持つ",
+  "The third place on the Longest ride leaderboard, men and women apart. It moves to whoever rides further: a ride counts once our team enters or approves its distance.": "最長ライドランキングの3位。男性と女性は別々です。もっと遠くまで走った人に移ります：チームが距離を記録または承認した時点でライドが数えられます。"
 }

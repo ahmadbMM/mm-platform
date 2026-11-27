@@ -233,10 +233,16 @@ describe("the cards", () => {
     inPart(0, ["club-up-h", "club-hub-report-h"]);
     inPart(1, ["club-hub-yr-h", "club-hub-me-h", "Season challenge", "club-hub-club-h"]);
     inPart(2, ["club-hub-mt-h", "club-hub-vol-h", "club-hub-inv"]);
-    expect(html).toMatch(/<div class="club-parts" role="group" aria-label="Your membership">(<button type="button" class="club-part[^"]*" aria-pressed="(true|false)" aria-controls="club-pane-\w+" data-part="\w+">[^<]+<\/button>){3}<\/div>/);
+    expect(html).toMatch(/<div class="club-parts" role="group" aria-label="Your membership">(<button type="button" class="club-part[^"]*" aria-pressed="(true|false)" aria-controls="club-pane-\w+" data-part="\w+">[^<]+<\/button>){4}<\/div>/);
     expect(html).toContain('>Sessions</button>');
     expect(html).toContain('>Challenges</button>');
     expect(html).toContain('>Club</button>');
+    // the Leaderboard part (2026-11-27), between Challenges and Club: a way into each distance leaderboard
+    expect(html).toContain('>Leaderboard</button>');
+    expect(at('id="club-pane-board"')).toBeGreaterThan(at('id="club-pane-goals"'));
+    expect(at('id="club-pane-board"')).toBeLessThan(at('id="club-pane-club"'));
+    expect(html).toMatch(/id="club-pane-board"[^>]*hidden/);
+    for (const b of ["longest", "lifetime", "year"]) expect(html).toContain(`href="/leaderboard?b=${b}"`);
     expect(html).not.toMatch(/id="club-pane-sess"[^>]*hidden/); // Sessions shows first
     expect(html).toMatch(/id="club-pane-goals"[^>]*hidden/);
     for (const n of ["873", "3107", "54021", "24019", "457", "871"]) expect(html, n).not.toContain(n);

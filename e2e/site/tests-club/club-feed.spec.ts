@@ -19,7 +19,7 @@ const state = async (page: Page) => (await (await page.request.get(`${STUB}/__st
 const area = (page: Page) => page.locator(".club-members");
 // The area's three parts (2026-11-20, as the booking app's Community tab): a card outside Sessions is reached through the
 // switch first, as a member does.
-async function part(page: Page, k: "sess" | "goals" | "club") {
+async function part(page: Page, k: "sess" | "goals" | "board" | "club") {
   const b = page.locator(`.club-members .club-part[data-part="${k}"]`);
   await b.click();
   await expect(b).toHaveAttribute("aria-pressed", "true");
@@ -37,12 +37,12 @@ test("the cards stand in the parts the app's tab has them in, each with its own 
   await page.goto("/club");
   const a = area(page);
   await expect(a.locator("#club-hub-me-h")).toHaveText("Your challenge");
-  // three parts behind a switch, Sessions showing first; the card and its tier bar above them
-  await expect(a.locator(".club-parts button")).toHaveText(["Sessions", "Challenges", "Club"]);
+  // four parts behind a switch (the Leaderboard since 2026-11-27), Sessions showing first; the card and its tier bar above them
+  await expect(a.locator(".club-parts button")).toHaveText(["Sessions", "Challenges", "Leaderboard", "Club"]);
   await expect(a.locator("#club-pane-sess")).toBeVisible();
   await expect(a.locator("#club-pane-goals")).toBeHidden();
   await expect(a.locator("#club-pane-club")).toBeHidden();
-  await ordered(page, [".club-members .club-cardviz", ".club-parts", "#club-pane-sess", ".club-up", "#club-hub-report-h", "#club-pane-goals", "#club-hub-yr-h", "#club-hub-me-h", ".club-hub-season", "#club-hub-club-h", "#club-pane-club", "#club-hub-mt-h", "#club-hub-vol-h", ".club-hub-inv"]);
+  await ordered(page, [".club-members .club-cardviz", ".club-parts", "#club-pane-sess", ".club-up", "#club-hub-report-h", "#club-pane-goals", "#club-hub-yr-h", "#club-hub-me-h", ".club-hub-season", "#club-hub-club-h", "#club-pane-board", "#club-pane-club", "#club-hub-mt-h", "#club-hub-vol-h", ".club-hub-inv"]);
   // the Saturday report: its photo, the member's own Saturdays this month, the staff's line
   const rep = a.locator(".club-hub-report");
   await expect(rep.locator("h3")).toContainText("Saturday report");
@@ -227,7 +227,7 @@ test("in Arabic: the app's own words, right to left", async ({ page }) => {
   await page.goto("/club");
   const a = area(page);
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await expect(a.locator(".club-parts button")).toHaveText(["الجلسات", "التحديات", "النادي"]);
+  await expect(a.locator(".club-parts button")).toHaveText(["الجلسات", "التحديات", "المتصدرون", "النادي"]);
   await expect(a.locator("#club-hub-me-h")).toHaveText("تحديك");
   await expect(a.locator("#club-hub-club-h")).toHaveText("هدف المجتمع");
   await expect(a.locator(".club-hub-season .club-hub-name").first()).toHaveText("تحدي رمضان");
@@ -247,7 +247,17 @@ test("/club#challenges (a badge's pop-up, the rating's last screen) opens Challe
     const r = bar.getBoundingClientRect(), b = [...bar.querySelectorAll("button")].map((x) => x.getBoundingClientRect());
     return { n: b.length, oneRow: new Set(b.map((x) => Math.round(x.top))).size === 1, inside: b.every((x) => x.left >= r.left - 0.5 && x.right <= r.right + 0.5), side: document.documentElement.scrollWidth <= window.innerWidth };
   });
-  expect(geo).toEqual({ n: 3, oneRow: true, inside: true, side: true });
+  expect(geo).toEqual({ n: 4, oneRow: true, inside: true, side: true });
   await part(page, "sess");
   await expect(area(page).locator("#club-pane-goals")).toBeHidden();
+});
+
+test("the Leaderboard part (2026-11-27) opens each distance leaderboard, as the app's Longest ride, Lifetime and This year", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/club");
+  await part(page, "board");
+  const go = area(page).locator("#club-pane-board .club-lb-go a");
+  await expect(go).toHaveText(["Longest ride", "Lifetime", "This year"]);
+  expect(await go.evaluateAll((l) => l.map((a) => a.getAttribute("href")))).toEqual(["/leaderboard?b=longest", "/leaderboard?b=lifetime", "/leaderboard?b=year"]);
+  await expect(area(page).locator("#club-pane-club")).toBeHidden();
 });

@@ -32,6 +32,11 @@ const RACE: Record<string, [string, [string, string, string], string, string, [s
   // The KAUST Triathlon (the booking app, 2026-11-22; staff give it to those who finished): the medal in the race poster's sky
   // blue, KAUST struck on it, on a ribbon in the sea's two blues
   kaust_triathlon: ["KAUST", ["#eaf4fc", "#5aa9e6", "#1d5fa8"], "#123f73", "#0d2f57", ["#0e959a", "#1565b4"]],
+  // Longest Ride Gold, Silver and Bronze (the booking app, 2026-11-27, the distance leaderboards): the place struck on the
+  // medal in gold, silver and bronze, on the brand green ribbon
+  lr1: ["#1", ["#fff3b8", "#f3c431", "#b07c00"], "#7d5800", "#5c3f00", ["#03c46a", "#027a43"]],
+  lr2: ["#2", ["#fff", "#cfd5de", "#858f9e"], "#636b78", "#323946", ["#03c46a", "#027a43"]],
+  lr3: ["#3", ["#ffd9b5", "#dc8d4c", "#93501d"], "#713b12", "#4d2408", ["#03c46a", "#027a43"]],
 };
 // The M-Dot (the booking app's BDG_MDOT): the IRONMAN mark's block M with the dot over it, centred on x 0, 35.4 wide and 49 tall
 const MDOT = "M-8.58 8.57a8.58 8.58 0 1 0 17.16 0a8.58 8.58 0 1 0-17.16 0zM-17.72 18.97H17.72V48.93H7.17V37.8L3.22 48.93H-3.22L-7.17 37.8V48.93H-17.72z";

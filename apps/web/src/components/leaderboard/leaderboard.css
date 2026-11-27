@@ -1,0 +1,68 @@
+/* The distance leaderboards (Leaderboard.tsx; the booking app's .dbd-* in distance-board.js): the page in the account's
+   look (.ac, .ac-in), its switches as the Club's parts, the rows on white with the signed-in rider's own in green. */
+.lb-page { max-width: 640px; margin: 0 auto; }
+.lb-page h1 { margin-bottom: 18px; }
+.lb { display: flex; flex-direction: column; gap: 12px; }
+.lb-sw { display: flex; gap: 2px; width: fit-content; max-width: 100%; padding: 4px; border-radius: 999px; background: rgba(0, 0, 0, .06); box-sizing: border-box; }
+.lb-sb { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: #57605a; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.lb-sb:hover { color: #1a1919; }
+.lb-sb.active { background: #fff; color: #1a1919; font-weight: 800; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.lb-sb:focus-visible, .lb-go:focus-visible, .lb-add:focus-visible, .lb-tb:focus-visible, .lb-pub:focus-within { outline: 2px solid #077a4b; outline-offset: 2px; }
+.lb-sb:disabled { opacity: .55; cursor: default; }
+.lb-sub { margin: 0; color: #57605a; font-size: 14px; }
+
+.lb-me { display: flex; flex-direction: column; gap: 12px; padding: 18px; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-top: 3px solid #077a4b; border-radius: 18px; }
+.lb-me-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; }
+.lb-me-place { display: flex; align-items: center; gap: 10px; }
+.lb-me-r { font-size: 30px; font-weight: 800; letter-spacing: -1px; color: #077a4b; }
+.lb-me-km { font-size: 22px; font-weight: 800; color: #1a1919; }
+.lb-note { margin: 0; color: #57605a; font-size: 14px; }
+.lb-pub { margin-top: 0; }
+.lb-pub-t { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.lb-pub-t small { font-size: 12.5px; color: #57605a; }
+.lb-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.lb-go, .lb-add, .lb-tb { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.lb-go { background: #077a4b; border: 0; color: #fbf9f4; }
+.lb-add, .lb-tb { background: #fff; border: 1px solid rgba(26, 25, 25, .24); color: #1a1919; }
+.lb-tb { min-height: 36px; padding: 0 14px; font-size: 12.5px; }
+.lb-said { margin: 0; font-size: 13px; color: #4a4843; }
+.lb-said:empty { display: none; }
+
+.lb-wait { min-height: 160px; border-radius: 18px; background: linear-gradient(90deg, rgba(0, 0, 0, .04), rgba(0, 0, 0, .08), rgba(0, 0, 0, .04)); }
+.lb-err { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; background: #fff; border: 1px dashed rgba(0, 0, 0, .2); border-radius: 14px; color: #57605a; }
+.lb-list { list-style: none; margin: 0; padding: 0; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 18px; overflow: hidden; }
+.lb-row { display: grid; grid-template-columns: 2.4em 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 52px; padding: 6px 16px; border-top: 1px solid rgba(0, 0, 0, .06); }
+.lb-row:first-child { border-top: 0; }
+.lb-row.mine { background: rgba(7, 122, 75, .08); }
+.lb-r { font-weight: 800; color: #57605a; text-align: center; }
+.lb-md { display: flex; align-items: center; justify-content: center; }
+.lb-medal { width: 30px; height: 30px; }
+.lb-me-place .lb-medal { width: 40px; height: 40px; }
+.lb-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.lb-row.mine .lb-nm { color: #077a4b; font-weight: 800; }
+.lb-km { font-weight: 800; white-space: nowrap; }
+
+.lb-mine { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.ac .lb-h { font-size: 20px; letter-spacing: -.4px; margin: 0; }
+.lb-cl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.lb-ci { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 14px; }
+.lb-ci-t { font-size: 15px; }
+.lb-ci-t span, .lb-ci-d { color: #57605a; font-size: 13px; }
+.lb-ci-s { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lb-pill { font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(122, 90, 16, .12); color: #7a5a10; white-space: nowrap; }
+.lb-ci.st-approved .lb-pill, .lb-ci.st-staff .lb-pill { background: rgba(7, 122, 75, .1); color: #077a4b; }
+.lb-ci.st-declined .lb-pill { background: rgba(179, 38, 30, .1); color: #b3261e; }
+.lb-reply { font-size: 13px; color: #4a4843; }
+
+.bdr-in .lb-kinds { width: 100%; }
+.bdr-in .lb-kinds .lb-sb { flex: 1 1 0; min-width: 0; padding: 0 8px; }
+.bdr-f input:not([type="file"]) { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid rgba(0, 0, 0, .18); border-radius: 12px; padding: 12px; font: inherit; font-size: 16px; font-weight: 400; background: #fff; color: #1a1919; }
+.bdr-f input:not([type="file"]):focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.lb-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+@media (max-width: 560px) {
+  .lb-sw { width: 100%; }
+  .lb-sb { flex: 1 1 0; min-width: 0; padding: 0 6px; font-size: 13px; }
+  .lb-row { padding: 6px 12px; gap: 8px; }
+  .lb-dates { grid-template-columns: 1fr; }
+}

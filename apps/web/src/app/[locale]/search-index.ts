@@ -10,9 +10,11 @@ import { termsSchema } from "@/content/pages/terms";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
 import { pageState } from "@/lib/page-state";
+import { boardWords } from "@/components/leaderboard/Leaderboard.words";
+import { BOARD_PATH } from "@/lib/distance-board";
 
 // What the header's search looks through besides the pages' names (components/site/SiteSearch.tsx):
-// the Help answers, the About and Club questions, the Journal's articles and the Terms' clauses,
+// the Help answers, the About and Club questions (and the distance leaderboards with the Club), the Journal's articles and the Terms' clauses,
 // in the visitor's language, from pages the visitor can open, and the Learn to ride sign-up (a page
 // of Experiences' own, with no place in the menus). A server action, so it is read with the pages'
 // own dictionaries; kept a minute per language, as staff edits are. While the site is Coming Soon a
@@ -50,7 +52,12 @@ export async function searchIndex(locale: string): Promise<SearchItem[]> {
     const hours = S(resolvePage(siteSchema, content, L).contact.hoursText);
     qa(list(resolvePage(aboutSchema, content, L).faq.items), "/about", { hours });
   }
-  if (on("club")) qa(list(resolvePage(clubSchema, content, L).faq.items), "/club");
+  if (on("club")) {
+    qa(list(resolvePage(clubSchema, content, L).faq.items), "/club");
+    // the distance leaderboards (2026-11-27), found by their boards' names in the visitor's language
+    const w = boardWords(L);
+    items.push({ title: w.title, text: [w.longest, w.month, w.lifetime, w.year].join(" · "), href: BOARD_PATH, words: `${w.lbT} leaderboard leaderboards distance km longest` });
+  }
   if (on("experiences")) {
     const l = resolvePage(experiencesSchema, content, L).learn;
     if (l.on) items.push({ title: l.eyebrow || l.title, text: l.taking ? l.teaserText : l.closedText, href: "/experiences/learn", words: LEARN_WORDS });

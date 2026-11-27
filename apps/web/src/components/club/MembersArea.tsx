@@ -38,6 +38,8 @@ import YearCard from "./YearCard";
 import Mentorship from "./Mentorship";
 import InviteFriend from "./InviteFriend";
 import ClubParts from "./ClubParts";
+import { boardWords } from "@/components/leaderboard/Leaderboard.words";
+import { BOARD_PATH } from "@/lib/distance-board";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
 // their card - name, since when, credits, tier and what is left to the next - their attendance
@@ -68,6 +70,8 @@ import ClubParts from "./ClubParts";
 // the recap, the Build-up plan, My interests, the upcoming sessions, the member's rides, the staff card), Challenges (the
 // year, My month, the challenge, Plan my Saturdays, the season challenges, the club goal) and Club (the title, Ask,
 // Mentorship, Volunteers needed, Suggest a ride, the invitation); the card, its tier bar and the birthday stay above them.
+// Since 2026-11-27 a fourth part, Leaderboard, between Challenges and Club, as the app's: Longest ride, Lifetime and This
+// year, each opening its distance leaderboard (/leaderboard, components/leaderboard/Leaderboard.tsx).
 // The Community chat is a round button at the bottom corner of the area (ChatButton), as the booking app's is since
 // 2026-11-20 (it was the Club part's first card).
 type Props = {
@@ -215,6 +219,16 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
       {hub?.club && <ClubGoalCard g={hub.club} locale={locale} w={cw} />}
     </>
   ) : null;
+  // The Leaderboard part (the booking app, 2026-11-27): one way into each distance leaderboard, /leaderboard on that board.
+  const bw = boardWords(locale);
+  const board = (
+    <section className="club-lb" aria-labelledby="club-lb-h">
+      <h3 id="club-lb-h">{bw.lbT}</h3>
+      <div className="club-lb-go">
+        {(["longest", "lifetime", "year"] as const).map((b) => <a key={b} href={localHref(`${BOARD_PATH}?b=${b}`, locale)}>{bw[b]} {arrow}</a>)}
+      </div>
+    </section>
+  );
   const club = (title || (asks && asks.length > 0) || mentor || hub?.volunteer || suggestions || invite) ? (
     <>
       {title && (
@@ -270,7 +284,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
       <span className="club-bar"><span style={{ width: `${pct}%` }} /></span>
       <p className="club-mine-next">{a.tier >= 2 || !a.next ? t.top : t.toNext(N(Math.max(0, a.next - a.credits)), tierNames[a.tier + 1])}</p>
 
-      <ClubParts parts={{ sess, ...(goals ? { goals } : {}), ...(club ? { club } : {}) }} labels={{ sess: cw.secSess, goals: cw.secGoals, club: cw.secClub }} label={t.title} />
+      <ClubParts parts={{ sess, ...(goals ? { goals } : {}), board, ...(club ? { club } : {}) }} labels={{ sess: cw.secSess, goals: cw.secGoals, board: bw.secBoard, club: cw.secClub }} label={t.title} />
       {chatHref && <ChatButton href={chatHref} label={memberHubWords(locale).chtTitle} />}
     </div>
     </InterestsBox>

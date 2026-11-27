@@ -19,6 +19,8 @@ export type ShareSubject = {
   chip: { color: string } | null;
   file: string;
   lines?: string[];
+  /** The address at the picture's foot, where it is not the website's own (a leaderboard's: micromobility.sa/leaderboard). */
+  foot?: string;
 };
 
 export const SHARE_W = 1080;
@@ -155,6 +157,6 @@ export function paintShare(x: Ctx, sub: ShareSubject, first: string, a: ShareAss
   if (sub.level) said.push(sub.level);
   if (sub.date) said.push(sub.date);
   if (sub.lines) said.push(...sub.lines);
-  x.fillStyle = SHARE_INK.foot; x.font = `400 40px ${fam}`; put(SHARE_SITE, 1790);
+  x.fillStyle = SHARE_INK.foot; x.font = `400 40px ${fam}`; put(sub.foot || SHARE_SITE, 1790);
   return said;
 }

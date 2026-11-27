@@ -11,6 +11,8 @@
 // circuit night in five days held by Sara and Omar Khalid with an add-on and a locker, a night in six on its waitlist, two
 // more open nights to move to, the add-ons the night sells, and the lockers; customer_booking_update, customer_create_booking,
 // customer_addon_stock and the customer_locker_* functions change it as the database would, in outline.
+// The distance leaderboards' functions (distance_board, customer_distances, customer_distance_claim / _withdraw,
+// customer_board_public) answer for tests-account/leaderboard.spec.ts.
 // Nothing here reaches a real database.
 import { createServer } from "node:http";
 
@@ -47,6 +49,9 @@ function fresh() {
     bookings: BOOKINGS(),
     lockers: [{ id: "lk-1", booking_id: null, day: day(4), period: "both", code: "B7", name: "Sara Khalid", status: "reserved", pay: "wallet", paid: true }],
     stock: {},
+    // the distance leaderboards (rentals 20261127180000): Sara's switch and her own distances
+    boardPublic: false,
+    claims: [{ id: 5, kind: "ride", km: 64, d: day(-20), from: null, status: "approved", source: "staff", reply: null, at: `${day(-19)}T10:00:00Z` }],
   };
 }
 let st; // set once the bookings below are defined
@@ -174,7 +179,20 @@ const BOOKINGS = () => [
   { id: "e-cx1", session_id: "s-cx", session_date: day(9), session_day: wd(day(9)), status: "cancelled", cancelled_by: "customer", queue_num: 3, price: 75, paid: false, name: "Sara Khalid", type_preference: "Hybrid" },
 ];
 st = fresh();
+// The distance leaderboards (tests-account/leaderboard.spec.ts): each board's rows, men and women apart; on Longest ride Sara
+// (a woman) shares second place, with Silver; a name only for a rider who switched it on.
+const BOARD = (b, g) => {
+  if (g === "male") return [{ r: 1, km: b === "lifetime" ? 3200 : 150, name: "Omar-Al_Harbi K.", medal: b === "longest" ? 1 : null, mine: false }, { r: 2, km: b === "lifetime" ? 2100 : 110, name: null, medal: b === "longest" ? 2 : null, mine: false }];
+  if (b === "longest") return [{ r: 1, km: 120, name: "Noor A.", medal: 1, mine: false }, { r: 2, km: 90.5, name: st.boardPublic ? "Sara K." : null, medal: 2, mine: true }, { r: 2, km: 90.5, name: null, medal: null, mine: false }];
+  return [{ r: 1, km: b === "lifetime" ? 1800 : 600, name: "Noor A.", medal: null, mine: false }];
+};
 const READS = {
+  distance_board: (a) => {
+    const b = ["longest", "month", "lifetime", "year"].includes(a.p_board) ? a.p_board : "longest", g = a.p_gender === "female" ? "female" : "male";
+    const rows = BOARD(b, g).map((r) => ({ ...r, mine: r.mine && !!a.p_id })), me = rows.find((r) => r.mine);
+    return { ok: true, board: b, gender: g, rows, ...(a.p_id ? { me: { ...(me ? { r: me.r, km: me.km } : {}), public: st.boardPublic, member: true, gender: "female" } } : {}) };
+  },
+  customer_distances: () => ({ ok: true, best: 90.5, at: day(-3), lifetime: 640, year: 410.4, public: st.boardPublic, member: true, medal: 2, claims: st.claims }),
   customer_profile: () => [st.profile],
   customer_seen: () => null,
   customer_about: () => [st.about],
@@ -245,6 +263,19 @@ const READS = {
   customer_vl_teams: () => [],
 };
 const WRITES = {
+  customer_board_public: (a) => { st.boardPublic = !!a.p_on; return { ok: true, public: st.boardPublic }; },
+  customer_distance_claim: (a) => {
+    if (st.claims.filter((c) => c.status === "pending").length >= 3) return { ok: false, error: "limit" };
+    if (!(a.p_km >= 1 && a.p_km <= (a.p_kind === "total" ? 50000 : 300))) return { ok: false, error: "km" };
+    const id = 100 + st.claims.length;
+    st.claims.unshift({ id, kind: a.p_kind, km: a.p_km, d: a.p_date, from: a.p_from, status: "pending", source: "claim", reply: null, at: new Date().toISOString() });
+    return { ok: true, id };
+  },
+  customer_distance_withdraw: (a) => {
+    const n = st.claims.length;
+    st.claims = st.claims.filter((c) => !(c.id === a.p_claim && c.status === "pending" && c.source === "claim"));
+    return st.claims.length < n ? { ok: true } : { ok: false, error: "gone" };
+  },
   customer_update_profile: (a) => {
     const map = { p_name: "name", p_email: "email", p_phone: "phone", p_height: "height", p_type_preference: "type_preference", p_birth_date: "birth_date", p_country: "country", p_city: "city", p_nationality: "nationality" };
     for (const [k, col] of Object.entries(map)) if (k in a) st.profile[col] = a[k];

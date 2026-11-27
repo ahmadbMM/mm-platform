@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-21";
+export const PRIVACY_VERSION = "2026-11-27";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -11,7 +11,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    "h": "Who we are"
   },
   {
-   "p": "<strong>شركة التنقل الدقيق المحدودة</strong> (Micromobility Company Ltd.), a single-person limited liability company. Unified number 7041881512 (Commercial Registration 1009107240). Building 7933, Ibn Anuq Al Fedha Street, Al Mansurah District, Riyadh 12692 (additional no. 2987), Saudi Arabia."
+   "p": "<strong>شركة التنقل الدقيق المحدودة</strong> (MicroMobility Company Ltd.), a single-person limited liability company. Unified number 7041881512 (Commercial Registration 1009107240). Building 7933, Ibn Anuq Al Fedha Street, Al Mansurah District, Riyadh 12692 (additional no. 2987), Saudi Arabia."
   },
   {
    "p": "We run bicycle rentals, group rides and events at micromobility.sa. For anything about your data, contact <a href=\"mailto:info@micromobility.sa\">info@micromobility.sa</a>."
@@ -181,6 +181,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Badge requests: the badge you ask for, your comment and the proof you attach (a picture or a PDF), and our team’s answer",
       "Always optional: only if you ask for a badge from your account page. Seen by you (except the proof, once sent) and our staff.",
       "Deciding whether to give you the badge. The proof is deleted as soon as our team answers."
+     ],
+     [
+      "Distance leaderboards: the distances of the bike sessions you finish, a distance our team enters for you, and a distance you add (one ride or a total over dates) with its proof (a picture or a PDF) and your comment",
+      "The leaderboards are worked out from your rides. Adding a distance is always optional. Members are ranked on the leaderboards that anyone can open: your place and distance show, and your first name with the first letter of your last name only if you switch it on from the leaderboard (off unless you do). The proof and comment are seen by you and our staff only.",
+      "Showing the leaderboards and their Gold, Silver and Bronze badges, and deciding whether to count a distance you add. The proof is deleted as soon as our team answers."
      ],
      [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings, whether you said before a session that you are still coming or running late (and by about how many minutes), a note for the desk if you write one with a booking (seen only by you and our staff), and any bike problem you report from your ticket (the fault you pick, a short note if you add one, and when)",
@@ -408,6 +413,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>Booking and payment records:</strong> kept for 10 years, because the law requires financial records. Then destroyed.",
     "<strong>Technical error reports:</strong> deleted after 90 days.",
     "<strong>The proof you attach to a badge request:</strong> deleted as soon as our team answers the request.",
+    "<strong>The proof you attach to a distance for the leaderboards:</strong> deleted as soon as our team answers; the distance itself is kept while you have an account.",
     "<strong>Your Updates list:</strong> each message is deleted after 90 days.",
     "<strong>Booking reminders:</strong> kept until 30 days after we tell you, or after the reminder ends because the date can no longer be booked by you; deleted at once if you remove it, or when its date passes before booking opens.",
     "<strong>The Saturdays you plan to come:</strong> deleted when the month ends.",
@@ -635,6 +641,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "تحديد ما إذا كنا سنمنحك الوسام. ويُحذف الإثبات فور ردّ فريقنا."
      ],
      [
+      "لوحات المتصدرين للمسافات: مسافات جلسات الدراجة التي تُكملها، والمسافة التي يُدخلها فريقنا لك، والمسافة التي تضيفها (رحلة واحدة أو مجموع خلال فترة) مع إثباتها (صورة أو ملف PDF) وتعليقك",
+      "تُحسب اللوحات من رحلاتك. إضافة مسافة اختيارية دائمًا. يُرتَّب الأعضاء في لوحات يمكن لأي شخص فتحها: يظهر مركزك ومسافتك، ولا يظهر اسمك الأول وأول حرف من اسم عائلتك إلا إذا فعّلت ذلك من لوحة المتصدرين (مُطفأ ما لم تفعّله). الإثبات والتعليق لا يراهما إلا أنت وموظفونا.",
+      "عرض لوحات المتصدرين وأوسمتها الذهبية والفضية والبرونزية، وتحديد ما إذا كنا سنحتسب المسافة التي تضيفها. ويُحذف الإثبات فور ردّ فريقنا."
+     ],
+     [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات، وما إذا أكّدت قبل الجلسة أنك ما زلت قادمًا أو أنك ستتأخر (وبكم دقيقة تقريبًا)، وملاحظة لفريق الاستقبال إن كتبتها مع الحجز (لا يراها إلا أنت وموظفونا)، وأي مشكلة في الدراجة تُبلغ عنها من تذكرتك (العطل الذي تختاره، وملاحظة قصيرة إن أضفتها، ووقت البلاغ)",
       "تُسجَّل أثناء استخدامك للخدمة",
       "تشغيل رحلاتك، والسلامة، والمدفوعات، والسجلات. يقرأ موظفونا بلاغ مشكلة الدراجة لإصلاحها."
@@ -860,6 +871,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>سجلات الحجز والدفع:</strong> نحتفظ بها 10 سنوات لأن النظام يُلزم بحفظ السجلات المالية، ثم نتلفها.",
     "<strong>تقارير الأخطاء التقنية:</strong> تُحذف بعد 90 يومًا.",
     "<strong>الإثبات الذي ترفقه بطلب وسام:</strong> يُحذف فور ردّ فريقنا على الطلب.",
+    "<strong>الإثبات الذي ترفقه بمسافة للوحات المتصدرين:</strong> يُحذف فور ردّ فريقنا؛ وتُحفظ المسافة نفسها ما دام حسابك قائمًا.",
     "<strong>قائمة التحديثات:</strong> تُحذف كل رسالة بعد 90 يومًا.",
     "<strong>تذكيرات الحجز:</strong> تُحفظ حتى 30 يومًا بعد إخبارك، أو بعد انتهاء التذكير لأن الموعد لم يعد متاحًا لك؛ وتُحذف فورًا إن أزلتها، أو عند مرور الموعد قبل فتح الحجز.",
     "<strong>أيام السبت التي تنوي الحضور فيها:</strong> تُحذف بانتهاء الشهر.",

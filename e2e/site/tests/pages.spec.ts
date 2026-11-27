@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 // heading, its search-engine tags, no script errors, and no serious accessibility problems (axe,
 // WCAG 2.1 A/AA). An unknown address gets the site's own 404.
 const AXE = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
-const PAGES = ["/", "/about", "/club", "/experiences", "/experiences/learn", "/workshop", "/help", "/events", "/journal", "/business", "/ambassadors", "/gallery", "/routes", "/privacy", "/terms", "/account", "/bookings", "/bikes", "/live", "/testimonials", "/testimonials/write"];
+const PAGES = ["/", "/about", "/club", "/experiences", "/experiences/learn", "/workshop", "/help", "/events", "/journal", "/business", "/ambassadors", "/gallery", "/routes", "/privacy", "/terms", "/account", "/bookings", "/bikes", "/live", "/testimonials", "/testimonials/write", "/leaderboard"];
 // The account page, Bookings and the live ride map are private: no canonical address, never indexed.
 const PRIVATE = new Set(["/account", "/bookings", "/live"]);
 

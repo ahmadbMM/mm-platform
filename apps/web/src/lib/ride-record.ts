@@ -46,7 +46,11 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   first_lap: ["flag", "green"], regular: ["wheel", "teal"], podium: ["podium", "purple"], front_row: ["one", "gold"], carbon: ["bike", "silver"],
   streak: ["flame", "orange"], squad: ["people", "blue"], fuel: ["bottle", "red"], corniche25: ["wave", "blue"],
   marshal: ["shield", "orange"], pit_crew: ["wrench", "silver"], green_flag: ["wflag", "green"], super_licence: ["card", "purple"],
-  scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], t100: ["t100", "gold"], t50: ["t50", "silver"], t25: ["t25", "orange"], ironman_703: ["ironman_703", "silver"], ironman_1406: ["ironman_1406", "gold"], kaust_triathlon: ["kaust_triathlon", "blue"], complete_profile: ["profile", "special"],
+  scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], t100: ["t100", "gold"], t50: ["t50", "silver"], t25: ["t25", "orange"], ironman_703: ["ironman_703", "silver"], ironman_1406: ["ironman_1406", "gold"], kaust_triathlon: ["kaust_triathlon", "blue"],
+  // Longest Ride Gold, Silver and Bronze: given and taken by the database as the Longest ride leaderboard moves (the booking
+  // app, 2026-11-27, rentals 20261127180000), held only and never requested
+  lr_gold: ["lr1", "gold"], lr_silver: ["lr2", "silver"], lr_bronze: ["lr3", "orange"],
+  complete_profile: ["profile", "special"],
   national_day_96: ["n96", "national"], back_on_track: ["return", "teal"], safety_car: ["beacon", "orange"], endurance: ["clock", "purple"],
   triple_crown: ["crown", "gold"], slipstream: ["wind", "green"], paceline: ["wind", "blue"], peloton: ["wind", "gold"],
   rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
@@ -94,7 +98,7 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
 /** Badges staff give that a rider sees only once they hold one (BDG_HELD_ONLY): never greyed under Badges to earn,
  *  never offered to request (the booking app, 2026-11-12: Talent Scout, for helping someone from the community get a job anywhere,
  *  "only visible for its holders"). */
-export const HELD_ONLY = new Set(["kaust_triathlon", "company_challenge", "talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night", "tee_painting", "back_on_track"]);
+export const HELD_ONLY = new Set(["lr_gold", "lr_silver", "lr_bronze", "kaust_triathlon", "company_challenge", "talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night", "tee_painting", "back_on_track"]);
 /** Whether only a badge's holders see it (the booking app's _bdgHeldOnly, 2026-11-12: "add a switch to all badges that has
  *  to do with the visibility of the badges to customers and members"): the catalogue's held_only, staff's switch in
  *  Community > Badges, else the start the app keeps (def): HELD_ONLY, the ride badges rideBadges marks hide. */

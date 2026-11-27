@@ -7,7 +7,8 @@ import { badgeReqWords } from "./BadgeRequest.words";
 import { shareWords } from "./BadgeShare.words";
 import { fill } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
-import { lastReq, PDF_MAX, type AskChoice, type BadgeReq } from "@/lib/badge-request";
+import { lastReq, type AskChoice, type BadgeReq } from "@/lib/badge-request";
+import { readProof, type Proof } from "@/lib/proof-file";
 import { TickIcon } from "@/components/site/Icons";
 import { onBackdrop } from "@/lib/backdrop";
 import { badgeSubject, type ShareSubject } from "@/lib/share-picture";
@@ -44,7 +45,6 @@ export type BadgeView = {
 };
 /** The badge requests: the account's own, newest first, and the badges the dialog offers; null: none offered. */
 export type BadgeAsk = { reqs: BadgeReq[]; choices: AskChoice[]; locale: string };
-type Proof = { url: string; kind: "image" | "pdf"; name: string };
 type ReqForm = { slug: string; note: string; proof: Proof | null; busy: boolean; err: string };
 export type BadgeLevel = { slug: string; icon: string; color: string; on: boolean; name: string; how: string; prog: string | null };
 export type BadgeGridText = {
@@ -69,37 +69,6 @@ const Doc = () => (
     <path d="M14 3.4H7.2a1.8 1.8 0 0 0-1.8 1.8v13.6a1.8 1.8 0 0 0 1.8 1.8h9.6a1.8 1.8 0 0 0 1.8-1.8V8z" /><path d="M14 3.4V8h4.6M8.8 12.6h6.4M8.8 16h4.2" />
   </svg>
 );
-// A picture made small as a receipt is (the long side 1600 px, a JPEG under ~2.5 MB); a PDF as it is, 2 MB at most,
-// once its first bytes say PDF (the booking app's _bdrFile).
-function readProof(f: File): Promise<Proof | null> {
-  const name = (f.name || "").slice(-120);
-  return new Promise((ok) => {
-    const rd = new FileReader();
-    rd.onerror = () => ok(null);
-    if (/^application\/pdf$/i.test(f.type) || (!/^image\//.test(f.type) && /\.pdf$/i.test(name))) {
-      if (f.size > PDF_MAX) { ok(null); return; }
-      rd.onload = () => { const s = String(rd.result || ""), b = s.slice(s.indexOf(",") + 1); ok(/^JVBER/.test(b) ? { url: `data:application/pdf;base64,${b}`, kind: "pdf", name: name || "proof.pdf" } : null); };
-      rd.readAsDataURL(f);
-      return;
-    }
-    if (!/^image\//.test(f.type)) { ok(null); return; }
-    rd.onload = () => {
-      const im = new Image();
-      im.onerror = () => ok(null);
-      im.onload = () => {
-        const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight, 1)), w = Math.round(im.naturalWidth * k), h = Math.round(im.naturalHeight * k);
-        const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
-        const cx = cv.getContext("2d"); if (!cx) { ok(null); return; }
-        cx.fillStyle = "#fff"; cx.fillRect(0, 0, w, h); cx.drawImage(im, 0, 0, w, h);
-        let q = 0.82, u = cv.toDataURL("image/jpeg", q);
-        while (u.length > 2_500_000 && q > 0.4) { q -= 0.12; u = cv.toDataURL("image/jpeg", q); }
-        ok({ url: u, kind: "image", name: name || "proof.jpg" });
-      };
-      im.src = String(rd.result);
-    };
-    rd.readAsDataURL(f);
-  });
-}
 // A level not begun yet in a ladder's popup (the booking app's lock icon).
 const Lock = () => (
   <svg className="badge-lvl-lock" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
