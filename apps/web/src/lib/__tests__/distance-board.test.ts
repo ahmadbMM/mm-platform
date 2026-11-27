@@ -13,7 +13,7 @@ import { GET as boardRoute } from "../../app/api/leaderboard/route";
 import { GET as mineRoute, POST as mineSend } from "../../app/api/account/distances/route";
 import { askChoices } from "../badge-request";
 import {
-  boardName, boardSubject, claimBody, kmMi, claimProblem, claimRefusal, kmNum, ownCard, readBoard, readKm, readMine, refusalWord,
+  asGender, boardName, boardSubject, claimBody, kmMi, startGender, claimProblem, claimRefusal, kmNum, ownCard, readBoard, readKm, readMine, refusalWord,
   BOARD_LINK, BOARD_MEDAL, type MyDistances,
 } from "../distance-board";
 import { BADGE_SYS, HELD_ONLY, badgeList, type BadgeData } from "../ride-record";
@@ -60,6 +60,10 @@ describe("the boards as the database answers them", () => {
     expect(a.me).toEqual({ r: 2, km: 90.5, member: true, gender: "female" });
     // signed out: no `me`; an unknown board or gender reads as Longest ride, men
     expect(readBoard({ ok: true, board: "nope", gender: "x", rows: [] })).toEqual({ board: "longest", gender: "male", rows: [], me: null });
+    expect(readBoard({ ok: true, board: "year", gender: "all", rows: [] })?.gender).toBe("all");
+    // All (2026-11-28): asked for by name; a visitor without an account's gender starts on it
+    expect([asGender("all"), asGender("female"), asGender("x")]).toEqual(["all", "female", "male"]);
+    expect([startGender("female"), startGender("male"), startGender(null), startGender("other")]).toEqual(["female", "male", "all", "all"]);
     expect(readBoard({ ok: false })).toBeNull();
     expect(readBoard(null)).toBeNull();
     expect(boardName(" - ")).toBeNull();
@@ -138,6 +142,8 @@ describe("the share picture", () => {
     const y = boardSubject("year", "male", 14, 410, 1, w);
     expect([y.label, plainText(y.level), y.medal]).toEqual(["Kilometres this year", "#14 · Men", { icon: "road", color: "green" }]); // a medal only on Longest ride
     expect(BOARD_LINK).toBe("micromobility.sa/leaderboard");
+    // All (2026-11-28): the place alone, no gender word
+    expect(plainText(boardSubject("longest", "all", 4, 90.5, 2, w).level)).toBe("#4");
     expect(plainText(boardSubject("lifetime", "male", 1, 640, null, BOARD_WORDS.ar).name)).toBe("640 كم · 397.7 ميل");
   });
 });
@@ -151,6 +157,7 @@ describe("the words", () => {
       for (const v of Object.values(w)) expect(v.trim(), l).not.toBe("");
       expect(w.km, l).toContain("{0}");
       expect(w.mi, l).toContain("{0}");
+      expect(w.all.trim(), l).not.toBe("");
       for (const v of Object.values(w)) expect(v, `${l} digits`).not.toMatch(/[٠-٩۰-۹०-९০-৯]/);
     }
     expect(BOARD_WORDS.ar.onlyMembers).toBe("يُرتَّب أعضاء المجتمع فقط.");
@@ -208,6 +215,10 @@ describe("the routes", () => {
     vi.stubGlobal("fetch", g);
     expect(await (await boardRoute(get("/api/leaderboard?b=drop&g=x"))).json()).toMatchObject({ ok: true, board: { me: null } });
     expect(sentTo(g).args).toEqual({ p_board: "longest", p_gender: "male", p_id: null, p_token: null });
+    const h = db({ ok: true, board: "lifetime", gender: "all", rows: [] });
+    vi.stubGlobal("fetch", h);
+    await boardRoute(get("/api/leaderboard?b=lifetime&g=all"));
+    expect(sentTo(h).args.p_gender).toBe("all");
     vi.stubGlobal("fetch", db({ message: "Could not find the function" }, 404));
     expect((await boardRoute(get("/api/leaderboard"))).status).toBe(502);
   });

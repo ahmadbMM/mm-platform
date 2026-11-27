@@ -18,7 +18,7 @@ import {
 
 // The distance leaderboards' page (micromobility.sa/leaderboard; the booking app's distance-board.js, rentals migration
 // 20261127180000): the four boards (Longest ride, This month, Lifetime, This year) behind one switch and men and women
-// behind another, each board's rows with their place, the medal on Longest ride, the rider's
+// behind another (All, Men, Women: everyone together since 2026-11-28), each board's rows with their place, the medal on Longest ride, the rider's
 // full name ("Member" only when there is none) and the distance; the rider's own row adds a green "You". A signed-in rider
 // also sees their own place, Share (the picture is drawn in the browser, components/account/ShareImage.tsx) once they are
 // ranked, Add a distance
@@ -165,7 +165,7 @@ export default function Leaderboard({ locale, b: b0, g: g0, board, signedIn, min
   return (
     <div className="lb">
       {swBtns(BOARDS.map((x) => [x, boardName(x)] as [Board, string]), b, (v) => pick(v, g), w.title)}
-      {swBtns([["male", w.men], ["female", w.women]] as [BoardGender, string][], g, (v) => pick(b, v), `${w.men} / ${w.women}`)}
+      {swBtns([["all", w.all], ["male", w.men], ["female", w.women]] as [BoardGender, string][], g, (v) => pick(b, v), `${w.all} / ${w.men} / ${w.women}`)}
       {sub && <p className="lb-sub">{sub}</p>}
 
       {own && (
@@ -190,7 +190,7 @@ export default function Leaderboard({ locale, b: b0, g: g0, board, signedIn, min
         : !cur ? (
           <div className="lb-err" role="alert"><span>{w.loadErr}</span><button type="button" className="lb-add" onClick={retry}>{w.retry}</button></div>
         ) : cur.rows.length > 0 && (
-          <ol className="lb-list" aria-label={`${boardName(b)} · ${g === "female" ? w.women : w.men}`}>
+          <ol className="lb-list" aria-label={`${boardName(b)} · ${g === "all" ? w.all : g === "female" ? w.women : w.men}`}>
             {cur.rows.map((r, i) => (
               <li key={`${r.r}-${i}`} className={`lb-row${r.mine ? " mine" : ""}`}>
                 <span className="lb-r" dir="ltr">{r.r}</span>

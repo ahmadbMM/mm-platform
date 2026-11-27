@@ -4,7 +4,7 @@ import { readDistanceBoard } from "@/lib/distance-board-server";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
 
-// GET /api/leaderboard?b=longest|month|lifetime|year&g=male|female: one distance leaderboard for the page's switches
+// GET /api/leaderboard?b=longest|month|lifetime|year&g=all|male|female: one distance leaderboard for the page's switches
 // (components/leaderboard/Leaderboard.tsx), through the booking app's distance_board (rentals migration 20261127180000),
 // which anyone may read. With the account cookie its id and token go too, so the answer marks the rider's own row and
 // carries their own place (`me`), as the booking app's page asks it (_dbdFetch). Answers {ok: true, board} or

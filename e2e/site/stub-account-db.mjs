@@ -181,13 +181,15 @@ st = fresh();
 // The distance leaderboards (tests-account/leaderboard.spec.ts): each board's rows, men and women apart; on Longest ride Sara
 // (a woman) shares second place, with Silver; every row with its full name (2026-11-28), one with none.
 const BOARD = (b, g) => {
+  // All (2026-11-28): everyone ranked together, each medal the rider's own (the podium stays per gender)
+  if (g === "all") return [...BOARD(b, "male"), ...BOARD(b, "female")].sort((x, y) => y.km - x.km).map((r, i, l) => ({ ...r, r: l.findIndex((z) => z.km === r.km) + 1 }));
   if (g === "male") return [{ r: 1, km: b === "lifetime" ? 3200 : 150, name: "Omar-Al_Harbi Khalid", medal: b === "longest" ? 1 : null, mine: false }, { r: 2, km: b === "lifetime" ? 2100 : 110, name: null, medal: b === "longest" ? 2 : null, mine: false }];
   if (b === "longest") return [{ r: 1, km: 120, name: "Noor Ahmed", medal: 1, mine: false }, { r: 2, km: 90.5, name: "Sara Khalid", medal: 2, mine: true }, { r: 2, km: 90.5, name: null, medal: null, mine: false }];
   return [{ r: 1, km: b === "lifetime" ? 1800 : 600, name: "Noor Ahmed", medal: null, mine: false }];
 };
 const READS = {
   distance_board: (a) => {
-    const b = ["longest", "month", "lifetime", "year"].includes(a.p_board) ? a.p_board : "longest", g = a.p_gender === "female" ? "female" : "male";
+    const b = ["longest", "month", "lifetime", "year"].includes(a.p_board) ? a.p_board : "longest", g = a.p_gender === "female" || a.p_gender === "all" ? a.p_gender : "male";
     const rows = BOARD(b, g).map((r) => ({ ...r, mine: r.mine && !!a.p_id })), me = rows.find((r) => r.mine);
     return { ok: true, board: b, gender: g, rows, ...(a.p_id ? { me: { ...(me ? { r: me.r, km: me.km } : {}), member: true, gender: "female" } } : {}) };
   },

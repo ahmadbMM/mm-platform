@@ -36,6 +36,24 @@ test("signed out: the board's places, distances, full names or Member, the medal
   await expect(rows(page).locator(".lb-nm")).toHaveText(["Omar Al Harbi Khalid", "Member"]);
 });
 
+test("All (2026-11-28): a signed-out visitor starts on everyone together, each medal its rider's own; ?g=all opens it", async ({ page }) => {
+  await signIn(page, "en", false);
+  await page.goto("/leaderboard");
+  const gw = page.locator(".lb-sw").nth(1).locator("button");
+  await expect(gw).toHaveText(["All", "Men", "Women"]);
+  await expect(page.getByRole("button", { name: "All", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(rows(page).locator(".lb-nm")).toHaveText(["Omar Al Harbi Khalid", "Noor Ahmed", "Member", "Sara Khalid", "Member"]);
+  await expect(rows(page).locator(".lb-r")).toHaveText(["1", "2", "3", "4", "4"]);
+  await expect(rows(page).locator("svg.bdg-race")).toHaveCount(4); // the men's and the women's podium, side by side
+  // signed in, ?g=all: her row marked, and the picture's level is the place alone
+  await signIn(page);
+  await page.goto("/leaderboard?g=all");
+  await expect(page.getByRole("button", { name: "All", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".lb-me .lb-me-r")).toHaveText("#4");
+  await page.locator(".lb-me").getByRole("button", { name: "Share" }).click();
+  await expect(page.locator("dialog.shr-dlg img")).toHaveAttribute("alt", /Longest ride · 90\.5 km · 56\.2 mi · #4$/);
+});
+
 test("signed in: the own place with its medal, her name with You on her row, the boards, Share and Your distances", async ({ page }) => {
   await signIn(page);
   await page.goto("/leaderboard");

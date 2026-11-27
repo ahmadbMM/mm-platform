@@ -14,10 +14,15 @@ import { ltrNum, type ShareSubject } from "./share-picture";
 
 export const BOARDS = ["longest", "month", "lifetime", "year"] as const;
 export type Board = (typeof BOARDS)[number];
-export type BoardGender = "male" | "female";
+/** Men, women, or everyone ranked together ("all", the user, 2026-11-28: "add a all genders leaderboard"; rentals
+ *  20261128170000; the podium medals stay per gender). */
+export type BoardGender = "male" | "female" | "all";
 export const isBoard = (v: unknown): v is Board => typeof v === "string" && (BOARDS as readonly string[]).includes(v);
 export const asBoard = (v: unknown): Board => (isBoard(v) ? v : "longest");
-export const asGender = (v: unknown): BoardGender => (v === "female" ? "female" : "male");
+export const asGender = (v: unknown): BoardGender => (v === "female" || v === "all" ? v : "male");
+/** The board a visitor opens on without ?g=: a signed-in rider their own gender's, anyone else (or an account with none on
+ *  file) everyone together (the booking app's _dbdOpen). */
+export const startGender = (accountGender: unknown): BoardGender => (accountGender === "female" || accountGender === "male" ? accountGender : "all");
 
 /** The page's own address, and the address a share picture prints at its foot (the website's, as every picture the site
  *  draws prints micromobility.sa where the booking app prints its own). */
@@ -27,7 +32,7 @@ export const BOARD_LINK = "micromobility.sa/leaderboard";
 /** One row of a board: its rank (equal distances share one), the distance, the rider's full name (null: "Member"), the Longest ride medal 1-3, and whether it is the signed-in rider's own. */
 export type BoardRow = { r: number; km: number; name: string | null; medal: 1 | 2 | 3 | null; mine: boolean };
 /** The signed-in rider on a board: their place and figure when ranked, whether they are a member. */
-export type BoardMe = { r: number | null; km: number | null; member: boolean; gender: BoardGender | null };
+export type BoardMe = { r: number | null; km: number | null; member: boolean; gender: "male" | "female" | null };
 export type BoardAnswer = { board: Board; gender: BoardGender; rows: BoardRow[]; me: BoardMe | null };
 
 export type Claim = {
@@ -173,7 +178,7 @@ export function boardSubject(b: Board, g: BoardGender, r: number, km: number, me
   const m = b === "longest" && medal ? BOARD_MEDAL[medal] : null;
   return {
     label: b === "month" ? w.monthP : b === "lifetime" ? w.lifetimeP : b === "year" ? w.yearP : w.longest,
-    name: kmMi(km, w, ltrNum), level: `${ltrNum(`#${r}`)} · ${g === "female" ? w.women : w.men}`, date: "",
+    name: kmMi(km, w, ltrNum), level: g === "all" ? ltrNum(`#${r}`) : `${ltrNum(`#${r}`)} · ${g === "female" ? w.women : w.men}`, date: "",
     medal: m ? { icon: m[0], color: m[1] } : { icon: "road", color: "green" }, chip: null, file: `micromobility-${b}`, foot: BOARD_LINK,
   };
 }
