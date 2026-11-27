@@ -95,6 +95,15 @@ export function kmNum(v: unknown): string {
   const n = Math.round((Number(v) || 0) * 10) / 10;
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
+/** Kilometres to miles (the booking app's DBD_MI). */
+export const MI_PER_KM = 0.621371;
+/** A distance in kilometres and miles, "90 km · 55.9 mi" (the user, 2026-11-28: "show the mileage in miles and km in the
+ *  leaderboard"; the booking app's _dbdKm): each to one decimal, a whole number without its point. `num` wraps each number
+ *  (ltrNum on the share picture, to keep its order in a right-to-left line). */
+export function kmMi(v: unknown, w: { km: string; mi: string }, num: (s: string) => string = (s) => s): string {
+  const k = Number(v) || 0;
+  return `${fill(w.km, num(kmNum(k)))} · ${fill(w.mi, num(kmNum(k * MI_PER_KM)))}`;
+}
 /** A typed number: Arabic and Persian digits and a comma or the Arabic point for the point are read too (_dbdRead). */
 export function readKm(v: unknown): number {
   const s = String(v == null ? "" : v)
@@ -158,11 +167,11 @@ export const refusalWord = (e: unknown): "eKm" | "eDate" | "eProof" | "eLimit" |
 /** The share picture of the rider's place (the booking app's _dbdShare, drawn as its badge-share.js kind 'dist'): the
  *  board's name, the distance, the place with the board's men or women, the Longest ride medal held (else the road),
  *  and the leaderboard's address at its foot. Its numbers keep their order inside a right-to-left line. */
-export function boardSubject(b: Board, g: BoardGender, r: number, km: number, medal: 1 | 2 | 3 | null, w: Record<"longest" | "monthP" | "lifetimeP" | "yearP" | "km" | "men" | "women", string>): ShareSubject {
+export function boardSubject(b: Board, g: BoardGender, r: number, km: number, medal: 1 | 2 | 3 | null, w: Record<"longest" | "monthP" | "lifetimeP" | "yearP" | "km" | "mi" | "men" | "women", string>): ShareSubject {
   const m = b === "longest" && medal ? BOARD_MEDAL[medal] : null;
   return {
     label: b === "month" ? w.monthP : b === "lifetime" ? w.lifetimeP : b === "year" ? w.yearP : w.longest,
-    name: fill(w.km, ltrNum(kmNum(km))), level: `${ltrNum(`#${r}`)} · ${g === "female" ? w.women : w.men}`, date: "",
+    name: kmMi(km, w, ltrNum), level: `${ltrNum(`#${r}`)} · ${g === "female" ? w.women : w.men}`, date: "",
     medal: m ? { icon: m[0], color: m[1] } : { icon: "road", color: "green" }, chip: null, file: `micromobility-${b}`, foot: BOARD_LINK,
   };
 }

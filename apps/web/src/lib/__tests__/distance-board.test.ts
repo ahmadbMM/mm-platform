@@ -13,7 +13,7 @@ import { GET as boardRoute } from "../../app/api/leaderboard/route";
 import { GET as mineRoute, POST as mineSend } from "../../app/api/account/distances/route";
 import { askChoices } from "../badge-request";
 import {
-  boardName, boardSubject, claimBody, claimProblem, claimRefusal, kmNum, ownCard, readBoard, readKm, readMine, refusalWord,
+  boardName, boardSubject, claimBody, kmMi, claimProblem, claimRefusal, kmNum, ownCard, readBoard, readKm, readMine, refusalWord,
   BOARD_LINK, BOARD_MEDAL, type MyDistances,
 } from "../distance-board";
 import { BADGE_SYS, HELD_ONLY, badgeList, type BadgeData } from "../ride-record";
@@ -79,6 +79,8 @@ describe("the boards as the database answers them", () => {
   it("writes a distance as the app does: Latin digits, a whole number bare, else one decimal; and reads Arabic digits typed", () => {
     expect([kmNum(40), kmNum(40.04), kmNum(82.55), kmNum("x")]).toEqual(["40", "40", "82.6", "0"]);
     expect(readKm("١٢٣٫٥")).toBe(123.5);
+    // in kilometres and miles (2026-11-28), each to one decimal, a whole number bare
+    expect([kmMi(90, BOARD_WORDS.en), kmMi(100, BOARD_WORDS.en), kmMi(0.5, BOARD_WORDS.ms), kmMi(160.9344, BOARD_WORDS.ja)]).toEqual(["90 km · 55.9 mi", "100 km · 62.1 mi", "0.5 km · 0.3 batu", "160.9 km · 100 マイル"]);
     expect(readKm("۴۲")).toBe(42);
     expect(readKm(" 12,5 ")).toBe(12.5);
     expect(readKm("12 km")).toBeNaN();
@@ -127,11 +129,11 @@ describe("the share picture", () => {
   it("names the board, the distance and the place with the board's gender, the medal held, and the leaderboard's address", () => {
     const w = BOARD_WORDS.en;
     const s = boardSubject("longest", "female", 2, 90.5, 2, w);
-    expect([s.label, plainText(s.name), plainText(s.level), s.medal, s.file, s.foot]).toEqual(["Longest ride", "90.5 km", "#2 · Women", { icon: "lr2", color: "silver" }, "micromobility-longest", BOARD_LINK]);
+    expect([s.label, plainText(s.name), plainText(s.level), s.medal, s.file, s.foot]).toEqual(["Longest ride", "90.5 km · 56.2 mi", "#2 · Women", { icon: "lr2", color: "silver" }, "micromobility-longest", BOARD_LINK]);
     const y = boardSubject("year", "male", 14, 410, 1, w);
     expect([y.label, plainText(y.level), y.medal]).toEqual(["Kilometres this year", "#14 · Men", { icon: "road", color: "green" }]); // a medal only on Longest ride
     expect(BOARD_LINK).toBe("micromobility.sa/leaderboard");
-    expect(plainText(boardSubject("lifetime", "male", 1, 640, null, BOARD_WORDS.ar).name)).toBe("640 كم");
+    expect(plainText(boardSubject("lifetime", "male", 1, 640, null, BOARD_WORDS.ar).name)).toBe("640 كم · 397.7 ميل");
   });
 });
 
@@ -143,6 +145,7 @@ describe("the words", () => {
       expect(Object.keys(w), l).toEqual(Object.keys(en));
       for (const v of Object.values(w)) expect(v.trim(), l).not.toBe("");
       expect(w.km, l).toContain("{0}");
+      expect(w.mi, l).toContain("{0}");
       for (const v of Object.values(w)) expect(v, `${l} digits`).not.toMatch(/[٠-٩۰-۹०-९০-৯]/);
     }
     expect(BOARD_WORDS.ar.onlyMembers).toBe("يُرتَّب أعضاء المجتمع فقط.");

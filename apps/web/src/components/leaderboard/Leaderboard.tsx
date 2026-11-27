@@ -7,13 +7,12 @@ import Medal from "@/components/account/Medal";
 import ShareImage, { ShareIc } from "@/components/account/ShareImage";
 import { shareWords } from "@/components/account/BadgeShare.words";
 import { boardWords } from "./Leaderboard.words";
-import { fill } from "@/i18n/tx";
 import { onBackdrop } from "@/lib/backdrop";
 import { readProof, type Proof } from "@/lib/proof-file";
 import { shareDay, type ShareSubject } from "@/lib/share-picture";
 import { riyadhClock } from "@/lib/workshop-days";
 import {
-  BOARDS, BOARD_MEDAL, boardSubject, claimProblem, kmNum, ownCard, readBoard, readKm, readMine, refusalWord,
+  BOARDS, BOARD_MEDAL, boardSubject, claimProblem, kmMi, ownCard, readBoard, readKm, readMine, refusalWord,
   type Board, type BoardAnswer, type BoardGender, type Claim, type MyDistances,
 } from "@/lib/distance-board";
 
@@ -25,6 +24,7 @@ import {
 // (one ride, or a total over dates, with a picture or a PDF as proof, for staff to approve) and Your distances, a waiting
 // one with Take back. The first board comes drawn from the server; a switch asks /api/leaderboard and keeps each answer
 // a minute. Nothing about anyone else but the place, the distance and an opted-in name; no count of riders.
+// Every distance in kilometres and miles, "90 km · 55.9 mi" (the user, 2026-11-28; the app's _dbdKm, lib/distance-board.ts kmMi).
 
 type Hit = { at: number; board: BoardAnswer | null };
 type Form = { kind: "ride" | "total"; km: string; d: string; from: string; note: string; proof: Proof | null; busy: boolean; err: string };
@@ -98,7 +98,7 @@ export default function Leaderboard({ locale, b: b0, g: g0, board, signedIn, min
   const cur = hit?.board ?? null;
   const card = signedIn ? ownCard(b, cur?.me ?? null, mine) : null;
   const own = card && { ...card, pub: pubNow ?? card.pub };
-  const km = (v: number) => fill(w.km, kmNum(v));
+  const km = (v: number) => kmMi(v, w);
   const boardName = (x: Board) => w[x];
   const sub = b === "month" ? w.monthP : b === "lifetime" ? w.lifetimeP : b === "year" ? w.yearP : "";
 
