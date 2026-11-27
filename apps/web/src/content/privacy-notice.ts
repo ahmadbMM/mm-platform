@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-27";
+export const PRIVACY_VERSION = "2026-11-28";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -184,7 +184,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Distance leaderboards: the distances of the bike sessions you finish, a distance our team enters for you, and a distance you add (one ride or a total over dates) with its proof (a picture or a PDF) and your comment",
-      "The leaderboards are worked out from your rides. Adding a distance is always optional. Members are ranked on the leaderboards that anyone can open: your place and distance show, and your first name with the first letter of your last name only if you switch it on from the leaderboard (off unless you do). The proof and comment are seen by you and our staff only.",
+      "The leaderboards are worked out from your rides. Adding a distance is always optional. Members are ranked on the leaderboards that anyone can open: your full name, your place and your distance show there. The proof and comment are seen by you and our staff only.",
       "Showing the leaderboards and their Gold, Silver and Bronze badges, and deciding whether to count a distance you add. The proof is deleted as soon as our team answers."
      ],
      [
@@ -642,7 +642,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "لوحات المتصدرين للمسافات: مسافات جلسات الدراجة التي تُكملها، والمسافة التي يُدخلها فريقنا لك، والمسافة التي تضيفها (رحلة واحدة أو مجموع خلال فترة) مع إثباتها (صورة أو ملف PDF) وتعليقك",
-      "تُحسب اللوحات من رحلاتك. إضافة مسافة اختيارية دائمًا. يُرتَّب الأعضاء في لوحات يمكن لأي شخص فتحها: يظهر مركزك ومسافتك، ولا يظهر اسمك الأول وأول حرف من اسم عائلتك إلا إذا فعّلت ذلك من لوحة المتصدرين (مُطفأ ما لم تفعّله). الإثبات والتعليق لا يراهما إلا أنت وموظفونا.",
+      "تُحسب اللوحات من رحلاتك. إضافة مسافة اختيارية دائمًا. يُرتَّب الأعضاء في لوحات يمكن لأي شخص فتحها: يظهر فيها اسمك الكامل ومركزك ومسافتك. الإثبات والتعليق لا يراهما إلا أنت وموظفونا.",
       "عرض لوحات المتصدرين وأوسمتها الذهبية والفضية والبرونزية، وتحديد ما إذا كنا سنحتسب المسافة التي تضيفها. ويُحذف الإثبات فور ردّ فريقنا."
      ],
      [

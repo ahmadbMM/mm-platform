@@ -18,12 +18,13 @@ import {
 
 // The distance leaderboards' page (micromobility.sa/leaderboard; the booking app's distance-board.js, rentals migration
 // 20261127180000): the four boards (Longest ride, This month, Lifetime, This year) behind one switch and men and women
-// behind another, each board's rows with their place, the medal on Longest ride, the name a rider switched on (else
-// "Member") and the distance. A signed-in rider also sees their own place, the "Show my name on the leaderboards" switch,
-// Share (the picture is drawn in the browser, components/account/ShareImage.tsx) once they are ranked, Add a distance
+// behind another, each board's rows with their place, the medal on Longest ride, the rider's
+// full name ("Member" only when there is none) and the distance; the rider's own row adds a green "You". A signed-in rider
+// also sees their own place, Share (the picture is drawn in the browser, components/account/ShareImage.tsx) once they are
+// ranked, Add a distance
 // (one ride, or a total over dates, with a picture or a PDF as proof, for staff to approve) and Your distances, a waiting
 // one with Take back. The first board comes drawn from the server; a switch asks /api/leaderboard and keeps each answer
-// a minute. Nothing about anyone else but the place, the distance and an opted-in name; no count of riders.
+// a minute. Nothing about anyone else but the place, the distance and the name; no count of riders.
 // Every distance in kilometres and miles, "90 km · 55.9 mi" (the user, 2026-11-28; the app's _dbdKm, lib/distance-board.ts kmMi).
 
 type Hit = { at: number; board: BoardAnswer | null };
@@ -60,7 +61,6 @@ export default function Leaderboard({ locale, b: b0, g: g0, board, signedIn, min
   const [mine, setMine] = useState<MyDistances | null>(mine0);
   const [form, setForm] = useState<Form | null>(null);
   const [said, setSaid] = useState("");
-  const [pubNow, setPubNow] = useState<boolean | null>(null); // the switch as last set here, until a board says it
   const [shr, setShr] = useState<{ n: number; sub: ShareSubject } | null>(null);
   const dlg = useRef<HTMLDialogElement>(null);
   const addBtn = useRef<HTMLButtonElement>(null);
@@ -96,25 +96,11 @@ export default function Leaderboard({ locale, b: b0, g: g0, board, signedIn, min
 
   const hit = cache[key(b, g)];
   const cur = hit?.board ?? null;
-  const card = signedIn ? ownCard(b, cur?.me ?? null, mine) : null;
-  const own = card && { ...card, pub: pubNow ?? card.pub };
+  const own = signedIn ? ownCard(b, cur?.me ?? null, mine) : null;
   const km = (v: number) => kmMi(v, w);
   const boardName = (x: Board) => w[x];
   const sub = b === "month" ? w.monthP : b === "lifetime" ? w.lifetimeP : b === "year" ? w.yearP : "";
 
-  async function flip(on: boolean) {
-    setPubNow(on);
-    let ok = false;
-    try {
-      const r = await fetch("/api/account/distances", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "public", on }) });
-      ok = !!((await r.json().catch(() => null)) as { ok?: boolean } | null)?.ok;
-    } catch { ok = false; }
-    if (!ok) { setPubNow(null); setSaid(w.eNet); return; }
-    setMine((m) => m && { ...m, public: on });
-    setSaid("");
-    setCache({}); // every board names the rider now, or no longer
-    void load(b, g);
-  }
   async function withdraw(c: Claim) {
     try {
       const r = await fetch("/api/account/distances", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "withdraw", id: c.id }) });
@@ -169,7 +155,7 @@ export default function Leaderboard({ locale, b: b0, g: g0, board, signedIn, min
   }
 
   const status = (x: Claim) => (x.source === "staff" ? w.stStaff : x.status === "approved" ? w.stOk : x.status === "declined" ? w.stNo : w.stWait);
-  const when = (x: Claim) => (x.kind === "total" && x.from ? `${shareDay(x.from, locale)} – ${shareDay(x.d, locale)}` : shareDay(x.d, locale));
+  const when = (x: Claim) => (!x.d ? w.noDate : x.kind === "total" && x.from ? `${shareDay(x.from, locale)} – ${shareDay(x.d, locale)}` : shareDay(x.d, locale));
   const swBtns = <T extends string>(list: [T, string][], on: T, go: (v: T) => void, label: string) => (
     <div className="lb-sw" role="group" aria-label={label}>
       {list.map(([v, t]) => <button key={v} type="button" className={`lb-sb${v === on ? " active" : ""}`} aria-pressed={v === on} onClick={() => go(v)}>{t}</button>)}
@@ -192,11 +178,6 @@ export default function Leaderboard({ locale, b: b0, g: g0, board, signedIn, min
             <div className="lb-me-km" dir="ltr">{own.km ? km(own.km) : ""}</div>
           </div>
           {!own.member && <p className="lb-note">{w.onlyMembers}</p>}
-          <label className="shr-sw lb-pub">
-            <input type="checkbox" role="switch" checked={own.pub} onChange={(e) => void flip(e.target.checked)} />
-            <span className="shr-sw-box" aria-hidden="true" />
-            <span className="lb-pub-t"><b>{w.nameSw}</b><small>{w.nameSwSub}</small></span>
-          </label>
           <div className="lb-acts">
             {own.r != null && <button type="button" ref={shareBtn} className="lb-go" onClick={share}><ShareIc /><span>{sw.share}</span></button>}
             <button type="button" ref={addBtn} className="lb-add" onClick={openForm}><Plus /><span>{w.add}</span></button>
@@ -214,7 +195,7 @@ export default function Leaderboard({ locale, b: b0, g: g0, board, signedIn, min
               <li key={`${r.r}-${i}`} className={`lb-row${r.mine ? " mine" : ""}`}>
                 <span className="lb-r" dir="ltr">{r.r}</span>
                 <span className="lb-md">{r.medal && <Medal icon={BOARD_MEDAL[r.medal][0]} color={BOARD_MEDAL[r.medal][1]} className="lb-medal" />}</span>
-                <bdi className="lb-nm">{r.mine ? w.you : r.name || w.member}</bdi>
+                <span className="lb-nm"><bdi>{r.name || w.member}</bdi>{r.mine && <span className="lb-you">{w.you}</span>}</span>
                 <span className="lb-km" dir="ltr">{km(r.km)}</span>
               </li>
             ))}

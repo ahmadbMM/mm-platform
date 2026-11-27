@@ -14,7 +14,6 @@ import { withinLimit } from "@/lib/rate-limit";
 //         over dates with a picture or a PDF as proof, for staff to approve ({ok: true, id}, or {ok: false, error}: "km",
 //         "date", "proof", "limit" as the database refused it);
 //   POST {action: "withdraw", id}: customer_distance_withdraw, takes back a waiting claim;
-//   POST {action: "public", on}: customer_board_public, the "Show my name on the leaderboards" switch.
 // Besides: "signin" for a signed-out request or a token refused, "invalid" for a body it cannot read, "absent" when the
 // database has no such function yet, "busy" or "generic". Only this site's pages may post; a connection sends 30 a
 // minute at most.
@@ -53,8 +52,6 @@ export async function POST(req: Request) {
     const id = typeof b.id === "number" && Number.isSafeInteger(b.id) && b.id > 0 ? b.id : null;
     if (!id) return json({ ok: false, error: "invalid" }, 400);
     fn = "customer_distance_withdraw"; args = { ...who, p_claim: id };
-  } else if (b.action === "public" && typeof b.on === "boolean") {
-    fn = "customer_board_public"; args = { ...who, p_on: b.on };
   } else return json({ ok: false, error: "invalid" }, 400);
   const r = await rpcServer<unknown>(fn, args, slow ? 20_000 : 4000);
   if (r.status === 0 || r.status >= 500) return json({ ok: false, error: "generic" }, 502);

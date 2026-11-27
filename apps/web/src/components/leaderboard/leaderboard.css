@@ -7,7 +7,7 @@
 .lb-sb { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: #57605a; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .lb-sb:hover { color: #1a1919; }
 .lb-sb.active { background: #fff; color: #1a1919; font-weight: 800; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
-.lb-sb:focus-visible, .lb-go:focus-visible, .lb-add:focus-visible, .lb-tb:focus-visible, .lb-pub:focus-within { outline: 2px solid #077a4b; outline-offset: 2px; }
+.lb-sb:focus-visible, .lb-go:focus-visible, .lb-add:focus-visible, .lb-tb:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .lb-sb:disabled { opacity: .55; cursor: default; }
 .lb-sub { margin: 0; color: #57605a; font-size: 14px; }
 
@@ -17,9 +17,6 @@
 .lb-me-r { font-size: 30px; font-weight: 800; letter-spacing: -1px; color: #077a4b; }
 .lb-me-km { font-size: 22px; font-weight: 800; color: #1a1919; }
 .lb-note { margin: 0; color: #57605a; font-size: 14px; }
-.lb-pub { margin-top: 0; }
-.lb-pub-t { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
-.lb-pub-t small { font-size: 12.5px; color: #57605a; }
 .lb-acts { display: flex; flex-wrap: wrap; gap: 8px; }
 .lb-go, .lb-add, .lb-tb { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .lb-go { background: #077a4b; border: 0; color: #fbf9f4; }
@@ -38,8 +35,11 @@
 .lb-md { display: flex; align-items: center; justify-content: center; }
 .lb-medal { width: 30px; height: 30px; }
 .lb-me-place .lb-medal { width: 40px; height: 40px; }
-.lb-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-.lb-row.mine .lb-nm { color: #077a4b; font-weight: 800; }
+.lb-nm { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+.lb-nm bdi { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-row.mine .lb-nm bdi { color: #077a4b; font-weight: 800; }
+/* the rider's own row: their name, then a small green You (the booking app's .dbd-you, 2026-11-28) */
+.lb-you { flex: none; padding: 2px 8px; border-radius: 999px; background: #077a4b; color: #fbf9f4; font-size: 11px; font-weight: 800; line-height: 1.4; }
 .lb-km { font-weight: 800; white-space: nowrap; }
 
 .lb-mine { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }

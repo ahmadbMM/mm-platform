@@ -2,9 +2,10 @@
 // a leaderboard of the longest single ride with badges that move to whoever rides further, shared on social media, then
 // lifetime and this year, with distances riders add with a picture or a PDF as proof for staff to approve). Four boards
 // (Longest ride, This month, Lifetime, This year), men and women apart; only members are ranked, and a row names a rider
-// only when they switched it on (customers.board_public; "Member" otherwise). What the database answers, read safely,
+// only by their full name (the user, 2026-11-28: "show all full names on the leaderboard", rentals 20261128150000; "Member"
+// only when a name is missing). What the database answers, read safely,
 // and what a claim may be, in a plain module the page, its routes and the tests share. Nothing about anyone else but the
-// place, the distance and an opted-in short name; no count of riders.
+// place, the distance and the name; no count of riders.
 // A proof is what a badge request takes (lib/badge-request.ts proofKind): a JPEG, PNG or WebP picture or a PDF as a
 // data: URL, 3 MB at most.
 import { NAME_MAX, proofKind } from "./badge-request";
@@ -23,20 +24,19 @@ export const asGender = (v: unknown): BoardGender => (v === "female" ? "female" 
 export const BOARD_PATH = "/leaderboard";
 export const BOARD_LINK = "micromobility.sa/leaderboard";
 
-/** One row of a board: its rank (equal distances share one), the distance, the rider's short name only when they
- *  switched it on (else null: "Member"), the Longest ride medal 1-3, and whether it is the signed-in rider's own. */
+/** One row of a board: its rank (equal distances share one), the distance, the rider's full name (null: "Member"), the Longest ride medal 1-3, and whether it is the signed-in rider's own. */
 export type BoardRow = { r: number; km: number; name: string | null; medal: 1 | 2 | 3 | null; mine: boolean };
-/** The signed-in rider on a board: their place and figure when ranked, their switch, whether they are a member. */
-export type BoardMe = { r: number | null; km: number | null; public: boolean; member: boolean; gender: BoardGender | null };
+/** The signed-in rider on a board: their place and figure when ranked, whether they are a member. */
+export type BoardMe = { r: number | null; km: number | null; member: boolean; gender: BoardGender | null };
 export type BoardAnswer = { board: Board; gender: BoardGender; rows: BoardRow[]; me: BoardMe | null };
 
 export type Claim = {
-  id: number; kind: "ride" | "total"; km: number; d: string; from: string | null;
+  id: number; kind: "ride" | "total"; km: number; /** null: entered by staff with no date (2026-11-28) */ d: string | null; from: string | null;
   status: "pending" | "approved" | "declined"; source: "claim" | "staff"; reply: string | null; at: string;
 };
 /** customer_distances: the rider's best single ride, lifetime and this year's kilometres, the switch, membership, the
  *  medal they hold, and their own distances (waiting, entered by staff, or answered in the last 90 days). */
-export type MyDistances = { best: number | null; at: string | null; lifetime: number; year: number; public: boolean; member: boolean; medal: 1 | 2 | 3 | null; claims: Claim[] };
+export type MyDistances = { best: number | null; at: string | null; lifetime: number; year: number; member: boolean; medal: 1 | 2 | 3 | null; claims: Claim[] };
 
 /** The Longest ride medals: [the medal's drawing, its colour] (the booking app's DBD_MEDAL; Medal.tsx RACE lr1-3). */
 export const BOARD_MEDAL: Record<1 | 2 | 3, [string, string]> = { 1: ["lr1", "gold"], 2: ["lr2", "silver"], 3: ["lr3", "orange"] };
@@ -44,10 +44,10 @@ export const BOARD_MEDAL: Record<1 | 2 | 3, [string, string]> = { 1: ["lr1", "go
 const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v)) ? Number(v) : null);
 const medalOf = (v: unknown): 1 | 2 | 3 | null => (v === 1 || v === 2 || v === 3 ? v : null);
 const day = (v: unknown): string | null => (typeof v === "string" && /^\d{4}-\d\d-\d\d/.test(v) ? v.slice(0, 10) : null);
-/** A name as a row shows it: never with dashes or underscores (the owner's rule: names without dashes), 40 letters at most. */
+/** A name as a row shows it: never with dashes or underscores (the owner's rule: names without dashes), 80 letters at most. */
 export function boardName(v: unknown): string | null {
   if (typeof v !== "string") return null;
-  const s = v.replace(/[-_‐-―]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 40);
+  const s = v.replace(/[-_‐-―]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
   return s || null;
 }
 
@@ -64,7 +64,7 @@ export function readBoard(v: unknown): BoardAnswer | null {
   const m = a.me && typeof a.me === "object" ? (a.me as Record<string, unknown>) : null;
   const me: BoardMe | null = m ? {
     r: num(m.r) != null && (num(m.r) as number) >= 1 ? Math.round(num(m.r) as number) : null, km: num(m.km),
-    public: m.public === true, member: m.member !== false, gender: m.gender === "female" || m.gender === "male" ? m.gender : null,
+    member: m.member !== false, gender: m.gender === "female" || m.gender === "male" ? m.gender : null,
   } : null;
   return { board: asBoard(a.board), gender: asGender(a.gender), rows, me };
 }
@@ -77,7 +77,7 @@ export function readMine(v: unknown): MyDistances | null {
   const claims: Claim[] = [];
   for (const x of (Array.isArray(a.claims) ? a.claims : []) as Record<string, unknown>[]) {
     const id = num(x?.id), km = num(x?.km), d = day(x?.d);
-    if (id == null || km == null || !d || !KIND.has(String(x.kind)) || !STATUS.has(String(x.status)) || !SOURCE.has(String(x.source))) continue;
+    if (id == null || km == null || !KIND.has(String(x.kind)) || !STATUS.has(String(x.status)) || !SOURCE.has(String(x.source))) continue;
     claims.push({
       id, kind: x.kind as Claim["kind"], km, d, from: day(x.from), status: x.status as Claim["status"], source: x.source as Claim["source"],
       reply: typeof x.reply === "string" && x.reply.trim() ? x.reply.trim() : null, at: typeof x.at === "string" ? x.at : "",
@@ -85,7 +85,7 @@ export function readMine(v: unknown): MyDistances | null {
   }
   return {
     best: num(a.best), at: day(a.at), lifetime: num(a.lifetime) ?? 0, year: num(a.year) ?? 0,
-    public: a.public === true, member: a.member !== false, medal: medalOf(a.medal), claims,
+    member: a.member !== false, medal: medalOf(a.medal), claims,
   };
 }
 
@@ -114,17 +114,19 @@ export function readKm(v: unknown): number {
 }
 
 /** The own card's figures on a board (the booking app's _dbdMineHtml): the place when ranked, the distance to show (the
- *  board's own when ranked, else the rider's own figure for that board), the medal on Longest ride, the switch, and
+ *  board's own when ranked, else the rider's own figure for that board), the medal on Longest ride, and
  *  whether they are a member (unknown reads as yes, as the app's). */
-export function ownCard(b: Board, me: BoardMe | null, mine: MyDistances | null): { r: number | null; km: number | null; medal: 1 | 2 | 3 | null; pub: boolean; member: boolean } {
-  const pub = me ? me.public : mine ? mine.public : false, member = me ? me.member : mine ? mine.member : true;
+export function ownCard(b: Board, me: BoardMe | null, mine: MyDistances | null): { r: number | null; km: number | null; medal: 1 | 2 | 3 | null; member: boolean } {
+  const member = me ? me.member : mine ? mine.member : true;
   const r = me?.r ?? null;
   const own = b === "lifetime" ? mine?.lifetime : b === "year" ? mine?.year : b === "longest" ? mine?.best : me?.km;
   const km = r != null && me?.km != null ? me.km : own ? own : null;
-  return { r, km, medal: b === "longest" ? mine?.medal ?? null : null, pub, member };
+  return { r, km, medal: b === "longest" ? mine?.medal ?? null : null, member };
 }
 
-export const CLAIM_MAX = { ride: 300, total: 50_000 } as const;
+/** No maximum for a ride or a total (the user, 2026-11-28: "dont put a maximum limit for kms per one ride"): 99,999 km is
+ *  only the column's own room. */
+export const CLAIM_MAX = 99_999;
 export const NOTE_MAX = 300;
 const YMD = /^\d{4}-\d\d-\d\d$/;
 export type ClaimForm = { kind: "ride" | "total"; km: string; d: string; from: string; proof: string | null };
@@ -132,7 +134,7 @@ export type ClaimForm = { kind: "ride" | "total"; km: string; d: string; from: s
  *  a total's start not after its end), then the proof. Null when it may go. */
 export function claimProblem(f: ClaimForm, today: string): "eKm" | "eDate" | "eProof" | null {
   const km = readKm(f.km);
-  if (!(km >= 1 && km <= CLAIM_MAX[f.kind])) return "eKm";
+  if (!(km >= 1 && km <= CLAIM_MAX)) return "eKm";
   if (!YMD.test(f.d) || f.d > today || (f.kind === "total" && (!YMD.test(f.from) || f.from > f.d))) return "eDate";
   if (!f.proof) return "eProof";
   return null;
@@ -145,7 +147,7 @@ export function claimBody(body: unknown): ClaimArgs | null {
   const b = body && typeof body === "object" ? (body as Record<string, unknown>) : null;
   if (!b || (b.kind !== "ride" && b.kind !== "total")) return null;
   const km = typeof b.km === "number" ? b.km : readKm(b.km);
-  if (!Number.isFinite(km) || km <= 0 || km > CLAIM_MAX.total) return null;
+  if (!Number.isFinite(km) || km <= 0 || km > CLAIM_MAX) return null;
   if (typeof b.date !== "string" || !YMD.test(b.date)) return null;
   const from = b.kind === "total" ? (typeof b.from === "string" && YMD.test(b.from) ? b.from : null) : null;
   if (b.kind === "total" && !from) return null;

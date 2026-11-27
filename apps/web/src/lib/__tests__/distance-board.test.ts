@@ -44,20 +44,20 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
-const mine = (o: Partial<MyDistances> = {}): MyDistances => ({ best: 82.5, at: "2026-11-01", lifetime: 640, year: 410.4, public: false, member: true, medal: null, claims: [], ...o });
+const mine = (o: Partial<MyDistances> = {}): MyDistances => ({ best: 82.5, at: "2026-11-01", lifetime: 640, year: 410.4, member: true, medal: null, claims: [], ...o });
 
 describe("the boards as the database answers them", () => {
-  it("reads distance_board's rows: shared ranks, a name only when one is given, never with dashes, the medal and the rider's own", () => {
+  it("reads distance_board's rows: shared ranks, every full name (null: Member), never with dashes, the medal and the rider's own", () => {
     const a = readBoard({ ok: true, board: "longest", gender: "female", rows: [
-      { r: 1, km: 120, name: "Sara A.", medal: 1, mine: false },
+      { r: 1, km: 120, name: "Sara Ahmed Alzahrani", medal: 1, mine: false },
       { r: 2, km: 90.5, name: null, medal: 2, mine: true },
-      { r: 2, km: 90.5, name: "Noor-Al_Huda K.", medal: null, mine: false },
+      { r: 2, km: 90.5, name: "Noor-Al_Huda Khalid", medal: null, mine: false },
       { r: "x", km: 10 }, { r: 0, km: 5 },
-    ], me: { r: 2, km: 90.5, public: true, member: true, gender: "female" } })!;
+    ], me: { r: 2, km: 90.5, public: true, member: true, gender: "female" } })!; // public: the old switch, read no more
     expect(a.board).toBe("longest");
     expect(a.gender).toBe("female");
-    expect(a.rows.map((x) => [x.r, x.km, x.name, x.medal, x.mine])).toEqual([[1, 120, "Sara A.", 1, false], [2, 90.5, null, 2, true], [2, 90.5, "Noor Al Huda K.", null, false]]);
-    expect(a.me).toEqual({ r: 2, km: 90.5, public: true, member: true, gender: "female" });
+    expect(a.rows.map((x) => [x.r, x.km, x.name, x.medal, x.mine])).toEqual([[1, 120, "Sara Ahmed Alzahrani", 1, false], [2, 90.5, null, 2, true], [2, 90.5, "Noor Al Huda Khalid", null, false]]);
+    expect(a.me).toEqual({ r: 2, km: 90.5, member: true, gender: "female" });
     // signed out: no `me`; an unknown board or gender reads as Longest ride, men
     expect(readBoard({ ok: true, board: "nope", gender: "x", rows: [] })).toEqual({ board: "longest", gender: "male", rows: [], me: null });
     expect(readBoard({ ok: false })).toBeNull();
@@ -70,9 +70,11 @@ describe("the boards as the database answers them", () => {
       { id: 7, kind: "total", km: 500, d: "2026-10-31", from: "2026-01-01", status: "pending", source: "claim", reply: null, at: "2026-11-02T10:00:00Z" },
       { id: 8, kind: "ride", km: 60, d: "2026-10-04", from: null, status: "declined", source: "claim", reply: " Blurry ", at: "2026-10-05T10:00:00Z" },
       { id: 9, kind: "lap", km: 1, d: "2026-10-04", status: "pending", source: "claim" },
+      { id: 10, kind: "ride", km: 210, d: null, from: null, status: "approved", source: "staff", reply: null, at: "2026-11-28T10:00:00Z" }, // staff gave no date (2026-11-28)
     ] })!;
-    expect(m).toMatchObject({ best: 82.5, lifetime: 640, year: 410.4, public: true, member: false, medal: 3 });
-    expect(m.claims.map((x) => [x.id, x.kind, x.from, x.reply])).toEqual([[7, "total", "2026-01-01", null], [8, "ride", null, "Blurry"]]);
+    expect(m).toMatchObject({ best: 82.5, lifetime: 640, year: 410.4, member: false, medal: 3 });
+    expect(m.claims.map((x) => [x.id, x.kind, x.from, x.reply])).toEqual([[7, "total", "2026-01-01", null], [8, "ride", null, "Blurry"], [10, "ride", null, null]]);
+    expect(m.claims[2].d).toBeNull();
     expect(readMine({ ok: false, error: "token" })).toBeNull();
   });
 
@@ -87,12 +89,12 @@ describe("the boards as the database answers them", () => {
   });
 
   it("puts the rider's own figure on their card: the board's when ranked, else their own, the medal only on Longest ride", () => {
-    const m = mine({ medal: 2, public: true });
-    expect(ownCard("longest", { r: 3, km: 82.5, public: true, member: true, gender: "male" }, m)).toEqual({ r: 3, km: 82.5, medal: 2, pub: true, member: true });
-    expect(ownCard("lifetime", { r: null, km: null, public: false, member: false, gender: null }, m)).toEqual({ r: null, km: 640, medal: null, pub: false, member: false });
+    const m = mine({ medal: 2 });
+    expect(ownCard("longest", { r: 3, km: 82.5, member: true, gender: "male" }, m)).toEqual({ r: 3, km: 82.5, medal: 2, member: true });
+    expect(ownCard("lifetime", { r: null, km: null, member: false, gender: null }, m)).toEqual({ r: null, km: 640, medal: null, member: false });
     expect(ownCard("year", null, m).km).toBe(410.4);
     expect(ownCard("month", null, m).km).toBeNull(); // this month's figure comes only from the board
-    expect(ownCard("longest", null, null)).toEqual({ r: null, km: null, medal: null, pub: false, member: true });
+    expect(ownCard("longest", null, null)).toEqual({ r: null, km: null, medal: null, member: true });
   });
 });
 
@@ -101,9 +103,10 @@ describe("Add a distance", () => {
   it("checks the distance, then the dates, then the proof, as the booking app's form", () => {
     expect(claimProblem(f, "2026-11-27")).toBeNull();
     expect(claimProblem({ ...f, km: "0.5" }, "2026-11-27")).toBe("eKm");
-    expect(claimProblem({ ...f, km: "301" }, "2026-11-27")).toBe("eKm");
-    expect(claimProblem({ ...f, kind: "total", km: "301", from: "2026-01-01" }, "2026-11-27")).toBeNull();
-    expect(claimProblem({ ...f, kind: "total", km: "50001", from: "2026-01-01" }, "2026-11-27")).toBe("eKm");
+    // no maximum for a ride or a total (2026-11-28), only the column's room
+    expect(claimProblem({ ...f, km: "301" }, "2026-11-27")).toBeNull();
+    expect(claimProblem({ ...f, kind: "total", km: "50001", from: "2026-01-01" }, "2026-11-27")).toBeNull();
+    expect(claimProblem({ ...f, km: "100000" }, "2026-11-27")).toBe("eKm");
     expect(claimProblem({ ...f, d: "2026-11-28" }, "2026-11-27")).toBe("eDate");
     expect(claimProblem({ ...f, kind: "total", from: "2026-11-21" }, "2026-11-27")).toBe("eDate");
     expect(claimProblem({ ...f, kind: "total", from: "" }, "2026-11-27")).toBe("eDate");
@@ -117,6 +120,8 @@ describe("Add a distance", () => {
     expect(claimBody({ kind: "ride", km: 40, date: "2026-11-20" })).toBeNull();
     expect(claimBody({ kind: "ride", km: 40, date: "2026-11-20", proof: "data:text/html;base64,PGI+" })).toBeNull();
     expect(claimBody({ kind: "lap", km: 40, date: "2026-11-20", proof: PDF })).toBeNull();
+    expect(claimBody({ kind: "ride", km: 420, date: "2026-11-20", proof: PDF })?.p_km).toBe(420);
+    expect(claimBody({ kind: "ride", km: 100000, date: "2026-11-20", proof: PDF })).toBeNull();
     expect(claimBody({ kind: "ride", km: 40, date: "20 Nov", proof: PDF })).toBeNull();
   });
   it("says the database's refusals in the form's words", () => {
@@ -150,7 +155,10 @@ describe("the words", () => {
     }
     expect(BOARD_WORDS.ar.onlyMembers).toBe("يُرتَّب أعضاء المجتمع فقط.");
     expect(BOARD_WORDS.ms.secBoard).toBe("Pendahulu");
-    expect(BOARD_WORDS.ne.eKm).toContain("300");
+    expect(BOARD_WORDS.en.eKm).toBe("Enter a distance of 1 km or more.");
+    expect(BOARD_WORDS.ne.eKm).toBe("1 किमी वा बढी दूरी लेख्नुहोस्।");
+    expect(BOARD_WORDS.ar.noDate).toBe("بلا تاريخ");
+    expect(Object.keys(BOARD_WORDS.en)).not.toContain("nameSw"); // the name switch went (2026-11-28)
   });
 });
 
@@ -212,7 +220,7 @@ describe("the routes", () => {
     expect(sentTo(f)).toEqual({ fn: "customer_distances", args: { p_id: "c1", p_token: TOK } });
   });
 
-  it("POST sends a claim, a take-back and the switch, and says the database's refusals", async () => {
+  it("POST sends a claim and a take-back, and says the database's refusals", async () => {
     let f = db({ ok: true, id: 31 });
     vi.stubGlobal("fetch", f);
     expect(await (await mineSend(post({ action: "claim", kind: "ride", km: 82.5, date: "2026-11-20", proof: PDF, proofName: "a.pdf" }))).json()).toEqual({ ok: true, id: 31 });
@@ -224,17 +232,14 @@ describe("the routes", () => {
     vi.stubGlobal("fetch", f);
     expect(await (await mineSend(post({ action: "withdraw", id: 31 }))).json()).toEqual({ ok: true });
     expect(sentTo(f)).toEqual({ fn: "customer_distance_withdraw", args: { p_id: "c1", p_token: TOK, p_claim: 31 } });
-    f = db({ ok: true, public: true });
-    vi.stubGlobal("fetch", f);
-    expect(await (await mineSend(post({ action: "public", on: true }))).json()).toEqual({ ok: true });
-    expect(sentTo(f)).toEqual({ fn: "customer_board_public", args: { p_id: "c1", p_token: TOK, p_on: true } });
     vi.stubGlobal("fetch", db({ ok: false, error: "token" }));
-    expect((await mineSend(post({ action: "public", on: false }))).status).toBe(401);
+    expect((await mineSend(post({ action: "withdraw", id: 31 }))).status).toBe(401);
     // nothing reaches the database: another site, no account, a body it cannot read
     const none = db({ ok: true });
     vi.stubGlobal("fetch", none);
-    expect((await mineSend(post({ action: "public", on: true }, { origin: "https://evil.example" }))).status).toBe(403);
-    expect((await mineSend(post({ action: "public", on: true }, { cookie: "" }))).status).toBe(401);
+    expect((await mineSend(post({ action: "withdraw", id: 31 }, { origin: "https://evil.example" }))).status).toBe(403);
+    expect((await mineSend(post({ action: "withdraw", id: 31 }, { cookie: "" }))).status).toBe(401);
+    expect((await mineSend(post({ action: "public", on: true }))).status).toBe(400); // the name switch went (2026-11-28)
     expect((await mineSend(post({ action: "claim", kind: "ride", km: 40, date: "2026-11-20" }))).status).toBe(400);
     expect((await mineSend(post({ action: "withdraw", id: "1; drop" }))).status).toBe(400);
     expect((await mineSend(post({ action: "nope" }))).status).toBe(400);
